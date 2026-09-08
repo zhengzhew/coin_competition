@@ -299,6 +299,59 @@ apiRouter.get('/teacher/summary', teacherGuard, (_req, res) => {
   res.json({ players: players.count, attempts: attempts.count, events: events.count, progress });
 });
 
+apiRouter.get('/teacher/dashboard', teacherGuard, (_req, res) => {
+  const database = getDb();
+  const overview = database.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM players) AS players,
+      (SELECT COUNT(*) FROM attempts) AS attempts,
+      (SELECT COUNT(*) FROM attempts WHERE status = 'success') AS successes,
+      (SELECT COUNT(*) FROM attempts WHERE status = 'running') AS active_attempts,
+      (SELECT ROUND(AVG(score), 1) FROM attempts WHERE score IS NOT NULL) AS average_score,
+      (SELECT COUNT(*) FROM events) AS events
+  `).get();
+  const modes = database.prepare(`
+    SELECT mode, COUNT(*) AS attempts, COUNT(DISTINCT player_uuid) AS players,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
+      ROUND(AVG(score), 1) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
+      ROUND(AVG(collisions), 1) AS average_collisions
+    FROM attempts GROUP BY mode ORDER BY mode
+  `).all();
+  const languages = database.prepare(`
+    SELECT COALESCE(p.language_experience, 'unknown') AS language_experience,
+      COUNT(DISTINCT p.player_uuid) AS players, COUNT(a.attempt_id) AS attempts,
+      SUM(CASE WHEN a.status = 'success' THEN 1 ELSE 0 END) AS successes,
+      ROUND(AVG(a.score), 1) AS average_score, ROUND(AVG(a.steps), 1) AS average_steps
+    FROM players p LEFT JOIN attempts a ON a.player_uuid = p.player_uuid
+    GROUP BY COALESCE(p.language_experience, 'unknown') ORDER BY players DESC
+  `).all();
+  const levels = database.prepare(`
+    SELECT assignment_key, 'L' || substr(assignment_key, 2) AS level_id, mode,
+      COUNT(DISTINCT player_uuid) AS players, COUNT(*) AS attempts,
+      SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
+      ROUND(AVG(score), 1) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
+      ROUND(AVG(collisions), 1) AS average_collisions
+    FROM attempts GROUP BY assignment_key, mode ORDER BY assignment_key
+  `).all();
+  const eventTypes = database.prepare(`
+    SELECT event_type, COUNT(*) AS count FROM events
+    GROUP BY event_type ORDER BY count DESC, event_type LIMIT 12
+  `).all();
+  const activity = database.prepare(`
+    SELECT substr(server_received_at, 1, 13) || ':00' AS hour, COUNT(*) AS count
+    FROM events GROUP BY hour ORDER BY hour DESC LIMIT 24
+  `).all().reverse();
+  const recentAttempts = database.prepare(`
+    SELECT a.attempt_id, a.assignment_key, a.mode, a.trial_index, a.status, a.steps,
+      a.collisions, a.collected_count, a.score, a.started_at, a.finalized_at,
+      p.display_name, substr(p.player_uuid, 1, 8) AS player_code,
+      COALESCE(p.language_experience, 'unknown') AS language_experience
+    FROM attempts a JOIN players p ON p.player_uuid = a.player_uuid
+    ORDER BY a.started_at DESC LIMIT 30
+  `).all();
+  res.json({ generated_at: now(), overview, modes, languages, levels, event_types: eventTypes, activity, recent_attempts: recentAttempts });
+});
+
 function csvCell(value: unknown) {
   return `"${String(value ?? '').replaceAll('"', '""')}"`;
 }

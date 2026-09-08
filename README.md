@@ -55,8 +55,13 @@ docker compose up -d --build
 
 ## 教师数据接口
 
-请求头统一携带 `x-teacher-key: <TEACHER_KEY>`：
+浏览器访问 `/teacher` 可打开行为数据看板。看板包含课堂总览、模式比较、编程经历分组、关卡完成率、高频交互、每小时事件趋势和最近挑战记录，并支持下载成绩与原始埋点。
 
+本地开发使用 `demo-teacher-key` 登录；生产环境使用 `.env` 中设置的 `TEACHER_KEY`。
+
+如需直接调用接口，请在请求头中携带 `x-teacher-key: <TEACHER_KEY>`：
+
+- `GET /api/teacher/dashboard`
 - `GET /api/teacher/summary`
 - `GET /api/teacher/export?kind=attempts&format=csv`
 - `GET /api/teacher/export?kind=attempts&format=jsonl`

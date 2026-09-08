@@ -299,8 +299,11 @@ export default function App() {
           <button className={mode === 'keyboard' ? 'active' : ''} onClick={() => changeMode('keyboard')} data-track-id="mode.keyboard">⌨ 键盘操作</button>
           <button className={mode === 'python_blank' ? 'active' : ''} onClick={() => changeMode('python_blank')} data-track-id="mode.python_blank">&lt;/&gt; Python 填空</button>
         </div>
-        <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
-          <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
+        <div className="header-actions">
+          <a className="teacher-link" href="/teacher" data-track-id="nav.teacher">数据看板</a>
+          <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
+            <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
+          </div>
         </div>
       </header>
 
