@@ -36,7 +36,6 @@ export default function App() {
   const [animating, setAnimating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
-  const [planOrder, setPlanOrder] = useState<string[]>([]);
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
   const levelRef = useRef<LevelDef | null>(null);
@@ -57,7 +56,7 @@ export default function App() {
     commitGame(createGameState(level));
     setRows(generateInitialRows(level.python));
     setAttempt(null); attemptRef.current = null;
-    setScore(null); setMessage(null); setEditorError(null); setPlanOrder([]);
+    setScore(null); setMessage(null); setEditorError(null);
     telemetryRef.current?.track('level_selected', `nav.level.${level.level_id}`, { level_id: level.level_id, coin_count: level.coins.length });
   }, []);
 
@@ -169,14 +168,21 @@ export default function App() {
     telemetryRef.current?.track('command_issued', `move.${direction}`, { direction, source, command_index: commandIndex });
     const result = step(state, {
       direction, command_index: commandIndex, command_id: createUuid(), source,
-    }, level.required_order, level.coins.length, level.max_commands);
+    }, level.required_order, level.coins.length, level.max_commands, level.step_limit);
     commitGame(result.state);
     telemetryRef.current?.track(result.event.type, 'game.board', { ...result.event });
+    if (result.event.type === 'order_violation') {
+      setMessage('这枚金币还没轮到，已保留在地图上；请先拾取当前编号。');
+    } else if (result.event.type === 'coin_collected') {
+      setMessage(null);
+    }
     return result.state;
   };
 
   const acceptServerResult = (result: ServerResult) => {
     setScore(result.score);
+    const current = gameRef.current;
+    if (current && result.status !== 'running') commitGame({ ...current, status: result.status });
     telemetryRef.current?.track('attempt_verified', 'attempt.result', {
       status: result.status, score: result.score.total_score, steps: result.steps,
       collisions: result.collisions, collected_order: result.collected_order,
@@ -258,16 +264,22 @@ export default function App() {
     const current = attemptRef.current;
     if (!current) return;
     await commandChain.current;
+    if (levelRef.current?.step_limit && !current.attempt_id.startsWith('local-')) {
+      try {
+        const response = await fetch(`/api/attempts/${current.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
+        const result = await response.json() as ServerResult;
+        if (!response.ok) throw new Error('结算失败');
+        acceptServerResult(result);
+        return;
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : '结算失败');
+        return;
+      }
+    }
     stopRemoteAttempt(current);
     const state = gameRef.current;
     if (state) commitGame({ ...state, status: 'stopped' });
     telemetryRef.current?.track('attempt_stopped', 'attempt.stop', {});
-  };
-
-  const addPlanCoin = (coinId: string) => {
-    const next = [...planOrder, coinId];
-    setPlanOrder(next);
-    telemetryRef.current?.track('plan_coin_added', `planner.coin.${coinId}`, { coin_id: coinId, planned_order: next });
   };
 
   if (loadingError) return <div className="fatal"><b>项目未能启动</b><span>{loadingError}</span><small>请确认服务端已运行，再刷新页面。</small></div>;
@@ -275,7 +287,12 @@ export default function App() {
 
   const currentAssignment = mode === 'keyboard' ? currentLevel.keyboard_id : currentLevel.python_id;
   const active = Boolean(attempt) && gameState.status === 'running';
-  const availablePlanCoins = currentLevel.coins.filter((coin) => !planOrder.includes(coin.id));
+  const totalValue = currentLevel.coins.reduce((sum, coin) => sum + (coin.value ?? 1), 0);
+  const collectedValue = currentLevel.coins
+    .filter((coin) => gameState.collected.includes(coin.id))
+    .reduce((sum, coin) => sum + (coin.value ?? 1), 0);
+  const hasChest = currentLevel.coins.some((coin) => coin.type === 'chest');
+  const displayOrder = currentLevel.required_order?.map((_, index) => circledNumber(index + 1));
 
   return (
     <div className="app">
@@ -300,7 +317,6 @@ export default function App() {
           <button className={mode === 'python_blank' ? 'active' : ''} onClick={() => changeMode('python_blank')} data-track-id="mode.python_blank">&lt;/&gt; 代码操控</button>
         </div>
         <div className="header-actions">
-          <a className="teacher-link" href="/teacher" data-track-id="nav.teacher">数据看板</a>
           <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
             <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
           </div>
@@ -312,29 +328,24 @@ export default function App() {
         <main className="game-area">
           <section className="mission-card">
             <div className="mission-number">{currentLevel.level_id.slice(1)}</div>
-            <div className="mission-copy"><span>{currentAssignment} · {stageLabel(currentLevel.stage)}</span><h1>{currentLevel.title}</h1><p>{currentLevel.objective}</p></div>
-            <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{currentLevel.coins.length} 枚金币</span></div>
+            <div className="mission-copy"><span>{currentAssignment} · {currentLevel.category_label ?? stageLabel(currentLevel.stage)}</span><h1>{currentLevel.title}</h1><p>{currentLevel.objective}</p><small>{currentLevel.rule_hint}</small></div>
+            <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{totalValue} 点金币价值</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
           </section>
 
           <div className="workspace-grid">
             <section className="board-panel">
-              <div className="panel-heading"><div><span>实时地图</span><b>先想顺序，再走路线</b></div><div className="legend"><span><i className="legend-start" />起点</span><span><i className="legend-wall" />障碍</span></div></div>
+              <div className="panel-heading"><div><span>实时地图</span><b>{currentLevel.category === 'budget' ? '算好预算，再选目标' : '先想顺序，再走路线'}</b></div><div className="legend"><span><i className="legend-start" />起点</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />封闭区</span>}{hasChest && <span><i className="legend-chest" />金币箱 ×3</span>}</div></div>
               <GameBoard level={currentLevel} state={gameState} />
               <div className="status-bar">
-                <div><small>有效步数</small><b>{gameState.steps}</b></div>
+                <div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
                 <div><small>碰撞次数</small><b>{gameState.collisions}</b></div>
-                <div><small>已捡金币</small><b>{gameState.collected.length}<em> / {currentLevel.coins.length}</em></b></div>
+                <div><small>已拾取价值</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
                 <div className={`status-pill status-${gameState.status}`}>{statusLabel(gameState.status)}</div>
               </div>
             </section>
 
             <aside className="control-column">
-              {currentLevel.stage === 'challenge' && <section className="planner-card">
-                <div className="mini-heading"><span>路线草稿</span><button onClick={() => setPlanOrder([])} data-track-id="planner.reset">清空</button></div>
-                <div className="planned-order">{planOrder.length ? planOrder.map((coin, index) => <span key={coin}>{index ? '→' : ''}<b>{coin}</b></span>) : <small>点击金币，规划自己的拾取路线</small>}</div>
-                <div className="coin-choices">{availablePlanCoins.map((coin) => <button key={coin.id} onClick={() => addPlanCoin(coin.id)} data-track-id={`planner.coin.${coin.id}`}>{coin.id}</button>)}</div>
-              </section>}
-              {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{currentLevel.required_order.join(' → ')}</b></div>}
+              {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
 
               {mode === 'keyboard' ? <section className="keyboard-card">
                 <div className="mini-heading"><span>方向控制</span><small>方向键 / WASD</small></div>
@@ -346,30 +357,34 @@ export default function App() {
                   <button className="dpad-btn down" onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
                 </div>
                 {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">开始本关</button>
-                  : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">停止本轮</button>
+                  : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">{currentLevel.step_limit ? '结束并结算' : '停止本轮'}</button>
                   : <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
               </section> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
 
               {score && <section className="score-panel">
-                <div className="score-total"><span>本轮得分</span><b>{score.total_score}</b><em>/ 100</em></div>
-                <div className="score-parts"><span>金币 {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div>
-                <p>{score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`}</p>
+                <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ 100</em></div>
+                {currentLevel.step_limit
+                  ? <><div className="score-parts"><span>价值 {score.collected_value} / {score.total_value}</span><span>预算 {score.steps} / {currentLevel.step_limit} 步</span></div><p>{score.collected_value === score.optimal_value ? `你拿到了预算内最高的 ${score.optimal_value} 点价值！` : `预算内最高可得 ${score.optimal_value} 点，再比较一下目标价值和绕行距离。`}</p></>
+                  : <><div className="score-parts"><span>金币 {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : '全部金币都已收集，操控任务完成！'}</p></>}
                 <button onClick={() => resetGame(false)} data-track-id="attempt.reset_after_score">重新挑战</button>
               </section>}
               {message && <div className="message" role="status">{message}</div>}
               {gameState.status === 'success' && !score && <div className="message success">金币已全部收集，正在等待服务端确认。</div>}
-              {gameState.status === 'order_violation' && <div className="message error">经过了错误的金币，请重新规划避让路线。</div>}
             </aside>
           </div>
         </main>
       </div>
-      <footer><span>玩家操作与时间节点已记录</span><span>规则：捡完全部金币即结束，不必返回起点</span></footer>
+      <footer><span>玩家操作与时间节点已记录</span><span>{currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
     </div>
   );
 }
 
 function stageLabel(stage: LevelDef['stage']) {
   return ({ explore: '探索阶段', guided: '引导阶段', challenge: '挑战阶段' })[stage];
+}
+
+function circledNumber(number: number) {
+  return ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'][number - 1] ?? String(number);
 }
 
 function statusLabel(status: GameStatus) {

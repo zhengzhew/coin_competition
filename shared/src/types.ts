@@ -17,6 +17,8 @@ export interface Position {
 export interface CoinDef {
   id: string;          // e.g. "A", "B", "C"
   position: [number, number]; // [x, y]
+  value?: number;
+  type?: 'coin' | 'chest';
 }
 
 export interface LevelDef {
@@ -25,18 +27,24 @@ export interface LevelDef {
   python_id: string;       // "P01".."P20"
   title: string;
   stage: 'explore' | 'guided' | 'challenge';
+  category?: 'intro' | 'ordered' | 'optimal_guided' | 'optimal_free' | 'obstacle_guided' | 'obstacle_free' | 'budget';
+  category_label?: string;
   width: number;
   height: number;
   start: [number, number]; // [x, y]
   coins: CoinDef[];
   walls: [number, number][];
   required_order: string[] | null;  // null = free order
+  step_limit?: number | null;       // successful-move budget; collisions do not consume it
+  expected_max_value?: number | null;
+  show_optimal_feedback?: boolean;
   max_commands: number;             // 256
   max_attempts?: number | null;
   expected_optimal_steps?: number;
   python: PythonConfig;
   knowledge: string;
   objective: string;
+  rule_hint?: string;
 }
 
 export interface PythonConfig {
@@ -91,7 +99,7 @@ export interface StepResult {
 }
 
 export interface DomainEvent {
-  type: 'move_success' | 'collision' | 'coin_collected' | 'order_violation' | 'all_collected' | 'command_limit';
+  type: 'move_success' | 'collision' | 'coin_collected' | 'order_violation' | 'all_collected' | 'budget_exhausted' | 'command_limit';
   command_index: number;
   position: [number, number];
   direction: Direction;
@@ -140,6 +148,9 @@ export interface ScoreResult {
   total_coins: number;
   steps: number;
   optimal_steps?: number;
+  collected_value?: number;
+  total_value?: number;
+  optimal_value?: number;
 }
 
 // ===== Player =====

@@ -48,6 +48,7 @@ export function step(
   requiredOrder: string[] | null,
   totalCoins: number,
   maxCommands = 256,
+  stepLimit?: number | null,
 ): StepResult {
   if (state.status !== 'running') {
     return {
@@ -110,16 +111,7 @@ export function step(
 
   if (state.coins.has(posKey) && !newCollected.includes(state.coins.get(posKey)!)) {
     coinId = state.coins.get(posKey)!;
-    const coinIndex = [...state.coins.values()].indexOf(coinId);
-    newCollected.push(coinId);
-    newMask |= 1 << coinIndex;
-    collected = true;
-  }
-
-  // Check order violation
-  if (collected && requiredOrder) {
-    const expectedIndex = newCollected.length - 1;
-    if (requiredOrder[expectedIndex] !== coinId) {
+    if (requiredOrder && requiredOrder[newCollected.length] !== coinId) {
       return {
         state: {
           ...state,
@@ -127,9 +119,6 @@ export function step(
           y: ny,
           steps: newSteps,
           consumed_commands: newConsumed,
-          collected: newCollected,
-          collected_mask: newMask,
-          status: 'order_violation',
           trace: newTrace,
         },
         event: {
@@ -142,6 +131,10 @@ export function step(
         },
       };
     }
+    const coinIndex = [...state.coins.values()].indexOf(coinId);
+    newCollected.push(coinId);
+    newMask |= 1 << coinIndex;
+    collected = true;
   }
 
   // Check all collected
@@ -160,6 +153,32 @@ export function step(
       },
       event: {
         type: 'all_collected',
+        command_index: command.command_index,
+        position: [nx, ny],
+        direction: command.direction,
+        coin_id: coinId,
+        collected_order: newCollected,
+        steps: newSteps,
+      },
+    };
+  }
+
+  // Budget levels settle openly when the successful-move allowance is used.
+  if (stepLimit && newSteps >= stepLimit) {
+    return {
+      state: {
+        ...state,
+        x: nx,
+        y: ny,
+        steps: newSteps,
+        consumed_commands: newConsumed,
+        collected: newCollected,
+        collected_mask: newMask,
+        status: 'success',
+        trace: newTrace,
+      },
+      event: {
+        type: 'budget_exhausted',
         command_index: command.command_index,
         position: [nx, ny],
         direction: command.direction,
@@ -231,7 +250,30 @@ export function calculateScore(
   state: GameState,
   totalCoins: number,
   optimalSteps?: number,
+  coinValues?: Record<string, number>,
+  optimalValue?: number | null,
 ): ScoreResult {
+  const values = coinValues ?? {};
+  const collectedValue = state.collected.reduce((sum, id) => sum + (values[id] ?? 1), 0);
+  const totalValue = Object.keys(values).length
+    ? Object.values(values).reduce((sum, value) => sum + value, 0)
+    : totalCoins;
+
+  if (optimalValue) {
+    const ratio = Math.min(1, collectedValue / optimalValue);
+    return {
+      collection_score: Math.round(60 * ratio * 10) / 10,
+      route_score: Math.round(40 * ratio * 10) / 10,
+      total_score: Math.round(100 * ratio * 10) / 10,
+      collected_count: state.collected.length,
+      total_coins: totalCoins,
+      steps: state.steps,
+      collected_value: collectedValue,
+      total_value: totalValue,
+      optimal_value: optimalValue,
+    };
+  }
+
   const collectionScore = totalCoins > 0
     ? (60 * state.collected.length) / totalCoins
     : 0;
@@ -248,5 +290,7 @@ export function calculateScore(
     total_coins: totalCoins,
     steps: state.steps,
     optimal_steps: optimalSteps,
+    collected_value: collectedValue,
+    total_value: totalValue,
   };
 }

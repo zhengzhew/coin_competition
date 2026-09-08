@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 import { apiRouter } from './routes.js';
 import { closeDb, getDb } from './db.js';
@@ -10,7 +11,13 @@ import { loadLevels } from './levels.js';
 const app = express();
 const port = Number(process.env.PORT || 3001);
 const publicOrigin = process.env.PUBLIC_ORIGIN || 'http://localhost:5173';
-const clientDist = resolve(process.cwd(), 'client', 'dist');
+const moduleDir = resolve(fileURLToPath(new URL('.', import.meta.url)));
+const clientDistCandidates = [
+  resolve(process.cwd(), 'client', 'dist'),
+  resolve(moduleDir, '../../client/dist'),
+  resolve(moduleDir, '../../../client/dist'),
+];
+const clientDist = clientDistCandidates.find(existsSync) ?? clientDistCandidates[0];
 
 app.set('trust proxy', 1);
 app.disable('x-powered-by');

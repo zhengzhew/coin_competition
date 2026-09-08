@@ -5,9 +5,9 @@ import './GameBoard.css';
 interface Props { level: LevelDef; state: GameState; }
 
 export default function GameBoard({ level, state }: Props) {
-  const cellSize = level.width <= 5 ? 66 : level.width <= 8 ? 54 : 46;
+  const cellSize = level.width <= 5 ? 54 : level.width <= 7 ? 42 : level.width === 8 ? 34 : 30;
   const walls = useMemo(() => new Set(level.walls.map(([x, y]) => `${x},${y}`)), [level.walls]);
-  const coins = useMemo(() => new Map(level.coins.map((coin) => [`${coin.position[0]},${coin.position[1]}`, coin.id])), [level.coins]);
+  const coins = useMemo(() => new Map(level.coins.map((coin) => [`${coin.position[0]},${coin.position[1]}`, coin])), [level.coins]);
   const trace = useMemo(() => new Set(state.trace.map(([x, y]) => `${x},${y}`)), [state.trace]);
   const rows = [];
 
@@ -18,8 +18,11 @@ export default function GameBoard({ level, state }: Props) {
       const wall = walls.has(key);
       const car = x === state.x && y === state.y;
       const start = x === level.start[0] && y === level.start[1];
-      const coinId = coins.get(key);
+      const coin = coins.get(key);
+      const coinId = coin?.id;
       const collected = coinId ? state.collected.includes(coinId) : false;
+      const orderIndex = coinId && level.required_order ? level.required_order.indexOf(coinId) : -1;
+      const locked = orderIndex >= 0 && orderIndex !== state.collected.length;
       const visited = trace.has(key) && !car;
       const classes = ['cell', wall ? 'wall' : '', car ? 'car' : '', start ? 'start' : '', visited ? 'trace' : ''].filter(Boolean).join(' ');
       cells.push(
@@ -28,7 +31,7 @@ export default function GameBoard({ level, state }: Props) {
           data-track-id={`board.cell.${x}.${y}`}>
           {wall && <span className="wall-sprite" />}
           {car && <img className="car-sprite" src="/assets/car.png" alt="淘金车" />}
-          {coinId && !collected && !car && <><img className="coin-sprite" src="/assets/coin.png" alt="" /><b className="coin-label">{coinId}</b></>}
+          {coin && !collected && !car && <><img className={`coin-sprite ${locked ? 'locked' : ''}`} src={coin.type === 'chest' ? '/assets/chest_reference.png' : '/assets/coin.png'} alt="" />{orderIndex >= 0 && <b className="coin-label">{circledNumber(orderIndex + 1)}</b>}{coin.type === 'chest' && <b className="coin-value">×{coin.value ?? 3}</b>}</>}
           {start && !car && !coinId && <span className="start-label">起点</span>}
         </div>,
       );
@@ -51,4 +54,8 @@ export default function GameBoard({ level, state }: Props) {
       <div className="axis-hint">x →　　y ↑</div>
     </div>
   );
+}
+
+function circledNumber(number: number) {
+  return ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧'][number - 1] ?? String(number);
 }

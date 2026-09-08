@@ -55,7 +55,12 @@ export function solve(level: LevelDef, requiredOrder: string[] | null): Directio
         if (requiredOrder) {
           const collectedCount = countBits(current.mask);
           if (requiredOrder[collectedCount] !== coinInfo.id) {
-            continue; // Wrong order, skip
+            // The car may pass a locked coin; it simply is not collected yet.
+            const stateKey = `${nx},${ny},${newMask}`;
+            if (visited.has(stateKey)) continue;
+            visited.add(stateKey);
+            queue.push([{ x: nx, y: ny, mask: newMask }, [...path, dir]]);
+            continue;
           }
         }
         newMask |= 1 << coinInfo.index;
@@ -145,8 +150,7 @@ export function replay(
       if (requiredOrder) {
         const expectedIndex = collected.length - 1;
         if (requiredOrder[expectedIndex] !== coinId) {
-          status = 'order_violation';
-          break;
+          collected.pop();
         }
       }
 
@@ -155,6 +159,11 @@ export function replay(
         status = 'success';
         break;
       }
+    }
+
+    if (level.step_limit && steps >= level.step_limit) {
+      status = 'success';
+      break;
     }
 
     if (consumed >= level.max_commands) {

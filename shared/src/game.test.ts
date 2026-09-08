@@ -36,6 +36,29 @@ test('rule engine counts a collision without moving the car', () => {
   assert.equal(result.state.consumed_commands, 1);
 });
 
+test('a locked ordered coin is skipped without ending the attempt', () => {
+  const ordered = { ...level, walls: [], start: [2, 2] as [number, number] };
+  const result = step(createGameState(ordered), {
+    direction: 'right', command_index: 1, command_id: 'c2', source: 'keyboard',
+  }, ordered.required_order, ordered.coins.length, ordered.max_commands);
+  assert.equal(result.event.type, 'order_violation');
+  assert.equal(result.state.status, 'running');
+  assert.deepEqual(result.state.collected, []);
+});
+
+test('a budget level settles after its successful-move limit', () => {
+  const budget = { ...level, coins: [{ id: 'A', position: [3, 2] as [number, number] }], walls: [], required_order: null, step_limit: 2 };
+  const first = step(createGameState(budget), {
+    direction: 'right', command_index: 1, command_id: 'c3', source: 'keyboard',
+  }, null, budget.coins.length, budget.max_commands, budget.step_limit);
+  const second = step(first.state, {
+    direction: 'left', command_index: 2, command_id: 'c4', source: 'keyboard',
+  }, null, budget.coins.length, budget.max_commands, budget.step_limit);
+  assert.equal(second.event.type, 'budget_exhausted');
+  assert.equal(second.state.status, 'success');
+  assert.equal(second.state.steps, 2);
+});
+
 test('Python blanks retain and reject invalid raw count input', () => {
   const result = validateAndExpand([
     { row_id: 'r1', direction: 'right', count: '2+2' },

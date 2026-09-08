@@ -15,7 +15,7 @@ import { getLevelForAssignment, loadLevels } from './levels.js';
 
 export const apiRouter = Router();
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
-const TERMINAL = new Set(['success', 'order_violation', 'command_limit']);
+const TERMINAL = new Set(['success', 'command_limit']);
 
 function now() {
   return new Date().toISOString();
@@ -38,7 +38,7 @@ function playerCookieOptions(): CookieOptions {
 }
 
 function studentLevel(level: LevelDef) {
-  const { expected_optimal_steps: _answer, ...safe } = level;
+  const { expected_optimal_steps: _answer, expected_max_value: _valueAnswer, ...safe } = level;
   return safe;
 }
 
@@ -70,13 +70,14 @@ function teacherGuard(req: Request, res: Response, next: NextFunction) {
 
 function scoreReplay(level: LevelDef, result: ReplayResult) {
   const optimal = level.expected_optimal_steps ?? solve(level, level.required_order)?.length ?? result.steps;
+  const coinValues = Object.fromEntries(level.coins.map((coin) => [coin.id, coin.value ?? 1]));
   const state: GameState = {
     x: result.end[0], y: result.end[1], width: level.width, height: level.height,
     walls: new Set(), coins: new Map(), collected: result.collected_order,
     collected_mask: 0, steps: result.steps, collisions: result.collisions,
     consumed_commands: result.consumed_commands, status: result.status, trace: result.trace,
   };
-  return calculateScore(state, level.coins.length, optimal);
+  return calculateScore(state, level.coins.length, optimal, coinValues, level.expected_max_value);
 }
 
 apiRouter.get('/health', (_req, res) => {
@@ -226,7 +227,10 @@ apiRouter.post('/attempts/:id/finalize', requirePlayer, (req, res) => {
   const level = getLevelForAssignment(String(attempt.assignment_key));
   if (!level) return res.status(500).json({ error: '关卡数据缺失' });
   const commands = JSON.parse(String(attempt.commands || '[]')) as Direction[];
-  const result = replay(level, commands, level.required_order);
+  const replayed = replay(level, commands, level.required_order);
+  const result = level.step_limit && replayed.status === 'incomplete'
+    ? { ...replayed, status: 'success' as const }
+    : replayed;
   const score = scoreReplay(level, result);
   database.prepare(`
     UPDATE attempts SET status = ?, steps = ?, collisions = ?, collected_count = ?,
@@ -361,6 +365,31 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (_req, res) => {
     ORDER BY a.started_at DESC LIMIT 30
   `).all();
   res.json({ generated_at: now(), overview, modes, languages, levels, event_types: eventTypes, activity, recent_attempts: recentAttempts });
+});
+
+apiRouter.delete('/teacher/data', teacherGuard, (_req, res) => {
+  const database = getDb();
+  const before = database.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM players) AS players,
+      (SELECT COUNT(*) FROM attempts) AS attempts,
+      (SELECT COUNT(*) FROM events) AS events
+  `).get();
+  database.exec('BEGIN IMMEDIATE;');
+  try {
+    database.exec(`
+      DELETE FROM events;
+      DELETE FROM event_streams;
+      DELETE FROM attempts;
+      DELETE FROM assignments;
+      DELETE FROM players;
+    `);
+    database.exec('COMMIT;');
+  } catch (error) {
+    database.exec('ROLLBACK;');
+    throw error;
+  }
+  res.json({ cleared: true, deleted: before, cleared_at: now() });
 });
 
 function csvCell(value: unknown) {

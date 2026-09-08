@@ -32,6 +32,9 @@ export default function TeacherDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearConfirming, setClearConfirming] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'keyboard' | 'python_blank'>('all');
 
   const load = useCallback(async (authKey = key) => {
@@ -73,6 +76,22 @@ export default function TeacherDashboard() {
     anchor.click(); URL.revokeObjectURL(url);
   };
 
+  const clearAllData = async () => {
+    setClearing(true); setError(null); setNotice(null);
+    try {
+      const response = await fetch('/api/teacher/data', {
+        method: 'DELETE', headers: { 'x-teacher-key': key },
+      });
+      const body = await response.json().catch(() => null) as { error?: string } | null;
+      if (!response.ok) throw new Error(body?.error || '清空失败，请稍后重试');
+      setClearConfirming(false);
+      setNotice('所有课堂数据已清空，20 关配置保持不变。');
+      await load();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : '清空失败，请稍后重试');
+    } finally { setClearing(false); }
+  };
+
   if (!key || (!data && error)) {
     return <main className="teacher-login">
       <form onSubmit={login}>
@@ -98,7 +117,15 @@ export default function TeacherDashboard() {
       <div className="teacher-actions"><span className={loading ? 'syncing' : ''}>{loading ? '同步中…' : `更新于 ${formatTime(data.generated_at)}`}</span><button onClick={() => void load()}>刷新</button><a href="/">学生端</a><button onClick={logout}>退出</button></div>
     </header>
     <main className="dashboard">
-      <section className="dashboard-title"><div><span>课堂实时概览</span><h1>金币路径规划学习数据</h1><p>自动每 15 秒刷新，成绩以服务端回放结果为准。</p></div><div className="export-actions"><button onClick={() => void download('attempts', 'csv')}>导出成绩 CSV</button><button onClick={() => void download('events', 'jsonl')}>导出埋点 JSONL</button></div></section>
+      <section className="dashboard-title"><div><span>课堂实时概览</span><h1>金币路径规划学习数据</h1><p>自动每 15 秒刷新，成绩以服务端回放结果为准。</p></div><div className="export-actions"><button onClick={() => void download('attempts', 'csv')}>导出成绩 CSV</button><button onClick={() => void download('events', 'jsonl')}>导出埋点 JSONL</button><button className="danger" onClick={() => { setClearConfirming(true); setNotice(null); }}>清空所有数据</button></div></section>
+
+      {clearConfirming && <section className="clear-confirm" role="alertdialog" aria-labelledby="clear-data-title">
+        <div><b id="clear-data-title">确认清空所有课堂数据？</b><small>学生身份、挑战成绩和行为埋点都会永久删除，20 关配置不会改变。</small></div>
+        <button onClick={() => setClearConfirming(false)} disabled={clearing}>取消</button>
+        <button className="danger" onClick={() => void clearAllData()} disabled={clearing}>{clearing ? '正在清空…' : '确认清空'}</button>
+      </section>}
+      {notice && <div className="teacher-notice" role="status">{notice}</div>}
+      {error && <div className="teacher-error dashboard-error" role="alert">{error}</div>}
 
       <section className="metric-grid">
         <Metric label="学生人数" value={data.overview.players} note="独立 UUID" tone="forest" />
@@ -111,7 +138,7 @@ export default function TeacherDashboard() {
       <section className="dashboard-grid two-thirds">
         <article className="dash-card"><CardTitle eyebrow="模式比较" title="键盘与 Python 表现" />
           <div className="mode-cards">{data.modes.length ? data.modes.map((row) => <div className="mode-row" key={row.mode}>
-            <div className="mode-icon">{row.mode === 'keyboard' ? '⌨' : '&lt;/&gt;'}</div><div className="mode-copy"><b>{modeLabel(row.mode)}</b><small>{row.players} 人 · {row.attempts} 轮</small><div className="progress"><i style={{ width: `${percent(row.successes, row.attempts)}%` }} /></div></div>
+            <div className="mode-icon">{row.mode === 'keyboard' ? '⌨' : '</>'}</div><div className="mode-copy"><b>{modeLabel(row.mode)}</b><small>{row.players} 人 · {row.attempts} 轮</small><div className="progress"><i style={{ width: `${percent(row.successes, row.attempts)}%` }} /></div></div>
             <div className="mode-number"><b>{scoreText(row.average_score)}</b><small>平均分</small></div><div className="mode-number"><b>{percent(row.successes, row.attempts)}%</b><small>完成率</small></div>
           </div>) : <Empty />}</div>
         </article>
