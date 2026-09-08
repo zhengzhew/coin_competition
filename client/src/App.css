@@ -26,6 +26,7 @@ button { cursor: pointer; }
 button:focus-visible, input:focus-visible { outline: 3px solid rgba(233,174,53,.45); outline-offset: 2px; }
 
 .app {
+  container-type: inline-size;
   width: min(100vw, calc(100vh * 16 / 9));
   aspect-ratio: 16 / 9;
   max-height: 100vh;
@@ -34,6 +35,64 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(233,174,53,.
   overflow: hidden;
   background: radial-gradient(circle at 68% 5%, #f8f3df 0, #efeee6 37%, #e5e7df 100%);
   box-shadow: 0 0 48px rgba(0,0,0,.36);
+}
+
+/* Keep typography and spacing proportional to the landscape canvas. */
+@media(min-width:1000px) {
+  .app .app-header { height:4.6cqw; flex-basis:4.6cqw; padding:0 1.6cqw; border-bottom-width:3px; }
+  .app .brand b { font:750 1.5cqw system-ui,sans-serif; letter-spacing:.04em; }
+  .app .brand span { font-size:.72cqw; }
+  .app .mode-switch button { font-size:.9cqw; padding:.65cqw 1.15cqw; }
+  .app .player-info b { font-size:.85cqw; }
+  .app .player-info small { font-size:.65cqw; }
+  .app .level-nav { width:15cqw; flex-basis:15cqw; padding:1.15cqw .9cqw; background:#293f36; }
+  .app .nav-heading span { font-size:1cqw; }
+  .app .nav-heading b { font-size:.8cqw; }
+  .app .stage-group { margin-top:.55cqw; }
+  .app .stage-label { padding:0 .2cqw .35cqw; }
+  .app .stage-label span { font-size:.78cqw; letter-spacing:.02em; }
+  .app .stage-label small { font-size:.65cqw; color:#b0c0b7; }
+  .app .stage-levels { gap:.35cqw; }
+  .app .level-btn { min-height:2.2cqw; padding:.3cqw .6cqw; border-radius:.5cqw; }
+  .app .level-btn span { font:700 .92cqw system-ui,sans-serif; }
+  .app .level-btn small { font-size:.68cqw; color:#b0c0b7; }
+  .app .level-btn.active small { color:#665520; }
+  .app .game-area { padding:1.1cqw 1.3cqw; }
+  .app .mission-card { max-width:none; min-height:0; flex-shrink:0; margin-bottom:.9cqw; padding:.85cqw 1.2cqw; gap:1cqw; border-radius:.9cqw; box-shadow:none; }
+  .app .mission-number { width:3.3cqw; height:3.3cqw; font:750 1.5cqw system-ui,sans-serif; }
+  .app .mission-copy span { font-size:.76cqw; }
+  .app .mission-copy h1 { font:750 1.65cqw system-ui,sans-serif; margin:.2cqw 0; }
+  .app .mission-copy p { font-size:.95cqw; line-height:1.55; }
+  .app .mission-copy small { font-size:.78cqw; }
+  .app .mission-meta { max-width:17cqw; }
+  .app .mission-meta span,.app .mission-meta strong { font-size:.78cqw; padding:.4cqw .6cqw; }
+  .app .workspace-grid { max-width:none; grid-template-columns:minmax(0,1fr) 22cqw; gap:1cqw; }
+  .app .board-panel { padding:.9cqw 1.1cqw; border-radius:.9cqw; box-shadow:0 4px 18px #24312c08; }
+  .app .panel-heading { padding-bottom:.65cqw; }
+  .app .panel-heading span,.app .mini-heading span { font-size:.8cqw; }
+  .app .panel-heading b { font:700 1.05cqw system-ui,sans-serif; margin-top:.15cqw; }
+  .app .legend span { font-size:.75cqw; }
+  .app .status-bar { padding:.65cqw .4cqw 0; }
+  .app .status-bar small { font-size:.78cqw; }
+  .app .status-bar b { font:750 1.55cqw system-ui,sans-serif; }
+  .app .status-bar em { font-size:.9cqw; }
+  .app .status-pill { font-size:.78cqw; padding:.4cqw .7cqw; }
+  .app .control-column { gap:.8cqw; padding:0; }
+  .app .keyboard-card,.app .score-panel,.app .python-editor { padding:1.2cqw; border-radius:.9cqw; box-shadow:0 4px 18px #24312c08; }
+  .app .mini-heading small { font-size:.73cqw; }
+  .app .dpad { width:16cqw; height:13cqw; margin:1.3cqw auto; grid-template-columns:repeat(3,4cqw); grid-template-rows:repeat(3,4cqw); gap:.5cqw; }
+  .app .dpad-btn { font-size:1.6cqw; border-radius:.65cqw; }
+  .app .dpad-btn:disabled { opacity:.55; }
+  .app .primary-action,.app .secondary-action { font-size:1cqw; padding:.8cqw; border-radius:.6cqw; }
+  .app .required-order { padding:.8cqw 1cqw; font-size:.85cqw; }
+  .app .score-total span,.app .score-total em { font-size:.9cqw; }
+  .app .score-total b { font:750 2.3cqw system-ui,sans-serif; }
+  .app .score-parts span,.app .score-panel p,.app .message { font-size:.82cqw; line-height:1.6; }
+  .app .score-panel button { font-size:.9cqw; }
+  .app footer { height:1.8cqw; flex-basis:1.8cqw; padding:.35cqw 1.3cqw .35cqw 16.3cqw; font-size:.65cqw; }
+  .app .board-coords-y span,.app .board-coords-x span { font:600 .78cqw system-ui,sans-serif; }
+  .app .axis-hint { font-size:.65cqw; }
+  .app .game-board { background:linear-gradient(135deg,#f5e6be,#ead09a); box-shadow:0 4px 14px #86632914; border-color:#c9aa6a; }
 }
 
 .app-header {
