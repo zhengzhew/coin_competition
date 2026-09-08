@@ -296,8 +296,8 @@ export default function App() {
       <header className="app-header">
         <div className="brand"><div className="brand-mark">◆</div><div><span>校园挑战</span><b>旷野淘金</b></div></div>
         <div className="mode-switch" aria-label="操作模式">
-          <button className={mode === 'keyboard' ? 'active' : ''} onClick={() => changeMode('keyboard')} data-track-id="mode.keyboard">⌨ 键盘操作</button>
-          <button className={mode === 'python_blank' ? 'active' : ''} onClick={() => changeMode('python_blank')} data-track-id="mode.python_blank">&lt;/&gt; Python 填空</button>
+          <button className={mode === 'keyboard' ? 'active' : ''} onClick={() => changeMode('keyboard')} data-track-id="mode.keyboard">⌨ 键盘操控</button>
+          <button className={mode === 'python_blank' ? 'active' : ''} onClick={() => changeMode('python_blank')} data-track-id="mode.python_blank">&lt;/&gt; 代码操控</button>
         </div>
         <div className="header-actions">
           <a className="teacher-link" href="/teacher" data-track-id="nav.teacher">数据看板</a>
