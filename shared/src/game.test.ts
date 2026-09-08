@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGameState, step, replay, solve, validateAndExpand, type LevelDef } from './index.js';
+import {
+  createGameState, createUuid, generateInitialRows, generatePythonSource, step, replay, solve,
+  validateAndExpand, type LevelDef,
+} from './index.js';
 
 const level: LevelDef = {
   level_id: 'LXX', keyboard_id: 'KXX', python_id: 'PXX', title: 'test', stage: 'challenge',
@@ -39,4 +42,39 @@ test('Python blanks retain and reject invalid raw count input', () => {
   ], { ...level.python, initial_rows: 1 });
   assert.equal(result.valid, false);
   assert.match(result.errors.join(' '), /整数/);
+});
+
+test('command rows expand the number inside movement parentheses', () => {
+  const rows = [
+    { row_id: 'r1', direction: 'right', count: '3' },
+    { row_id: 'r2', direction: 'up', count: '2' },
+  ];
+  const result = validateAndExpand(rows, level.python);
+  assert.equal(result.valid, true);
+  assert.deepEqual(result.expanded, ['right', 'right', 'right', 'up', 'up']);
+  assert.equal(generatePythonSource(rows, level.python), 'move_right(3)\nmove_up(2)\n');
+  assert.deepEqual(generateInitialRows(level.python), []);
+});
+
+test('command rows require a positive step count', () => {
+  const result = validateAndExpand([
+    { row_id: 'r1', direction: 'left', count: '0' },
+  ], level.python);
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join(' '), /1-20/);
+});
+
+test('UUID generation falls back to getRandomValues when randomUUID is unavailable', () => {
+  const uuid = createUuid({
+    getRandomValues(values) {
+      values.forEach((_, index) => { values[index] = index; });
+      return values;
+    },
+  });
+  assert.equal(uuid, '00010203-0405-4607-8809-0a0b0c0d0e0f');
+});
+
+test('UUID generation prefers the native randomUUID implementation', () => {
+  const expected = '11111111-2222-4333-8444-555555555555';
+  assert.equal(createUuid({ randomUUID: () => expected }), expected);
 });

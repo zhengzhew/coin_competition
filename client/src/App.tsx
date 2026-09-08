@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  createGameState, generateInitialRows, generatePythonSource, step, validateAndExpand,
+  createGameState, createUuid, generateInitialRows, generatePythonSource, step, validateAndExpand,
   type Direction, type GameState, type GameStatus, type LevelDef, type Mode,
   type ScoreResult, type TemplateRow,
 } from '@coin-path/shared';
@@ -154,7 +154,7 @@ export default function App() {
       telemetryRef.current?.track('attempt_started', 'attempt.start', { assignment_key: assignmentKey, trial_index: next.trial_index });
       return next;
     } catch (error) {
-      const next = { attempt_id: `local-${crypto.randomUUID()}`, trial_index: 1, assignment_key: assignmentKey };
+      const next = { attempt_id: `local-${createUuid()}`, trial_index: 1, assignment_key: assignmentKey };
       attemptRef.current = next; setAttempt(next);
       setMessage(error instanceof Error ? `${error.message}；已进入本机练习，不记录正式成绩。` : '已进入本机练习。');
       return next;
@@ -168,7 +168,7 @@ export default function App() {
     const commandIndex = state.consumed_commands + 1;
     telemetryRef.current?.track('command_issued', `move.${direction}`, { direction, source, command_index: commandIndex });
     const result = step(state, {
-      direction, command_index: commandIndex, command_id: crypto.randomUUID(), source,
+      direction, command_index: commandIndex, command_id: createUuid(), source,
     }, level.required_order, level.coins.length, level.max_commands);
     commitGame(result.state);
     telemetryRef.current?.track(result.event.type, 'game.board', { ...result.event });
@@ -331,7 +331,7 @@ export default function App() {
             <aside className="control-column">
               {currentLevel.stage === 'challenge' && <section className="planner-card">
                 <div className="mini-heading"><span>路线草稿</span><button onClick={() => setPlanOrder([])} data-track-id="planner.reset">清空</button></div>
-                <div className="planned-order">{planOrder.length ? planOrder.map((coin, index) => <span key={coin}>{index ? '→' : ''}<b>{coin}</b></span>) : <small>按计划的拾取顺序点金币</small>}</div>
+                <div className="planned-order">{planOrder.length ? planOrder.map((coin, index) => <span key={coin}>{index ? '→' : ''}<b>{coin}</b></span>) : <small>点击金币，规划自己的拾取路线</small>}</div>
                 <div className="coin-choices">{availablePlanCoins.map((coin) => <button key={coin.id} onClick={() => addPlanCoin(coin.id)} data-track-id={`planner.coin.${coin.id}`}>{coin.id}</button>)}</div>
               </section>}
               {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{currentLevel.required_order.join(' → ')}</b></div>}

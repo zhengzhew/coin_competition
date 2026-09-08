@@ -1,4 +1,4 @@
-import type { Mode, TelemetryEvent } from '@coin-path/shared';
+import { createUuid, type Mode, type TelemetryEvent } from '@coin-path/shared';
 
 export interface TelemetryContext {
   playerUuid: string;
@@ -11,7 +11,7 @@ export interface TelemetryContext {
 const STORAGE_KEY = 'coin_competition_pending_events_v1';
 
 export class TelemetryClient {
-  private readonly pageInstanceId = crypto.randomUUID();
+  private readonly pageInstanceId = createUuid();
   private readonly startedAt = performance.now();
   private streamId: string | null = null;
   private seq = 0;
@@ -43,10 +43,10 @@ export class TelemetryClient {
   track(eventType: string, elementId: string | null, payload: Record<string, unknown> = {}) {
     const mono = performance.now();
     this.queue.push({
-      schema_version: '2.0.0', event_id: crypto.randomUUID(), player_uuid: this.context.playerUuid,
+      schema_version: '2.0.0', event_id: createUuid(), player_uuid: this.context.playerUuid,
       session_id: null, assignment_key: this.context.assignmentKey(), level_id: this.context.levelId(),
       mode: this.context.mode(), attempt_id: this.context.attemptId(), stream_id: this.streamId || 'pending',
-      seq: ++this.seq, event_type: eventType, element_id: elementId, interaction_id: crypto.randomUUID(),
+      seq: ++this.seq, event_type: eventType, element_id: elementId, interaction_id: createUuid(),
       client_time: new Date().toISOString(), page_instance_id: this.pageInstanceId,
       mono_ms: Math.round(mono * 10) / 10, elapsed_ms: Math.round((mono - this.startedAt) * 10) / 10,
       payload,

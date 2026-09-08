@@ -28,14 +28,14 @@ export function validateDirection(value: string): { valid: boolean; error?: stri
 }
 
 /**
- * Validate a count value (for repeat_slots_v2).
+ * Validate the number of steps inside a movement command.
  */
 export function validateCount(value: string): { valid: boolean; error?: string; num?: number } {
   const trimmed = value.trim();
-  if (!trimmed) return { valid: false, error: '次数不能为空' };
-  if (!/^\d+$/.test(trimmed)) return { valid: false, error: '次数必须是整数' };
+  if (!trimmed) return { valid: false, error: '步数不能为空' };
+  if (!/^\d+$/.test(trimmed)) return { valid: false, error: '步数必须是整数' };
   const num = parseInt(trimmed, 10);
-  if (num < 0 || num > 20) return { valid: false, error: '次数必须在 0-20 之间' };
+  if (num < 1 || num > 20) return { valid: false, error: '步数必须在 1-20 之间' };
   return { valid: true, num };
 }
 
@@ -49,15 +49,11 @@ export function validateAndExpand(
   const errors: string[] = [];
 
   // Row count check
-  if (rows.length < config.min_rows) {
-    errors.push(`至少需要 ${config.min_rows} 行/段`);
+  if (rows.length < 1) {
+    errors.push('至少需要 1 行指令');
   }
   if (rows.length > config.max_rows) {
     errors.push(`最多 ${config.max_rows} 行/段`);
-  }
-
-  if (!config.can_add_delete_rows && rows.length !== config.initial_rows) {
-    errors.push(`此关固定 ${config.initial_rows} 行，不能增删`);
   }
 
   const expanded: Direction[] = [];
@@ -70,22 +66,16 @@ export function validateAndExpand(
       continue;
     }
 
-    if (config.template_id === 'repeat_slots_v2') {
-      // Has count field
-      if (row.count === null || row.count === undefined) {
-        errors.push(`第 ${i + 1} 段: 缺少次数`);
-        continue;
-      }
-      const countResult = validateCount(row.count);
-      if (!countResult.valid || countResult.num === undefined) {
-        errors.push(`第 ${i + 1} 段: ${countResult.error}`);
-        continue;
-      }
-      for (let j = 0; j < countResult.num; j++) {
-        expanded.push(row.direction.trim().toLowerCase() as Direction);
-      }
-    } else {
-      // call_slots_v2 - no count, each row is one command
+    if (row.count === null || row.count === undefined) {
+      errors.push(`第 ${i + 1} 行: 缺少步数`);
+      continue;
+    }
+    const countResult = validateCount(row.count);
+    if (!countResult.valid || countResult.num === undefined) {
+      errors.push(`第 ${i + 1} 行: ${countResult.error}`);
+      continue;
+    }
+    for (let j = 0; j < countResult.num; j++) {
       expanded.push(row.direction.trim().toLowerCase() as Direction);
     }
   }
@@ -109,26 +99,14 @@ export function validateAndExpand(
  * Generate the display Python source from template rows.
  */
 export function generatePythonSource(rows: TemplateRow[], config: PythonConfig): string {
-  if (config.template_id === 'call_slots_v2') {
-    return rows.map(r => `move_${r.direction || '???'}()`).join('\n') + '\n';
-  }
-  // repeat_slots_v2
-  return rows.map(r =>
-    `for _ in range(${r.count ?? '?'}):\n    move_${r.direction || '???'}()`
-  ).join('\n') + '\n';
+  void config;
+  return rows.map(r => `move_${r.direction || '???'}(${r.count ?? '?'})`).join('\n') + '\n';
 }
 
 /**
  * Generate initial rows for a level's Python template.
  */
 export function generateInitialRows(config: PythonConfig): TemplateRow[] {
-  const rows: TemplateRow[] = [];
-  for (let i = 0; i < config.initial_rows; i++) {
-    rows.push({
-      row_id: crypto.randomUUID(),
-      direction: '',
-      count: config.template_id === 'repeat_slots_v2' ? '' : null,
-    });
-  }
-  return rows;
+  void config;
+  return [];
 }
