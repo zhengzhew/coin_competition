@@ -1,0 +1,5772 @@
+{
+  "fixture_sha256": "267bed5473419bc7d1b517f77f21d928069cfba30525e2bc590c899a648adeb9",
+  "solutions": [
+    {
+      "level_id": "L01",
+      "global_optimal_steps": 2,
+      "required_optimal_steps": 2,
+      "order_steps": {
+        "A": 2
+      },
+      "collected_order": [
+        "A"
+      ],
+      "commands": [
+        "right",
+        "right"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "right"
+        }
+      ],
+      "python_reference": "move_right()\nmove_right()\n"
+    },
+    {
+      "level_id": "L02",
+      "global_optimal_steps": 3,
+      "required_optimal_steps": 3,
+      "order_steps": {
+        "A": 3
+      },
+      "collected_order": [
+        "A"
+      ],
+      "commands": [
+        "up",
+        "up",
+        "up"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "up"
+        }
+      ],
+      "python_reference": "move_up()\nmove_up()\nmove_up()\n"
+    },
+    {
+      "level_id": "L03",
+      "global_optimal_steps": 5,
+      "required_optimal_steps": 5,
+      "order_steps": {
+        "A": 5
+      },
+      "collected_order": [
+        "A"
+      ],
+      "commands": [
+        "right",
+        "right",
+        "right",
+        "up",
+        "up"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "up"
+        }
+      ],
+      "python_reference": "move_right()\nmove_right()\nmove_right()\nmove_up()\nmove_up()\n"
+    },
+    {
+      "level_id": "L04",
+      "global_optimal_steps": 9,
+      "required_optimal_steps": 9,
+      "order_steps": {
+        "AB": 9,
+        "BA": 10
+      },
+      "collected_order": [
+        "A",
+        "B"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "up"
+        },
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "right"
+        },
+        {
+          "direction": "down"
+        },
+        {
+          "direction": "down"
+        }
+      ],
+      "python_reference": "move_right()\nmove_up()\nmove_up()\nmove_up()\nmove_right()\nmove_right()\nmove_right()\nmove_down()\nmove_down()\n"
+    },
+    {
+      "level_id": "L05",
+      "global_optimal_steps": 8,
+      "required_optimal_steps": 8,
+      "order_steps": {
+        "AB": 8,
+        "BA": 10
+      },
+      "collected_order": [
+        "A",
+        "B"
+      ],
+      "commands": [
+        "left",
+        "left",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "up"
+      ],
+      "trace": [
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "left",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "up",
+          "count": 2
+        }
+      ],
+      "python_reference": "for _ in range(2):\n    move_left()\nfor _ in range(4):\n    move_right()\nfor _ in range(2):\n    move_up()\n"
+    },
+    {
+      "level_id": "L06",
+      "global_optimal_steps": 8,
+      "required_optimal_steps": 8,
+      "order_steps": {
+        "AB": 8,
+        "BA": 8
+      },
+      "collected_order": [
+        "B",
+        "A"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 3
+        },
+        {
+          "direction": "down",
+          "count": 2
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(2):\n    move_up()\nfor _ in range(3):\n    move_right()\nfor _ in range(2):\n    move_down()\n"
+    },
+    {
+      "level_id": "L07",
+      "global_optimal_steps": 9,
+      "required_optimal_steps": 9,
+      "order_steps": {
+        "AB": 9,
+        "BA": 16
+      },
+      "collected_order": [
+        "A",
+        "B"
+      ],
+      "commands": [
+        "up",
+        "up",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 3
+        },
+        {
+          "direction": "down",
+          "count": 2
+        }
+      ],
+      "python_reference": "for _ in range(2):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_right()\nfor _ in range(2):\n    move_down()\n",
+      "teacher_demo": {
+        "short": [
+          "up",
+          "up",
+          "right",
+          "up",
+          "right",
+          "right",
+          "right",
+          "down",
+          "down"
+        ],
+        "long": [
+          "right",
+          "left",
+          "up",
+          "up",
+          "right",
+          "up",
+          "right",
+          "right",
+          "right",
+          "down",
+          "down"
+        ],
+        "correct_steps": 9,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L08",
+      "global_optimal_steps": 14,
+      "required_optimal_steps": 17,
+      "order_steps": {
+        "ABC": 17,
+        "ACB": 14,
+        "BAC": 23,
+        "BCA": 21,
+        "CAB": 20,
+        "CBA": 21
+      },
+      "collected_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down",
+        "up",
+        "up",
+        "up",
+        "up",
+        "left"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "down",
+          "count": 3
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "left",
+          "count": 1
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_up()\nfor _ in range(4):\n    move_right()\nfor _ in range(3):\n    move_down()\nfor _ in range(4):\n    move_up()\nfor _ in range(1):\n    move_left()\n",
+      "teacher_demo": {
+        "short": [
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "right",
+          "down",
+          "down",
+          "down",
+          "up",
+          "up",
+          "up",
+          "up",
+          "left"
+        ],
+        "long": [
+          "right",
+          "left",
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "right",
+          "down",
+          "down",
+          "down",
+          "up",
+          "up",
+          "up",
+          "up",
+          "left"
+        ],
+        "correct_steps": 17,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L09",
+      "global_optimal_steps": 13,
+      "required_optimal_steps": 13,
+      "order_steps": {
+        "ABC": 13,
+        "ACB": 18,
+        "BAC": 23,
+        "BCA": 23,
+        "CAB": 28,
+        "CBA": 23
+      },
+      "collected_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "commands": [
+        "up",
+        "up",
+        "up",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "up",
+          "count": 3
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 5
+        },
+        {
+          "direction": "down",
+          "count": 3
+        }
+      ],
+      "python_reference": "for _ in range(3):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(5):\n    move_right()\nfor _ in range(3):\n    move_down()\n",
+      "teacher_demo": {
+        "short": [
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "down",
+          "down",
+          "down"
+        ],
+        "long": [
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "right",
+          "up",
+          "right",
+          "right",
+          "down",
+          "down",
+          "down",
+          "down"
+        ],
+        "correct_steps": 13,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L10",
+      "global_optimal_steps": 15,
+      "required_optimal_steps": 15,
+      "order_steps": {
+        "ABC": 15,
+        "ACB": 19,
+        "BAC": 25,
+        "BCA": 25,
+        "CAB": 29,
+        "CBA": 25
+      },
+      "collected_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "up",
+        "down",
+        "down",
+        "down",
+        "right",
+        "right",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "right",
+          "count": 3
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "down",
+          "count": 3
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 1
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_up()\nfor _ in range(3):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_down()\nfor _ in range(2):\n    move_right()\nfor _ in range(1):\n    move_down()\n",
+      "teacher_demo": {
+        "short": [
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "up",
+          "down",
+          "down",
+          "down",
+          "right",
+          "right",
+          "down"
+        ],
+        "long": [
+          "right",
+          "left",
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "up",
+          "down",
+          "down",
+          "down",
+          "right",
+          "right",
+          "down"
+        ],
+        "correct_steps": 15,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L11",
+      "global_optimal_steps": 20,
+      "required_optimal_steps": 23,
+      "order_steps": {
+        "ABCD": 31,
+        "ABDC": 34,
+        "ACBD": 27,
+        "ACDB": 32,
+        "ADBC": 24,
+        "ADCB": 26,
+        "BACD": 33,
+        "BADC": 30,
+        "BCAD": 23,
+        "BCDA": 24,
+        "BDAC": 26,
+        "BDCA": 30,
+        "CABD": 29,
+        "CADB": 24,
+        "CBAD": 23,
+        "CBDA": 20,
+        "CDAB": 28,
+        "CDBA": 30,
+        "DABC": 32,
+        "DACB": 30,
+        "DBAC": 38,
+        "DBCA": 32,
+        "DCAB": 40,
+        "DCBA": 36
+      },
+      "collected_order": [
+        "B",
+        "C",
+        "A",
+        "D"
+      ],
+      "commands": [
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "left",
+        "left",
+        "left",
+        "up",
+        "left",
+        "left",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 6
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 3
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 3
+        },
+        {
+          "direction": "right",
+          "count": 3
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 3
+        }
+      ],
+      "python_reference": "for _ in range(6):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_left()\nfor _ in range(1):\n    move_up()\nfor _ in range(2):\n    move_left()\nfor _ in range(3):\n    move_up()\nfor _ in range(3):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_right()\n",
+      "teacher_demo": {
+        "short": [
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "up",
+          "left",
+          "left",
+          "left",
+          "up",
+          "left",
+          "left",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "up",
+          "right",
+          "right",
+          "right"
+        ],
+        "long": [
+          "right",
+          "left",
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "right",
+          "up",
+          "left",
+          "left",
+          "left",
+          "up",
+          "left",
+          "left",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "right",
+          "up",
+          "right",
+          "right",
+          "right"
+        ],
+        "correct_steps": 23,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L12",
+      "global_optimal_steps": 14,
+      "required_optimal_steps": 20,
+      "order_steps": {
+        "ABCD": 20,
+        "ABDC": 24,
+        "ACBD": 14,
+        "ACDB": 19,
+        "ADBC": 22,
+        "ADCB": 23,
+        "BACD": 24,
+        "BADC": 32,
+        "BCAD": 22,
+        "BCDA": 28,
+        "BDAC": 26,
+        "BDCA": 24,
+        "CABD": 18,
+        "CADB": 23,
+        "CBAD": 22,
+        "CBDA": 24,
+        "CDAB": 27,
+        "CDBA": 24,
+        "DABC": 32,
+        "DACB": 27,
+        "DBAC": 28,
+        "DBCA": 24,
+        "DCAB": 27,
+        "DCBA": 28
+      },
+      "collected_order": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "right",
+        "down",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "left",
+        "left",
+        "left",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "up"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          6
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "down",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 3
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 1
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_down()\nfor _ in range(4):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_left()\nfor _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_up()\nfor _ in range(2):\n    move_right()\nfor _ in range(1):\n    move_up()\n",
+      "teacher_demo": {
+        "short": [
+          "right",
+          "up",
+          "right",
+          "down",
+          "right",
+          "right",
+          "right",
+          "right",
+          "up",
+          "left",
+          "left",
+          "left",
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "up"
+        ],
+        "long": [
+          "right",
+          "left",
+          "right",
+          "up",
+          "right",
+          "down",
+          "right",
+          "right",
+          "right",
+          "right",
+          "up",
+          "left",
+          "left",
+          "left",
+          "right",
+          "up",
+          "up",
+          "up",
+          "up",
+          "right",
+          "right",
+          "up"
+        ],
+        "correct_steps": 20,
+        "extra_steps": 2
+      }
+    },
+    {
+      "level_id": "L13",
+      "global_optimal_steps": 20,
+      "required_optimal_steps": 20,
+      "order_steps": {
+        "ABCD": 26,
+        "ABDC": 31,
+        "ACBD": 30,
+        "ACDB": 28,
+        "ADBC": 27,
+        "ADCB": 20,
+        "BACD": 30,
+        "BADC": 27,
+        "BCAD": 26,
+        "BCDA": 24,
+        "BDAC": 31,
+        "BDCA": 32,
+        "CABD": 40,
+        "CADB": 34,
+        "CBAD": 32,
+        "CBDA": 34,
+        "CDAB": 30,
+        "CDBA": 38,
+        "DABC": 29,
+        "DACB": 26,
+        "DBAC": 37,
+        "DBCA": 34,
+        "DCAB": 30,
+        "DCBA": 30
+      },
+      "collected_order": [
+        "A",
+        "D",
+        "C",
+        "B"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 7
+        },
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "down",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 5
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(7):\n    move_up()\nfor _ in range(4):\n    move_right()\nfor _ in range(1):\n    move_down()\nfor _ in range(2):\n    move_right()\nfor _ in range(5):\n    move_down()\n"
+    },
+    {
+      "level_id": "L14",
+      "global_optimal_steps": 17,
+      "required_optimal_steps": 17,
+      "order_steps": {
+        "ABCD": 29,
+        "ABDC": 25,
+        "ACBD": 19,
+        "ACDB": 22,
+        "ADBC": 25,
+        "ADCB": 32,
+        "BACD": 27,
+        "BADC": 33,
+        "BCAD": 27,
+        "BCDA": 27,
+        "BDAC": 23,
+        "BDCA": 17,
+        "CABD": 21,
+        "CADB": 22,
+        "CBAD": 31,
+        "CBDA": 21,
+        "CDAB": 34,
+        "CDBA": 23,
+        "DABC": 33,
+        "DACB": 28,
+        "DBAC": 23,
+        "DBCA": 17,
+        "DCAB": 30,
+        "DCBA": 29
+      },
+      "collected_order": [
+        "D",
+        "B",
+        "C",
+        "A"
+      ],
+      "commands": [
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "up",
+        "up",
+        "left",
+        "up",
+        "up",
+        "right"
+      ],
+      "trace": [
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "down",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 6
+        },
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "left",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 1
+        }
+      ],
+      "python_reference": "for _ in range(4):\n    move_right()\nfor _ in range(1):\n    move_down()\nfor _ in range(6):\n    move_left()\nfor _ in range(2):\n    move_up()\nfor _ in range(1):\n    move_left()\nfor _ in range(2):\n    move_up()\nfor _ in range(1):\n    move_right()\n"
+    },
+    {
+      "level_id": "L15",
+      "global_optimal_steps": 30,
+      "required_optimal_steps": 30,
+      "order_steps": {
+        "ABCDE": 36,
+        "ABCED": 37,
+        "ABDCE": 32,
+        "ABDEC": 32,
+        "ABECD": 31,
+        "ABEDC": 30,
+        "ACBDE": 38,
+        "ACBED": 37,
+        "ACDBE": 32,
+        "ACDEB": 30,
+        "ACEBD": 33,
+        "ACEDB": 32,
+        "ADBCE": 44,
+        "ADBEC": 38,
+        "ADCBE": 42,
+        "ADCEB": 36,
+        "ADEBC": 42,
+        "ADECB": 42,
+        "AEBCD": 35,
+        "AEBDC": 30,
+        "AECBD": 37,
+        "AECDB": 30,
+        "AEDBC": 36,
+        "AEDCB": 34,
+        "BACDE": 32,
+        "BACED": 33,
+        "BADCE": 38,
+        "BADEC": 38,
+        "BAECD": 31,
+        "BAEDC": 30,
+        "BCADE": 44,
+        "BCAED": 37,
+        "BCDAE": 42,
+        "BCDEA": 34,
+        "BCEAD": 41,
+        "BCEDA": 40,
+        "BDACE": 40,
+        "BDAEC": 38,
+        "BDCAE": 32,
+        "BDCEA": 30,
+        "BDEAC": 32,
+        "BDECA": 32,
+        "BEACD": 31,
+        "BEADC": 34,
+        "BECAD": 37,
+        "BECDA": 34,
+        "BEDAC": 36,
+        "BEDCA": 30,
+        "CABDE": null,
+        "CABED": null,
+        "CADBE": null,
+        "CADEB": null,
+        "CAEBD": null,
+        "CAEDB": null,
+        "CBADE": null,
+        "CBAED": null,
+        "CBDAE": null,
+        "CBDEA": null,
+        "CBEAD": null,
+        "CBEDA": null,
+        "CDABE": null,
+        "CDAEB": null,
+        "CDBAE": null,
+        "CDBEA": null,
+        "CDEAB": null,
+        "CDEBA": null,
+        "CEABD": null,
+        "CEADB": null,
+        "CEBAD": null,
+        "CEBDA": null,
+        "CEDAB": null,
+        "CEDBA": null,
+        "DABCE": null,
+        "DABEC": null,
+        "DACBE": null,
+        "DACEB": null,
+        "DAEBC": null,
+        "DAECB": null,
+        "DBACE": null,
+        "DBAEC": null,
+        "DBCAE": null,
+        "DBCEA": null,
+        "DBEAC": null,
+        "DBECA": null,
+        "DCABE": null,
+        "DCAEB": null,
+        "DCBAE": null,
+        "DCBEA": null,
+        "DCEAB": null,
+        "DCEBA": null,
+        "DEABC": null,
+        "DEACB": null,
+        "DEBAC": null,
+        "DEBCA": null,
+        "DECAB": null,
+        "DECBA": null,
+        "EABCD": null,
+        "EABDC": null,
+        "EACBD": null,
+        "EACDB": null,
+        "EADBC": null,
+        "EADCB": null,
+        "EBACD": null,
+        "EBADC": null,
+        "EBCAD": null,
+        "EBCDA": null,
+        "EBDAC": null,
+        "EBDCA": null,
+        "ECABD": null,
+        "ECADB": null,
+        "ECBAD": null,
+        "ECBDA": null,
+        "ECDAB": null,
+        "ECDBA": null,
+        "EDABC": null,
+        "EDACB": null,
+        "EDBAC": null,
+        "EDBCA": null,
+        "EDCAB": null,
+        "EDCBA": null
+      },
+      "collected_order": [
+        "B",
+        "D",
+        "C",
+        "E",
+        "A"
+      ],
+      "commands": [
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "left",
+        "left",
+        "up",
+        "left",
+        "left",
+        "left",
+        "left",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down",
+        "right",
+        "left",
+        "left",
+        "left",
+        "left",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 4
+        },
+        {
+          "direction": "up",
+          "count": 7
+        },
+        {
+          "direction": "left",
+          "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 4
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "down",
+          "count": 4
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 4
+        },
+        {
+          "direction": "down",
+          "count": 2
+        }
+      ],
+      "python_reference": "for _ in range(4):\n    move_right()\nfor _ in range(7):\n    move_up()\nfor _ in range(2):\n    move_left()\nfor _ in range(1):\n    move_up()\nfor _ in range(4):\n    move_left()\nfor _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_down()\nfor _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_left()\nfor _ in range(2):\n    move_down()\n"
+    },
+    {
+      "level_id": "L16",
+      "global_optimal_steps": 26,
+      "required_optimal_steps": 26,
+      "order_steps": {
+        "ABCDE": 68,
+        "ABCED": 50,
+        "ABDCE": 50,
+        "ABDEC": 38,
+        "ABECD": 40,
+        "ABEDC": 46,
+        "ACBDE": 46,
+        "ACBED": 44,
+        "ACDBE": 44,
+        "ACDEB": 48,
+        "ACEBD": 26,
+        "ACEDB": 32,
+        "ADBCE": 50,
+        "ADBEC": 36,
+        "ADCBE": 66,
+        "ADCEB": 52,
+        "ADEBC": 44,
+        "ADECB": 44,
+        "AEBCD": 42,
+        "AEBDC": 40,
+        "AECBD": 34,
+        "AECDB": 40,
+        "AEDBC": 40,
+        "AEDCB": 48,
+        "BACDE": 56,
+        "BACED": 38,
+        "BADCE": 60,
+        "BADEC": 48,
+        "BAECD": 46,
+        "BAEDC": 52,
+        "BCADE": 56,
+        "BCAED": 50,
+        "BCDAE": 72,
+        "BCDEA": 66,
+        "BCEAD": 54,
+        "BCEDA": 54,
+        "BDACE": 38,
+        "BDAEC": 42,
+        "BDCAE": 50,
+        "BDCEA": 48,
+        "BDEAC": 38,
+        "BDECA": 32,
+        "BEACD": 40,
+        "BEADC": 50,
+        "BECAD": 36,
+        "BECDA": 44,
+        "BEDAC": 42,
+        "BEDCA": 40,
+        "CABDE": 46,
+        "CABED": 44,
+        "CADBE": 44,
+        "CADEB": 48,
+        "CAEBD": 38,
+        "CAEDB": 44,
+        "CBADE": 68,
+        "CBAED": 62,
+        "CBDAE": 62,
+        "CBDEA": 56,
+        "CBEAD": 60,
+        "CBEDA": 60,
+        "CDABE": 66,
+        "CDAEB": 64,
+        "CDBAE": 62,
+        "CDBEA": 54,
+        "CDEAB": 66,
+        "CDEBA": 60,
+        "CEABD": 44,
+        "CEADB": 48,
+        "CEBAD": 48,
+        "CEBDA": 42,
+        "CEDAB": 54,
+        "CEDBA": 44,
+        "DABCE": 60,
+        "DABEC": 46,
+        "DACBE": 54,
+        "DACEB": 40,
+        "DAEBC": 48,
+        "DAECB": 48,
+        "DBACE": 38,
+        "DBAEC": 42,
+        "DBCAE": 50,
+        "DBCEA": 48,
+        "DBEAC": 36,
+        "DBECA": 30,
+        "DCABE": 54,
+        "DCAEB": 52,
+        "DCBAE": 72,
+        "DCBEA": 64,
+        "DCEAB": 58,
+        "DCEBA": 52,
+        "DEABC": 50,
+        "DEACB": 44,
+        "DEBAC": 42,
+        "DEBCA": 38,
+        "DECAB": 42,
+        "DECBA": 44,
+        "EABCD": 48,
+        "EABDC": 46,
+        "EACBD": 34,
+        "EACDB": 40,
+        "EADBC": 44,
+        "EADCB": 52,
+        "EBACD": 40,
+        "EBADC": 50,
+        "EBCAD": 38,
+        "EBCDA": 46,
+        "EBDAC": 36,
+        "EBDCA": 34,
+        "ECABD": 32,
+        "ECADB": 36,
+        "ECBAD": 44,
+        "ECBDA": 38,
+        "ECDAB": 50,
+        "ECDBA": 40,
+        "EDABC": 50,
+        "EDACB": 44,
+        "EDBAC": 38,
+        "EDBCA": 34,
+        "EDCAB": 46,
+        "EDCBA": 48
+      },
+      "collected_order": [
+        "A",
+        "C",
+        "E",
+        "B",
+        "D"
+      ],
+      "commands": [
+        "down",
+        "down",
+        "down",
+        "left",
+        "left",
+        "left",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "down",
+          "count": 3
+        },
+        {
+          "direction": "left",
+          "count": 3
+        },
+        {
+          "direction": "up",
+          "count": 6
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 5
+        },
+        {
+          "direction": "down",
+          "count": 7
+        }
+      ],
+      "python_reference": "for _ in range(3):\n    move_down()\nfor _ in range(3):\n    move_left()\nfor _ in range(6):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(5):\n    move_right()\nfor _ in range(7):\n    move_down()\n"
+    },
+    {
+      "level_id": "L17",
+      "global_optimal_steps": 30,
+      "required_optimal_steps": 30,
+      "order_steps": {
+        "ABCDE": 54,
+        "ABCED": 52,
+        "ABDCE": 48,
+        "ABDEC": 46,
+        "ABECD": 52,
+        "ABEDC": 52,
+        "ACBDE": 46,
+        "ACBED": 50,
+        "ACDBE": 46,
+        "ACDEB": 43,
+        "ACEBD": 44,
+        "ACEDB": 37,
+        "ADBCE": 48,
+        "ADBEC": 46,
+        "ADCBE": 54,
+        "ADCEB": 45,
+        "ADEBC": 52,
+        "ADECB": 45,
+        "AEBCD": 52,
+        "AEBDC": 46,
+        "AECBD": 46,
+        "AECDB": 39,
+        "AEDBC": 46,
+        "AEDCB": 45,
+        "BACDE": 40,
+        "BACED": 38,
+        "BADCE": 42,
+        "BADEC": 40,
+        "BAECD": 40,
+        "BAEDC": 40,
+        "BCADE": 40,
+        "BCAED": 38,
+        "BCDAE": 42,
+        "BCDEA": 38,
+        "BCEAD": 40,
+        "BCEDA": 38,
+        "BDACE": 34,
+        "BDAEC": 34,
+        "BDCAE": 34,
+        "BDCEA": 32,
+        "BDEAC": 32,
+        "BDECA": 30,
+        "BEACD": 38,
+        "BEADC": 40,
+        "BECAD": 38,
+        "BECDA": 38,
+        "BEDAC": 38,
+        "BEDCA": 36,
+        "CABDE": 40,
+        "CABED": 44,
+        "CADBE": 40,
+        "CADEB": 37,
+        "CAEBD": 38,
+        "CAEDB": 31,
+        "CBADE": 48,
+        "CBAED": 46,
+        "CBDAE": 42,
+        "CBDEA": 38,
+        "CBEAD": 46,
+        "CBEDA": 44,
+        "CDABE": 48,
+        "CDAEB": 39,
+        "CDBAE": 42,
+        "CDBEA": 38,
+        "CDEAB": 39,
+        "CDEBA": 44,
+        "CEABD": 40,
+        "CEADB": 33,
+        "CEBAD": 46,
+        "CEBDA": 38,
+        "CEDAB": 39,
+        "CEDBA": 38,
+        "DABCE": 56,
+        "DABEC": 54,
+        "DACBE": 54,
+        "DACEB": 45,
+        "DAEBC": 54,
+        "DAECB": 47,
+        "DBACE": 48,
+        "DBAEC": 48,
+        "DBCAE": 48,
+        "DBCEA": 46,
+        "DBEAC": 46,
+        "DBECA": 44,
+        "DCABE": 54,
+        "DCAEB": 45,
+        "DCBAE": 56,
+        "DCBEA": 52,
+        "DCEAB": 47,
+        "DCEBA": 52,
+        "DEABC": 54,
+        "DEACB": 45,
+        "DEBAC": 52,
+        "DEBCA": 50,
+        "DECAB": 45,
+        "DECBA": 52,
+        "EABCD": 52,
+        "EABDC": 46,
+        "EACBD": 44,
+        "EACDB": 37,
+        "EADBC": 46,
+        "EADCB": 45,
+        "EBACD": 50,
+        "EBADC": 52,
+        "EBCAD": 50,
+        "EBCDA": 50,
+        "EBDAC": 44,
+        "EBDCA": 42,
+        "ECABD": 44,
+        "ECADB": 37,
+        "ECBAD": 52,
+        "ECBDA": 44,
+        "ECDAB": 45,
+        "ECDBA": 44,
+        "EDABC": 52,
+        "EDACB": 43,
+        "EDBAC": 44,
+        "EDBCA": 42,
+        "EDCAB": 43,
+        "EDCBA": 50
+      },
+      "collected_order": [
+        "B",
+        "D",
+        "E",
+        "C",
+        "A"
+      ],
+      "commands": [
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "left",
+        "up",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "down",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          8,
+          3
+        ],
+        [
+          8,
+          4
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          8,
+          6
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          7,
+          7
+        ],
+        [
+          7,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          2,
+          7
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 8
+        },
+        {
+          "direction": "up",
+          "count": 7
+        },
+        {
+          "direction": "left",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "left",
+          "count": 6
+        },
+        {
+          "direction": "down",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 4
+        }
+      ],
+      "python_reference": "for _ in range(8):\n    move_right()\nfor _ in range(7):\n    move_up()\nfor _ in range(1):\n    move_left()\nfor _ in range(1):\n    move_up()\nfor _ in range(6):\n    move_left()\nfor _ in range(1):\n    move_down()\nfor _ in range(2):\n    move_right()\nfor _ in range(4):\n    move_down()\n"
+    },
+    {
+      "level_id": "L18",
+      "global_optimal_steps": 35,
+      "required_optimal_steps": 35,
+      "order_steps": {
+        "ABCDEF": 52,
+        "ABCDFE": 45,
+        "ABCEDF": 58,
+        "ABCEFD": 51,
+        "ABCFDE": 57,
+        "ABCFED": 57,
+        "ABDCEF": 54,
+        "ABDCFE": 53,
+        "ABDECF": 66,
+        "ABDEFC": 61,
+        "ABDFCE": 59,
+        "ABDFEC": 55,
+        "ABECDF": 46,
+        "ABECFD": 51,
+        "ABEDCF": 52,
+        "ABEDFC": 53,
+        "ABEFCD": 45,
+        "ABEFDC": 41,
+        "ABFCDE": 53,
+        "ABFCED": 59,
+        "ABFDCE": 47,
+        "ABFDEC": 55,
+        "ABFECD": 47,
+        "ABFEDC": 49,
+        "ACBDEF": 64,
+        "ACBDFE": 57,
+        "ACBEDF": 56,
+        "ACBEFD": 49,
+        "ACBFDE": 57,
+        "ACBFED": 57,
+        "ACDBEF": 52,
+        "ACDBFE": 53,
+        "ACDEBF": 52,
+        "ACDEFB": 55,
+        "ACDFBE": 45,
+        "ACDFEB": 47,
+        "ACEBDF": 58,
+        "ACEBFD": 51,
+        "ACEDBF": 66,
+        "ACEDFB": 61,
+        "ACEFBD": 59,
+        "ACEFDB": 61,
+        "ACFBDE": 65,
+        "ACFBED": 57,
+        "ACFDBE": 57,
+        "ACFDEB": 59,
+        "ACFEBD": 57,
+        "ACFEDB": 67,
+        "ADBCEF": 56,
+        "ADBCFE": 55,
+        "ADBECF": 56,
+        "ADBEFC": 51,
+        "ADBFCE": 57,
+        "ADBFEC": 53,
+        "ADCBEF": 42,
+        "ADCBFE": 43,
+        "ADCEBF": 44,
+        "ADCEFB": 47,
+        "ADCFBE": 43,
+        "ADCFEB": 45,
+        "ADEBCF": 54,
+        "ADEBFC": 51,
+        "ADECBF": 56,
+        "ADECFB": 59,
+        "ADEFBC": 51,
+        "ADEFCB": 57,
+        "ADFBCE": 49,
+        "ADFBEC": 45,
+        "ADFCBE": 47,
+        "ADFCEB": 51,
+        "ADFEBC": 43,
+        "ADFECB": 51,
+        "AEBCDF": 38,
+        "AEBCFD": 43,
+        "AEBDCF": 46,
+        "AEBDFC": 47,
+        "AEBFCD": 39,
+        "AEBFDC": 35,
+        "AECBDF": 52,
+        "AECBFD": 45,
+        "AECDBF": 48,
+        "AECDFB": 43,
+        "AECFBD": 53,
+        "AECFDB": 55,
+        "AEDBCF": 58,
+        "AEDBFC": 55,
+        "AEDCBF": 46,
+        "AEDCFB": 49,
+        "AEDFBC": 47,
+        "AEDFCB": 53,
+        "AEFBCD": 39,
+        "AEFBDC": 43,
+        "AEFCBD": 51,
+        "AEFCDB": 49,
+        "AEFDBC": 47,
+        "AEFDCB": 41,
+        "AFBCDE": 51,
+        "AFBCED": 57,
+        "AFBDCE": 53,
+        "AFBDEC": 61,
+        "AFBECD": 45,
+        "AFBEDC": 47,
+        "AFCBDE": 63,
+        "AFCBED": 55,
+        "AFCDBE": 51,
+        "AFCDEB": 53,
+        "AFCEBD": 57,
+        "AFCEDB": 67,
+        "AFDBCE": 57,
+        "AFDBEC": 53,
+        "AFDCBE": 43,
+        "AFDCEB": 47,
+        "AFDEBC": 51,
+        "AFDECB": 59,
+        "AFEBCD": 43,
+        "AFEBDC": 47,
+        "AFECBD": 57,
+        "AFECDB": 55,
+        "AFEDBC": 59,
+        "AFEDCB": 53,
+        "BACDEF": 64,
+        "BACDFE": 57,
+        "BACEDF": 70,
+        "BACEFD": 63,
+        "BACFDE": 69,
+        "BACFED": 69,
+        "BADCEF": 56,
+        "BADCFE": 55,
+        "BADECF": 68,
+        "BADEFC": 63,
+        "BADFCE": 61,
+        "BADFEC": 57,
+        "BAECDF": 52,
+        "BAECFD": 57,
+        "BAEDCF": 58,
+        "BAEDFC": 59,
+        "BAEFCD": 51,
+        "BAEFDC": 47,
+        "BAFCDE": 63,
+        "BAFCED": 69,
+        "BAFDCE": 57,
+        "BAFDEC": 65,
+        "BAFECD": 57,
+        "BAFEDC": 59,
+        "BCADEF": 66,
+        "BCADFE": 59,
+        "BCAEDF": 62,
+        "BCAEFD": 55,
+        "BCAFDE": 67,
+        "BCAFED": 67,
+        "BCDAEF": 48,
+        "BCDAFE": 53,
+        "BCDEAF": 56,
+        "BCDEFA": 56,
+        "BCDFAE": 49,
+        "BCDFEA": 44,
+        "BCEADF": 54,
+        "BCEAFD": 55,
+        "BCEDAF": 66,
+        "BCEDFA": 62,
+        "BCEFAD": 59,
+        "BCEFDA": 54,
+        "BCFADE": 65,
+        "BCFAED": 61,
+        "BCFDAE": 53,
+        "BCFDEA": 56,
+        "BCFEAD": 53,
+        "BCFEDA": 60,
+        "BDACEF": 68,
+        "BDACFE": 67,
+        "BDAECF": 62,
+        "BDAEFC": 57,
+        "BDAFCE": 67,
+        "BDAFEC": 63,
+        "BDCAEF": 58,
+        "BDCAFE": 63,
+        "BDCEAF": 58,
+        "BDCEFA": 58,
+        "BDCFAE": 57,
+        "BDCFEA": 52,
+        "BDEACF": 70,
+        "BDEAFC": 65,
+        "BDECAF": 76,
+        "BDECFA": 70,
+        "BDEFAC": 71,
+        "BDEFCA": 70,
+        "BDFACE": 69,
+        "BDFAEC": 59,
+        "BDFCAE": 63,
+        "BDFCEA": 58,
+        "BDFEAC": 59,
+        "BDFECA": 64,
+        "BEACDF": 50,
+        "BEACFD": 55,
+        "BEADCF": 48,
+        "BEADFC": 49,
+        "BEAFCD": 49,
+        "BEAFDC": 45,
+        "BECADF": 60,
+        "BECAFD": 61,
+        "BECDAF": 54,
+        "BECDFA": 50,
+        "BECFAD": 59,
+        "BECFDA": 54,
+        "BEDACF": 66,
+        "BEDAFC": 61,
+        "BEDCAF": 62,
+        "BEDCFA": 56,
+        "BEDFAC": 63,
+        "BEDFCA": 62,
+        "BEFACD": 55,
+        "BEFADC": 49,
+        "BEFCAD": 59,
+        "BEFCDA": 48,
+        "BEFDAC": 55,
+        "BEFDCA": 50,
+        "BFACDE": 63,
+        "BFACED": 69,
+        "BFADCE": 55,
+        "BFADEC": 63,
+        "BFAECD": 51,
+        "BFAEDC": 53,
+        "BFCADE": 67,
+        "BFCAED": 63,
+        "BFCDAE": 49,
+        "BFCDEA": 52,
+        "BFCEAD": 55,
+        "BFCEDA": 62,
+        "BFDACE": 61,
+        "BFDAEC": 51,
+        "BFDCAE": 51,
+        "BFDCEA": 46,
+        "BFDEAC": 59,
+        "BFDECA": 64,
+        "BFEACD": 51,
+        "BFEADC": 45,
+        "BFECAD": 61,
+        "BFECDA": 50,
+        "BFEDAC": 63,
+        "BFEDCA": 58,
+        "CABDEF": 72,
+        "CABDFE": 65,
+        "CABEDF": 64,
+        "CABEFD": 57,
+        "CABFDE": 65,
+        "CABFED": 65,
+        "CADBEF": 62,
+        "CADBFE": 63,
+        "CADEBF": 62,
+        "CADEFB": 65,
+        "CADFBE": 55,
+        "CADFEB": 57,
+        "CAEBDF": 58,
+        "CAEBFD": 51,
+        "CAEDBF": 66,
+        "CAEDFB": 61,
+        "CAEFBD": 59,
+        "CAEFDB": 61,
+        "CAFBDE": 71,
+        "CAFBED": 63,
+        "CAFDBE": 63,
+        "CAFDEB": 65,
+        "CAFEBD": 63,
+        "CAFEDB": 73,
+        "CBADEF": 62,
+        "CBADFE": 55,
+        "CBAEDF": 58,
+        "CBAEFD": 51,
+        "CBAFDE": 63,
+        "CBAFED": 63,
+        "CBDAEF": 56,
+        "CBDAFE": 61,
+        "CBDEAF": 64,
+        "CBDEFA": 64,
+        "CBDFAE": 57,
+        "CBDFEA": 52,
+        "CBEADF": 48,
+        "CBEAFD": 49,
+        "CBEDAF": 60,
+        "CBEDFA": 56,
+        "CBEFAD": 53,
+        "CBEFDA": 48,
+        "CBFADE": 61,
+        "CBFAED": 57,
+        "CBFDAE": 49,
+        "CBFDEA": 52,
+        "CBFEAD": 49,
+        "CBFEDA": 56,
+        "CDABEF": 50,
+        "CDABFE": 51,
+        "CDAEBF": 44,
+        "CDAEFB": 47,
+        "CDAFBE": 49,
+        "CDAFEB": 51,
+        "CDBAEF": 54,
+        "CDBAFE": 59,
+        "CDBEAF": 52,
+        "CDBEFA": 52,
+        "CDBFAE": 53,
+        "CDBFEA": 48,
+        "CDEABF": 54,
+        "CDEAFB": 55,
+        "CDEBAF": 58,
+        "CDEBFA": 52,
+        "CDEFAB": 61,
+        "CDEFBA": 54,
+        "CDFABE": 51,
+        "CDFAEB": 47,
+        "CDFBAE": 47,
+        "CDFBEA": 40,
+        "CDFEAB": 49,
+        "CDFEBA": 46,
+        "CEABDF": 60,
+        "CEABFD": 53,
+        "CEADBF": 58,
+        "CEADFB": 53,
+        "CEAFBD": 59,
+        "CEAFDB": 61,
+        "CEBADF": 56,
+        "CEBAFD": 57,
+        "CEBDAF": 62,
+        "CEBDFA": 58,
+        "CEBFAD": 55,
+        "CEBFDA": 50,
+        "CEDABF": 64,
+        "CEDAFB": 65,
+        "CEDBAF": 72,
+        "CEDBFA": 66,
+        "CEDFAB": 67,
+        "CEDFBA": 60,
+        "CEFABD": 65,
+        "CEFADB": 65,
+        "CEFBAD": 57,
+        "CEFBDA": 58,
+        "CEFDAB": 59,
+        "CEFDBA": 60,
+        "CFABDE": 71,
+        "CFABED": 63,
+        "CFADBE": 61,
+        "CFADEB": 63,
+        "CFAEBD": 57,
+        "CFAEDB": 67,
+        "CFBADE": 63,
+        "CFBAED": 59,
+        "CFBDAE": 57,
+        "CFBDEA": 60,
+        "CFBEAD": 49,
+        "CFBEDA": 56,
+        "CFDABE": 55,
+        "CFDAEB": 51,
+        "CFDBAE": 59,
+        "CFDBEA": 52,
+        "CFDEAB": 61,
+        "CFDEBA": 58,
+        "CFEABD": 59,
+        "CFEADB": 59,
+        "CFEBAD": 55,
+        "CFEBDA": 56,
+        "CFEDAB": 65,
+        "CFEDBA": 66,
+        "DABCEF": 54,
+        "DABCFE": 53,
+        "DABECF": 54,
+        "DABEFC": 49,
+        "DABFCE": 55,
+        "DABFEC": 51,
+        "DACBEF": 52,
+        "DACBFE": 53,
+        "DACEBF": 54,
+        "DACEFB": 57,
+        "DACFBE": 53,
+        "DACFEB": 55,
+        "DAEBCF": 46,
+        "DAEBFC": 43,
+        "DAECBF": 48,
+        "DAECFB": 51,
+        "DAEFBC": 43,
+        "DAEFCB": 49,
+        "DAFBCE": 53,
+        "DAFBEC": 49,
+        "DAFCBE": 51,
+        "DAFCEB": 55,
+        "DAFEBC": 47,
+        "DAFECB": 55,
+        "DBACEF": 64,
+        "DBACFE": 63,
+        "DBAECF": 58,
+        "DBAEFC": 53,
+        "DBAFCE": 63,
+        "DBAFEC": 59,
+        "DBCAEF": 56,
+        "DBCAFE": 61,
+        "DBCEAF": 56,
+        "DBCEFA": 56,
+        "DBCFAE": 55,
+        "DBCFEA": 50,
+        "DBEACF": 56,
+        "DBEAFC": 51,
+        "DBECAF": 62,
+        "DBECFA": 56,
+        "DBEFAC": 57,
+        "DBEFCA": 56,
+        "DBFACE": 63,
+        "DBFAEC": 53,
+        "DBFCAE": 57,
+        "DBFCEA": 52,
+        "DBFEAC": 53,
+        "DBFECA": 58,
+        "DCABEF": 50,
+        "DCABFE": 51,
+        "DCAEBF": 44,
+        "DCAEFB": 47,
+        "DCAFBE": 49,
+        "DCAFEB": 51,
+        "DCBAEF": 44,
+        "DCBAFE": 49,
+        "DCBEAF": 42,
+        "DCBEFA": 42,
+        "DCBFAE": 43,
+        "DCBFEA": 38,
+        "DCEABF": 46,
+        "DCEAFB": 47,
+        "DCEBAF": 50,
+        "DCEBFA": 44,
+        "DCEFAB": 53,
+        "DCEFBA": 46,
+        "DCFABE": 49,
+        "DCFAEB": 45,
+        "DCFBAE": 45,
+        "DCFBEA": 38,
+        "DCFEAB": 47,
+        "DCFEBA": 44,
+        "DEABCF": 56,
+        "DEABFC": 53,
+        "DEACBF": 56,
+        "DEACFB": 59,
+        "DEAFBC": 51,
+        "DEAFCB": 57,
+        "DEBACF": 62,
+        "DEBAFC": 57,
+        "DEBCAF": 60,
+        "DEBCFA": 54,
+        "DEBFAC": 57,
+        "DEBFCA": 56,
+        "DECABF": 64,
+        "DECAFB": 65,
+        "DECBAF": 62,
+        "DECBFA": 56,
+        "DECFAB": 65,
+        "DECFBA": 58,
+        "DEFABC": 57,
+        "DEFACB": 63,
+        "DEFBAC": 59,
+        "DEFBCA": 56,
+        "DEFCAB": 65,
+        "DEFCBA": 56,
+        "DFABCE": 55,
+        "DFABEC": 51,
+        "DFACBE": 53,
+        "DFACEB": 57,
+        "DFAEBC": 43,
+        "DFAECB": 51,
+        "DFBACE": 57,
+        "DFBAEC": 47,
+        "DFBCAE": 49,
+        "DFBCEA": 44,
+        "DFBEAC": 45,
+        "DFBECA": 50,
+        "DFCABE": 55,
+        "DFCAEB": 51,
+        "DFCBAE": 49,
+        "DFCBEA": 42,
+        "DFCEAB": 53,
+        "DFCEBA": 50,
+        "DFEABC": 45,
+        "DFEACB": 51,
+        "DFEBAC": 51,
+        "DFEBCA": 48,
+        "DFECAB": 59,
+        "DFECBA": 50,
+        "EABCDF": 50,
+        "EABCFD": 55,
+        "EABDCF": 58,
+        "EABDFC": 59,
+        "EABFCD": 51,
+        "EABFDC": 47,
+        "EACBDF": 62,
+        "EACBFD": 55,
+        "EACDBF": 58,
+        "EACDFB": 53,
+        "EACFBD": 63,
+        "EACFDB": 65,
+        "EADBCF": 60,
+        "EADBFC": 57,
+        "EADCBF": 48,
+        "EADCFB": 51,
+        "EADFBC": 49,
+        "EADFCB": 55,
+        "EAFBCD": 49,
+        "EAFBDC": 53,
+        "EAFCBD": 61,
+        "EAFCDB": 59,
+        "EAFDBC": 57,
+        "EAFDCB": 51,
+        "EBACDF": 56,
+        "EBACFD": 61,
+        "EBADCF": 54,
+        "EBADFC": 55,
+        "EBAFCD": 55,
+        "EBAFDC": 51,
+        "EBCADF": 58,
+        "EBCAFD": 59,
+        "EBCDAF": 52,
+        "EBCDFA": 48,
+        "EBCFAD": 57,
+        "EBCFDA": 52,
+        "EBDACF": 66,
+        "EBDAFC": 61,
+        "EBDCAF": 62,
+        "EBDCFA": 56,
+        "EBDFAC": 63,
+        "EBDFCA": 62,
+        "EBFACD": 55,
+        "EBFADC": 49,
+        "EBFCAD": 59,
+        "EBFCDA": 48,
+        "EBFDAC": 55,
+        "EBFDCA": 50,
+        "ECABDF": 70,
+        "ECABFD": 63,
+        "ECADBF": 68,
+        "ECADFB": 63,
+        "ECAFBD": 69,
+        "ECAFDB": 71,
+        "ECBADF": 60,
+        "ECBAFD": 61,
+        "ECBDAF": 66,
+        "ECBDFA": 62,
+        "ECBFAD": 59,
+        "ECBFDA": 54,
+        "ECDABF": 56,
+        "ECDAFB": 57,
+        "ECDBAF": 64,
+        "ECDBFA": 58,
+        "ECDFAB": 59,
+        "ECDFBA": 52,
+        "ECFABD": 69,
+        "ECFADB": 69,
+        "ECFBAD": 61,
+        "ECFBDA": 62,
+        "ECFDAB": 63,
+        "ECFDBA": 64,
+        "EDABCF": 66,
+        "EDABFC": 63,
+        "EDACBF": 66,
+        "EDACFB": 69,
+        "EDAFBC": 61,
+        "EDAFCB": 67,
+        "EDBACF": 76,
+        "EDBAFC": 71,
+        "EDBCAF": 74,
+        "EDBCFA": 68,
+        "EDBFAC": 71,
+        "EDBFCA": 70,
+        "EDCABF": 64,
+        "EDCAFB": 65,
+        "EDCBAF": 62,
+        "EDCBFA": 56,
+        "EDCFAB": 65,
+        "EDCFBA": 58,
+        "EDFABC": 63,
+        "EDFACB": 69,
+        "EDFBAC": 65,
+        "EDFBCA": 62,
+        "EDFCAB": 71,
+        "EDFCBA": 62,
+        "EFABCD": 55,
+        "EFABDC": 59,
+        "EFACBD": 67,
+        "EFACDB": 65,
+        "EFADBC": 61,
+        "EFADCB": 55,
+        "EFBACD": 57,
+        "EFBADC": 51,
+        "EFBCAD": 59,
+        "EFBCDA": 48,
+        "EFBDAC": 63,
+        "EFBDCA": 58,
+        "EFCABD": 69,
+        "EFCADB": 69,
+        "EFCBAD": 59,
+        "EFCBDA": 60,
+        "EFCDAB": 57,
+        "EFCDBA": 58,
+        "EFDABC": 55,
+        "EFDACB": 61,
+        "EFDBAC": 65,
+        "EFDBCA": 62,
+        "EFDCAB": 59,
+        "EFDCBA": 50,
+        "FABCDE": 57,
+        "FABCED": 63,
+        "FABDCE": 59,
+        "FABDEC": 67,
+        "FABECD": 51,
+        "FABEDC": 53,
+        "FACBDE": 69,
+        "FACBED": 61,
+        "FACDBE": 57,
+        "FACDEB": 59,
+        "FACEBD": 63,
+        "FACEDB": 73,
+        "FADBCE": 61,
+        "FADBEC": 57,
+        "FADCBE": 47,
+        "FADCEB": 51,
+        "FADEBC": 55,
+        "FADECB": 63,
+        "FAEBCD": 43,
+        "FAEBDC": 47,
+        "FAECBD": 57,
+        "FAECDB": 55,
+        "FAEDBC": 59,
+        "FAEDCB": 53,
+        "FBACDE": 59,
+        "FBACED": 65,
+        "FBADCE": 51,
+        "FBADEC": 59,
+        "FBAECD": 47,
+        "FBAEDC": 49,
+        "FBCADE": 61,
+        "FBCAED": 57,
+        "FBCDAE": 43,
+        "FBCDEA": 46,
+        "FBCEAD": 49,
+        "FBCEDA": 56,
+        "FBDACE": 63,
+        "FBDAEC": 53,
+        "FBDCAE": 53,
+        "FBDCEA": 48,
+        "FBDEAC": 61,
+        "FBDECA": 66,
+        "FBEACD": 45,
+        "FBEADC": 39,
+        "FBECAD": 55,
+        "FBECDA": 44,
+        "FBEDAC": 57,
+        "FBEDCA": 52,
+        "FCABDE": 71,
+        "FCABED": 63,
+        "FCADBE": 61,
+        "FCADEB": 63,
+        "FCAEBD": 57,
+        "FCAEDB": 67,
+        "FCBADE": 61,
+        "FCBAED": 57,
+        "FCBDAE": 55,
+        "FCBDEA": 58,
+        "FCBEAD": 47,
+        "FCBEDA": 54,
+        "FCDABE": 49,
+        "FCDAEB": 45,
+        "FCDBAE": 53,
+        "FCDBEA": 46,
+        "FCDEAB": 55,
+        "FCDEBA": 52,
+        "FCEABD": 59,
+        "FCEADB": 59,
+        "FCEBAD": 55,
+        "FCEBDA": 56,
+        "FCEDAB": 65,
+        "FCEDBA": 66,
+        "FDABCE": 55,
+        "FDABEC": 51,
+        "FDACBE": 53,
+        "FDACEB": 57,
+        "FDAEBC": 43,
+        "FDAECB": 51,
+        "FDBACE": 65,
+        "FDBAEC": 55,
+        "FDBCAE": 57,
+        "FDBCEA": 52,
+        "FDBEAC": 53,
+        "FDBECA": 58,
+        "FDCABE": 51,
+        "FDCAEB": 47,
+        "FDCBAE": 45,
+        "FDCBEA": 38,
+        "FDCEAB": 49,
+        "FDCEBA": 46,
+        "FDEABC": 53,
+        "FDEACB": 59,
+        "FDEBAC": 59,
+        "FDEBCA": 56,
+        "FDECAB": 67,
+        "FDECBA": 58,
+        "FEABCD": 45,
+        "FEABDC": 49,
+        "FEACBD": 57,
+        "FEACDB": 55,
+        "FEADBC": 51,
+        "FEADCB": 45,
+        "FEBACD": 51,
+        "FEBADC": 45,
+        "FEBCAD": 53,
+        "FEBCDA": 42,
+        "FEBDAC": 57,
+        "FEBDCA": 52,
+        "FECABD": 65,
+        "FECADB": 65,
+        "FECBAD": 55,
+        "FECBDA": 56,
+        "FECDAB": 53,
+        "FECDBA": 54,
+        "FEDABC": 57,
+        "FEDACB": 63,
+        "FEDBAC": 67,
+        "FEDBCA": 64,
+        "FEDCAB": 61,
+        "FEDCBA": 52
+      },
+      "collected_order": [
+        "A",
+        "E",
+        "B",
+        "F",
+        "D",
+        "C"
+      ],
+      "commands": [
+        "down",
+        "down",
+        "right",
+        "right",
+        "down",
+        "down",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "left",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right"
+      ],
+      "trace": [
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          8,
+          0
+        ],
+        [
+          8,
+          1
+        ],
+        [
+          9,
+          1
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          8,
+          5
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          6,
+          9
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "down",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 6
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "left",
+          "count": 8
+        },
+        {
+          "direction": "up",
+          "count": 3
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 3
+        }
+      ],
+      "python_reference": "for _ in range(2):\n    move_down()\nfor _ in range(2):\n    move_right()\nfor _ in range(2):\n    move_down()\nfor _ in range(6):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_up()\nfor _ in range(8):\n    move_left()\nfor _ in range(3):\n    move_up()\nfor _ in range(2):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(3):\n    move_right()\n"
+    },
+    {
+      "level_id": "L19",
+      "global_optimal_steps": 36,
+      "required_optimal_steps": 36,
+      "order_steps": {
+        "ABCDEF": 50,
+        "ABCDFE": 50,
+        "ABCEDF": 52,
+        "ABCEFD": 51,
+        "ABCFDE": 52,
+        "ABCFED": 51,
+        "ABDCEF": 52,
+        "ABDCFE": 52,
+        "ABDECF": 70,
+        "ABDEFC": 73,
+        "ABDFCE": 60,
+        "ABDFEC": 63,
+        "ABECDF": 42,
+        "ABECFD": 43,
+        "ABEDCF": 58,
+        "ABEDFC": 69,
+        "ABEFCD": 41,
+        "ABEFDC": 51,
+        "ABFCDE": 44,
+        "ABFCED": 45,
+        "ABFDCE": 50,
+        "ABFDEC": 69,
+        "ABFECD": 43,
+        "ABFEDC": 61,
+        "ACBDEF": 64,
+        "ACBDFE": 64,
+        "ACBEDF": 56,
+        "ACBEFD": 55,
+        "ACBFDE": 58,
+        "ACBFED": 57,
+        "ACDBEF": 54,
+        "ACDBFE": 56,
+        "ACDEBF": 48,
+        "ACDEFB": 48,
+        "ACDFBE": 48,
+        "ACDFEB": 46,
+        "ACEBDF": 56,
+        "ACEBFD": 49,
+        "ACEDBF": 58,
+        "ACEDFB": 50,
+        "ACEFBD": 57,
+        "ACEFDB": 56,
+        "ACFBDE": 58,
+        "ACFBED": 49,
+        "ACFDBE": 56,
+        "ACFDEB": 48,
+        "ACFEBD": 55,
+        "ACFEDB": 56,
+        "ADBCEF": 58,
+        "ADBCFE": 58,
+        "ADBECF": 50,
+        "ADBEFC": 53,
+        "ADBFCE": 52,
+        "ADBFEC": 55,
+        "ADCBEF": 46,
+        "ADCBFE": 48,
+        "ADCEBF": 40,
+        "ADCEFB": 40,
+        "ADCFBE": 40,
+        "ADCFEB": 38,
+        "ADEBCF": 64,
+        "ADEBFC": 61,
+        "ADECBF": 66,
+        "ADECFB": 58,
+        "ADEFBC": 69,
+        "ADEFCB": 64,
+        "ADFBCE": 56,
+        "ADFBEC": 51,
+        "ADFCBE": 54,
+        "ADFCEB": 46,
+        "ADFEBC": 57,
+        "ADFECB": 54,
+        "AEBCDF": 56,
+        "AEBCFD": 57,
+        "AEBDCF": 58,
+        "AEBDFC": 69,
+        "AEBFCD": 49,
+        "AEBFDC": 59,
+        "AECBDF": 66,
+        "AECBFD": 59,
+        "AECDBF": 58,
+        "AECDFB": 50,
+        "AECFBD": 59,
+        "AECFDB": 58,
+        "AEDBCF": 84,
+        "AEDBFC": 81,
+        "AEDCBF": 74,
+        "AEDCFB": 66,
+        "AEDFBC": 85,
+        "AEDFCB": 80,
+        "AEFBCD": 57,
+        "AEFBDC": 63,
+        "AEFCBD": 65,
+        "AEFCDB": 56,
+        "AEFDBC": 77,
+        "AEFDCB": 62,
+        "AFBCDE": 48,
+        "AFBCED": 49,
+        "AFBDCE": 50,
+        "AFBDEC": 69,
+        "AFBECD": 39,
+        "AFBEDC": 57,
+        "AFCBDE": 56,
+        "AFCBED": 47,
+        "AFCDBE": 46,
+        "AFCDEB": 38,
+        "AFCEBD": 47,
+        "AFCEDB": 48,
+        "AFDBCE": 64,
+        "AFDBEC": 59,
+        "AFDCBE": 52,
+        "AFDCEB": 44,
+        "AFDEBC": 71,
+        "AFDECB": 68,
+        "AFEBCD": 45,
+        "AFEBDC": 51,
+        "AFECBD": 55,
+        "AFECDB": 46,
+        "AFEDBC": 75,
+        "AFEDCB": 60,
+        "BACDEF": 50,
+        "BACDFE": 50,
+        "BACEDF": 52,
+        "BACEFD": 51,
+        "BACFDE": 52,
+        "BACFED": 51,
+        "BADCEF": 42,
+        "BADCFE": 42,
+        "BADECF": 60,
+        "BADEFC": 63,
+        "BADFCE": 50,
+        "BADFEC": 53,
+        "BAECDF": 52,
+        "BAECFD": 53,
+        "BAEDCF": 68,
+        "BAEDFC": 79,
+        "BAEFCD": 51,
+        "BAEFDC": 61,
+        "BAFCDE": 42,
+        "BAFCED": 43,
+        "BAFDCE": 48,
+        "BAFDEC": 67,
+        "BAFECD": 41,
+        "BAFEDC": 59,
+        "BCADEF": 56,
+        "BCADFE": 56,
+        "BCAEDF": 66,
+        "BCAEFD": 65,
+        "BCAFDE": 56,
+        "BCAFED": 55,
+        "BCDAEF": 56,
+        "BCDAFE": 46,
+        "BCDEAF": 56,
+        "BCDEFA": 47,
+        "BCDFAE": 54,
+        "BCDFEA": 55,
+        "BCEADF": 58,
+        "BCEAFD": 57,
+        "BCEDAF": 48,
+        "BCEDFA": 49,
+        "BCEFAD": 47,
+        "BCEFDA": 49,
+        "BCFADE": 48,
+        "BCFAED": 55,
+        "BCFDAE": 56,
+        "BCFDEA": 57,
+        "BCFEAD": 55,
+        "BCFEDA": 49,
+        "BDACEF": 58,
+        "BDACFE": 58,
+        "BDAECF": 60,
+        "BDAEFC": 63,
+        "BDAFCE": 50,
+        "BDAFEC": 53,
+        "BDCAEF": 66,
+        "BDCAFE": 56,
+        "BDCEAF": 58,
+        "BDCEFA": 49,
+        "BDCFAE": 56,
+        "BDCFEA": 57,
+        "BDEACF": 84,
+        "BDEAFC": 79,
+        "BDECAF": 74,
+        "BDECFA": 67,
+        "BDEFAC": 77,
+        "BDEFCA": 75,
+        "BDFACE": 64,
+        "BDFAEC": 67,
+        "BDFCAE": 72,
+        "BDFCEA": 65,
+        "BDFEAC": 75,
+        "BDFECA": 65,
+        "BEACDF": 56,
+        "BEACFD": 57,
+        "BEADCF": 48,
+        "BEADFC": 59,
+        "BEAFCD": 47,
+        "BEAFDC": 57,
+        "BECADF": 48,
+        "BECAFD": 47,
+        "BECDAF": 38,
+        "BECDFA": 39,
+        "BECFAD": 39,
+        "BECFDA": 41,
+        "BEDACF": 64,
+        "BEDAFC": 59,
+        "BEDCAF": 62,
+        "BEDCFA": 55,
+        "BEDFAC": 73,
+        "BEDFCA": 71,
+        "BEFACD": 45,
+        "BEFADC": 41,
+        "BEFCAD": 47,
+        "BEFCDA": 39,
+        "BEFDAC": 57,
+        "BEFDCA": 53,
+        "BFACDE": 48,
+        "BFACED": 49,
+        "BFADCE": 40,
+        "BFADEC": 59,
+        "BFAECD": 47,
+        "BFAEDC": 65,
+        "BFCADE": 50,
+        "BFCAED": 57,
+        "BFCDAE": 48,
+        "BFCDEA": 49,
+        "BFCEAD": 49,
+        "BFCEDA": 43,
+        "BFDACE": 56,
+        "BFDAEC": 59,
+        "BFDCAE": 62,
+        "BFDCEA": 55,
+        "BFDEAC": 81,
+        "BFDECA": 71,
+        "BFEACD": 55,
+        "BFEADC": 51,
+        "BFECAD": 49,
+        "BFECDA": 41,
+        "BFEDAC": 67,
+        "BFEDCA": 63,
+        "CABDEF": 70,
+        "CABDFE": 70,
+        "CABEDF": 62,
+        "CABEFD": 61,
+        "CABFDE": 64,
+        "CABFED": 63,
+        "CADBEF": 66,
+        "CADBFE": 68,
+        "CADEBF": 60,
+        "CADEFB": 60,
+        "CADFBE": 60,
+        "CADFEB": 58,
+        "CAEBDF": 76,
+        "CAEBFD": 69,
+        "CAEDBF": 78,
+        "CAEDFB": 70,
+        "CAEFBD": 77,
+        "CAEFDB": 76,
+        "CAFBDE": 68,
+        "CAFBED": 59,
+        "CAFDBE": 66,
+        "CAFDEB": 58,
+        "CAFEBD": 65,
+        "CAFEDB": 66,
+        "CBADEF": 62,
+        "CBADFE": 62,
+        "CBAEDF": 72,
+        "CBAEFD": 71,
+        "CBAFDE": 62,
+        "CBAFED": 61,
+        "CBDAEF": 76,
+        "CBDAFE": 66,
+        "CBDEAF": 76,
+        "CBDEFA": 67,
+        "CBDFAE": 74,
+        "CBDFEA": 75,
+        "CBEADF": 68,
+        "CBEAFD": 67,
+        "CBEDAF": 58,
+        "CBEDFA": 59,
+        "CBEFAD": 57,
+        "CBEFDA": 59,
+        "CBFADE": 60,
+        "CBFAED": 67,
+        "CBFDAE": 68,
+        "CBFDEA": 69,
+        "CBFEAD": 67,
+        "CBFEDA": 61,
+        "CDABEF": 52,
+        "CDABFE": 54,
+        "CDAEBF": 60,
+        "CDAEFB": 60,
+        "CDAFBE": 50,
+        "CDAFEB": 48,
+        "CDBAEF": 70,
+        "CDBAFE": 60,
+        "CDBEAF": 66,
+        "CDBEFA": 57,
+        "CDBFAE": 66,
+        "CDBFEA": 67,
+        "CDEABF": 64,
+        "CDEAFB": 60,
+        "CDEBAF": 52,
+        "CDEBFA": 51,
+        "CDEFAB": 52,
+        "CDEFBA": 55,
+        "CDFABE": 52,
+        "CDFAEB": 56,
+        "CDFBAE": 62,
+        "CDFBEA": 59,
+        "CDFEAB": 60,
+        "CDFEBA": 53,
+        "CEABDF": 72,
+        "CEABFD": 65,
+        "CEADBF": 70,
+        "CEADFB": 62,
+        "CEAFBD": 69,
+        "CEAFDB": 68,
+        "CEBADF": 54,
+        "CEBAFD": 53,
+        "CEBDAF": 58,
+        "CEBDFA": 59,
+        "CEBFAD": 51,
+        "CEBFDA": 53,
+        "CEDABF": 56,
+        "CEDAFB": 52,
+        "CEDBAF": 62,
+        "CEDBFA": 61,
+        "CEDFAB": 54,
+        "CEDFBA": 57,
+        "CEFABD": 61,
+        "CEFADB": 58,
+        "CEFBAD": 55,
+        "CEFBDA": 61,
+        "CEFDAB": 54,
+        "CEFDBA": 63,
+        "CFABDE": 62,
+        "CFABED": 53,
+        "CFADBE": 58,
+        "CFADEB": 50,
+        "CFAEBD": 65,
+        "CFAEDB": 66,
+        "CFBADE": 56,
+        "CFBAED": 63,
+        "CFBDAE": 68,
+        "CFBDEA": 69,
+        "CFBEAD": 59,
+        "CFBEDA": 53,
+        "CFDABE": 54,
+        "CFDAEB": 58,
+        "CFDBAE": 70,
+        "CFDBEA": 67,
+        "CFDEAB": 62,
+        "CFDEBA": 55,
+        "CFEABD": 69,
+        "CFEADB": 66,
+        "CFEBAD": 53,
+        "CFEBDA": 59,
+        "CFEDAB": 54,
+        "CFEDBA": 63,
+        "DABCEF": 58,
+        "DABCFE": 58,
+        "DABECF": 50,
+        "DABEFC": 53,
+        "DABFCE": 52,
+        "DABFEC": 55,
+        "DACBEF": 62,
+        "DACBFE": 64,
+        "DACEBF": 56,
+        "DACEFB": 56,
+        "DACFBE": 56,
+        "DACFEB": 54,
+        "DAEBCF": 64,
+        "DAEBFC": 61,
+        "DAECBF": 66,
+        "DAECFB": 58,
+        "DAEFBC": 69,
+        "DAEFCB": 64,
+        "DAFBCE": 56,
+        "DAFBEC": 51,
+        "DAFCBE": 54,
+        "DAFCEB": 46,
+        "DAFEBC": 57,
+        "DAFECB": 54,
+        "DBACEF": 68,
+        "DBACFE": 68,
+        "DBAECF": 70,
+        "DBAEFC": 73,
+        "DBAFCE": 60,
+        "DBAFEC": 63,
+        "DBCAEF": 82,
+        "DBCAFE": 72,
+        "DBCEAF": 74,
+        "DBCEFA": 65,
+        "DBCFAE": 72,
+        "DBCFEA": 73,
+        "DBEACF": 74,
+        "DBEAFC": 69,
+        "DBECAF": 64,
+        "DBECFA": 57,
+        "DBEFAC": 67,
+        "DBEFCA": 65,
+        "DBFACE": 66,
+        "DBFAEC": 69,
+        "DBFCAE": 74,
+        "DBFCEA": 67,
+        "DBFEAC": 77,
+        "DBFECA": 67,
+        "DCABEF": 56,
+        "DCABFE": 58,
+        "DCAEBF": 64,
+        "DCAEFB": 64,
+        "DCAFBE": 54,
+        "DCAFEB": 52,
+        "DCBAEF": 66,
+        "DCBAFE": 56,
+        "DCBEAF": 62,
+        "DCBEFA": 53,
+        "DCBFAE": 62,
+        "DCBFEA": 63,
+        "DCEABF": 60,
+        "DCEAFB": 56,
+        "DCEBAF": 48,
+        "DCEBFA": 47,
+        "DCEFAB": 48,
+        "DCEFBA": 51,
+        "DCFABE": 48,
+        "DCFAEB": 52,
+        "DCFBAE": 58,
+        "DCFBEA": 55,
+        "DCFEAB": 56,
+        "DCFEBA": 49,
+        "DEABCF": 84,
+        "DEABFC": 81,
+        "DEACBF": 90,
+        "DEACFB": 82,
+        "DEAFBC": 85,
+        "DEAFCB": 80,
+        "DEBACF": 74,
+        "DEBAFC": 69,
+        "DEBCAF": 78,
+        "DEBCFA": 71,
+        "DEBFAC": 75,
+        "DEBFCA": 73,
+        "DECABF": 76,
+        "DECAFB": 72,
+        "DECBAF": 74,
+        "DECBFA": 73,
+        "DECFAB": 66,
+        "DECFBA": 69,
+        "DEFABC": 77,
+        "DEFACB": 78,
+        "DEFBAC": 79,
+        "DEFBCA": 81,
+        "DEFCAB": 74,
+        "DEFCBA": 75,
+        "DFABCE": 64,
+        "DFABEC": 59,
+        "DFACBE": 68,
+        "DFACEB": 60,
+        "DFAEBC": 71,
+        "DFAECB": 68,
+        "DFBACE": 66,
+        "DFBAEC": 69,
+        "DFBCAE": 78,
+        "DFBCEA": 71,
+        "DFBEAC": 73,
+        "DFBECA": 63,
+        "DFCABE": 64,
+        "DFCAEB": 68,
+        "DFCBAE": 72,
+        "DFCBEA": 69,
+        "DFCEAB": 64,
+        "DFCEBA": 57,
+        "DFEABC": 75,
+        "DFEACB": 76,
+        "DFEBAC": 67,
+        "DFEBCA": 69,
+        "DFECAB": 64,
+        "DFECBA": 65,
+        "EABCDF": 66,
+        "EABCFD": 67,
+        "EABDCF": 68,
+        "EABDFC": 79,
+        "EABFCD": 59,
+        "EABFDC": 69,
+        "EACBDF": 80,
+        "EACBFD": 73,
+        "EACDBF": 72,
+        "EACDFB": 64,
+        "EACFBD": 73,
+        "EACFDB": 72,
+        "EADBCF": 74,
+        "EADBFC": 71,
+        "EADCBF": 64,
+        "EADCFB": 56,
+        "EADFBC": 75,
+        "EADFCB": 70,
+        "EAFBCD": 63,
+        "EAFBDC": 69,
+        "EAFCBD": 71,
+        "EAFCDB": 62,
+        "EAFDBC": 83,
+        "EAFDCB": 68,
+        "EBACDF": 56,
+        "EBACFD": 57,
+        "EBADCF": 48,
+        "EBADFC": 59,
+        "EBAFCD": 47,
+        "EBAFDC": 57,
+        "EBCADF": 62,
+        "EBCAFD": 61,
+        "EBCDAF": 52,
+        "EBCDFA": 53,
+        "EBCFAD": 53,
+        "EBCFDA": 55,
+        "EBDACF": 64,
+        "EBDAFC": 59,
+        "EBDCAF": 62,
+        "EBDCFA": 55,
+        "EBDFAC": 73,
+        "EBDFCA": 71,
+        "EBFACD": 53,
+        "EBFADC": 49,
+        "EBFCAD": 55,
+        "EBFCDA": 47,
+        "EBFDAC": 65,
+        "EBFDCA": 61,
+        "ECABDF": 66,
+        "ECABFD": 59,
+        "ECADBF": 64,
+        "ECADFB": 56,
+        "ECAFBD": 63,
+        "ECAFDB": 62,
+        "ECBADF": 58,
+        "ECBAFD": 57,
+        "ECBDAF": 62,
+        "ECBDFA": 63,
+        "ECBFAD": 55,
+        "ECBFDA": 57,
+        "ECDABF": 50,
+        "ECDAFB": 46,
+        "ECDBAF": 56,
+        "ECDBFA": 55,
+        "ECDFAB": 48,
+        "ECDFBA": 51,
+        "ECFABD": 57,
+        "ECFADB": 54,
+        "ECFBAD": 51,
+        "ECFBDA": 57,
+        "ECFDAB": 50,
+        "ECFDBA": 59,
+        "EDABCF": 74,
+        "EDABFC": 71,
+        "EDACBF": 80,
+        "EDACFB": 72,
+        "EDAFBC": 75,
+        "EDAFCB": 70,
+        "EDBACF": 84,
+        "EDBAFC": 79,
+        "EDBCAF": 88,
+        "EDBCFA": 81,
+        "EDBFAC": 85,
+        "EDBFCA": 83,
+        "EDCABF": 74,
+        "EDCAFB": 70,
+        "EDCBAF": 72,
+        "EDCBFA": 71,
+        "EDCFAB": 64,
+        "EDCFBA": 67,
+        "EDFABC": 83,
+        "EDFACB": 84,
+        "EDFBAC": 85,
+        "EDFBCA": 87,
+        "EDFCAB": 80,
+        "EDFCBA": 81,
+        "EFABCD": 55,
+        "EFABDC": 61,
+        "EFACBD": 69,
+        "EFACDB": 60,
+        "EFADBC": 67,
+        "EFADCB": 52,
+        "EFBACD": 57,
+        "EFBADC": 53,
+        "EFBCAD": 63,
+        "EFBCDA": 55,
+        "EFBDAC": 69,
+        "EFBDCA": 65,
+        "EFCABD": 65,
+        "EFCADB": 62,
+        "EFCBAD": 57,
+        "EFCBDA": 63,
+        "EFCDAB": 48,
+        "EFCDBA": 57,
+        "EFDABC": 67,
+        "EFDACB": 68,
+        "EFDBAC": 77,
+        "EFDBCA": 79,
+        "EFDCAB": 62,
+        "EFDCBA": 63,
+        "FABCDE": 48,
+        "FABCED": 49,
+        "FABDCE": 50,
+        "FABDEC": 69,
+        "FABECD": 39,
+        "FABEDC": 57,
+        "FACBDE": 62,
+        "FACBED": 53,
+        "FACDBE": 52,
+        "FACDEB": 44,
+        "FACEBD": 53,
+        "FACEDB": 54,
+        "FADBCE": 56,
+        "FADBEC": 51,
+        "FADCBE": 44,
+        "FADCEB": 36,
+        "FADEBC": 63,
+        "FADECB": 60,
+        "FAEBCD": 51,
+        "FAEBDC": 57,
+        "FAECBD": 61,
+        "FAECDB": 52,
+        "FAEDBC": 81,
+        "FAEDCB": 66,
+        "FBACDE": 50,
+        "FBACED": 51,
+        "FBADCE": 42,
+        "FBADEC": 61,
+        "FBAECD": 49,
+        "FBAEDC": 67,
+        "FBCADE": 56,
+        "FBCAED": 63,
+        "FBCDAE": 54,
+        "FBCDEA": 55,
+        "FBCEAD": 55,
+        "FBCEDA": 49,
+        "FBDACE": 58,
+        "FBDAEC": 61,
+        "FBDCAE": 64,
+        "FBDCEA": 57,
+        "FBDEAC": 83,
+        "FBDECA": 73,
+        "FBEACD": 53,
+        "FBEADC": 49,
+        "FBECAD": 47,
+        "FBECDA": 39,
+        "FBEDAC": 65,
+        "FBEDCA": 61,
+        "FCABDE": 58,
+        "FCABED": 49,
+        "FCADBE": 54,
+        "FCADEB": 46,
+        "FCAEBD": 61,
+        "FCAEDB": 62,
+        "FCBADE": 50,
+        "FCBAED": 57,
+        "FCBDAE": 62,
+        "FCBDEA": 63,
+        "FCBEAD": 53,
+        "FCBEDA": 47,
+        "FCDABE": 40,
+        "FCDAEB": 44,
+        "FCDBAE": 56,
+        "FCDBEA": 53,
+        "FCDEAB": 48,
+        "FCDEBA": 41,
+        "FCEABD": 57,
+        "FCEADB": 54,
+        "FCEBAD": 41,
+        "FCEBDA": 47,
+        "FCEDAB": 42,
+        "FCEDBA": 51,
+        "FDABCE": 56,
+        "FDABEC": 51,
+        "FDACBE": 60,
+        "FDACEB": 52,
+        "FDAEBC": 63,
+        "FDAECB": 60,
+        "FDBACE": 66,
+        "FDBAEC": 69,
+        "FDBCAE": 78,
+        "FDBCEA": 71,
+        "FDBEAC": 73,
+        "FDBECA": 63,
+        "FDCABE": 54,
+        "FDCAEB": 58,
+        "FDCBAE": 62,
+        "FDCBEA": 59,
+        "FDCEAB": 54,
+        "FDCEBA": 47,
+        "FDEABC": 81,
+        "FDEACB": 82,
+        "FDEBAC": 73,
+        "FDEBCA": 75,
+        "FDECAB": 70,
+        "FDECBA": 71,
+        "FEABCD": 55,
+        "FEABDC": 61,
+        "FEACBD": 69,
+        "FEACDB": 60,
+        "FEADBC": 67,
+        "FEADCB": 52,
+        "FEBACD": 47,
+        "FEBADC": 43,
+        "FEBCAD": 53,
+        "FEBCDA": 45,
+        "FEBDAC": 59,
+        "FEBDCA": 55,
+        "FECABD": 57,
+        "FECADB": 54,
+        "FECBAD": 49,
+        "FECBDA": 55,
+        "FECDAB": 40,
+        "FECDBA": 49,
+        "FEDABC": 67,
+        "FEDACB": 68,
+        "FEDBAC": 77,
+        "FEDBCA": 79,
+        "FEDCAB": 62,
+        "FEDCBA": 63
+      },
+      "collected_order": [
+        "F",
+        "A",
+        "D",
+        "C",
+        "E",
+        "B"
+      ],
+      "commands": [
+        "up",
+        "up",
+        "up",
+        "up",
+        "down",
+        "down",
+        "down",
+        "left",
+        "left",
+        "left",
+        "left",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "up",
+        "up",
+        "right",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "down",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down"
+      ],
+      "trace": [
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          6
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          2,
+          9
+        ],
+        [
+          3,
+          9
+        ],
+        [
+          4,
+          9
+        ],
+        [
+          5,
+          9
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          9,
+          8
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          9,
+          1
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "down",
+          "count": 3
+        },
+        {
+          "direction": "left",
+          "count": 4
+        },
+        {
+          "direction": "up",
+          "count": 5
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 6
+        },
+        {
+          "direction": "down",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "down",
+          "count": 7
+        }
+      ],
+      "python_reference": "for _ in range(4):\n    move_up()\nfor _ in range(3):\n    move_down()\nfor _ in range(4):\n    move_left()\nfor _ in range(5):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(2):\n    move_up()\nfor _ in range(1):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(6):\n    move_right()\nfor _ in range(1):\n    move_down()\nfor _ in range(1):\n    move_right()\nfor _ in range(7):\n    move_down()\n"
+    },
+    {
+      "level_id": "L20",
+      "global_optimal_steps": 40,
+      "required_optimal_steps": 40,
+      "order_steps": {
+        "ABCDEF": 82,
+        "ABCDFE": 75,
+        "ABCEDF": 56,
+        "ABCEFD": 60,
+        "ABCFDE": 75,
+        "ABCFED": 86,
+        "ABDCEF": 72,
+        "ABDCFE": 91,
+        "ABDECF": 70,
+        "ABDEFC": 83,
+        "ABDFCE": 65,
+        "ABDFEC": 59,
+        "ABECDF": 56,
+        "ABECFD": 60,
+        "ABEDCF": 80,
+        "ABEDFC": 69,
+        "ABEFCD": 84,
+        "ABEFDC": 69,
+        "ABFCDE": 91,
+        "ABFCED": 76,
+        "ABFDCE": 65,
+        "ABFDEC": 59,
+        "ABFECD": 74,
+        "ABFEDC": 83,
+        "ACBDEF": 64,
+        "ACBDFE": 57,
+        "ACBEDF": 50,
+        "ACBEFD": 54,
+        "ACBFDE": 57,
+        "ACBFED": 68,
+        "ACDBEF": 66,
+        "ACDBFE": 73,
+        "ACDEBF": 66,
+        "ACDEFB": 77,
+        "ACDFBE": 59,
+        "ACDFEB": 63,
+        "ACEBDF": 40,
+        "ACEBFD": 44,
+        "ACEDBF": 54,
+        "ACEDFB": 51,
+        "ACEFBD": 58,
+        "ACEFDB": 51,
+        "ACFBDE": 73,
+        "ACFBED": 70,
+        "ACFDBE": 59,
+        "ACFDEB": 63,
+        "ACFEBD": 70,
+        "ACFEDB": 77,
+        "ADBCEF": 72,
+        "ADBCFE": 91,
+        "ADBECF": 72,
+        "ADBEFC": 85,
+        "ADBFCE": 81,
+        "ADBFEC": 75,
+        "ADCBEF": 84,
+        "ADCBFE": 91,
+        "ADCEBF": 74,
+        "ADCEFB": 85,
+        "ADCFBE": 93,
+        "ADCFEB": 97,
+        "ADEBCF": 82,
+        "ADEBFC": 85,
+        "ADECBF": 72,
+        "ADECFB": 83,
+        "ADEFBC": 85,
+        "ADEFCB": 93,
+        "ADFBCE": 65,
+        "ADFBEC": 61,
+        "ADFCBE": 77,
+        "ADFCEB": 71,
+        "ADFEBC": 71,
+        "ADFECB": 69,
+        "AEBCDF": 56,
+        "AEBCFD": 60,
+        "AEBDCF": 70,
+        "AEBDFC": 59,
+        "AEBFCD": 74,
+        "AEBFDC": 59,
+        "AECBDF": 46,
+        "AECBFD": 50,
+        "AECDBF": 60,
+        "AECDFB": 57,
+        "AECFBD": 64,
+        "AECFDB": 57,
+        "AEDBCF": 70,
+        "AEDBFC": 73,
+        "AEDCBF": 70,
+        "AEDCFB": 81,
+        "AEDFBC": 59,
+        "AEDFCB": 67,
+        "AEFBCD": 74,
+        "AEFBDC": 73,
+        "AEFCBD": 74,
+        "AEFCDB": 81,
+        "AEFDBC": 59,
+        "AEFDCB": 67,
+        "AFBCDE": 91,
+        "AFBCED": 76,
+        "AFBDCE": 81,
+        "AFBDEC": 75,
+        "AFBECD": 76,
+        "AFBEDC": 85,
+        "AFCBDE": 91,
+        "AFCBED": 88,
+        "AFCDBE": 93,
+        "AFCDEB": 97,
+        "AFCEBD": 78,
+        "AFCEDB": 85,
+        "AFDBCE": 65,
+        "AFDBEC": 61,
+        "AFDCBE": 77,
+        "AFDCEB": 71,
+        "AFDEBC": 71,
+        "AFDECB": 69,
+        "AFEBCD": 86,
+        "AFEBDC": 85,
+        "AFECBD": 76,
+        "AFECDB": 83,
+        "AFEDBC": 85,
+        "AFEDCB": 93,
+        "BACDEF": 92,
+        "BACDFE": 85,
+        "BACEDF": 66,
+        "BACEFD": 70,
+        "BACFDE": 85,
+        "BACFED": 96,
+        "BADCEF": 100,
+        "BADCFE": 119,
+        "BADECF": 98,
+        "BADEFC": 111,
+        "BADFCE": 93,
+        "BADFEC": 87,
+        "BAECDF": 72,
+        "BAECFD": 76,
+        "BAEDCF": 96,
+        "BAEDFC": 85,
+        "BAEFCD": 100,
+        "BAEFDC": 85,
+        "BAFCDE": 119,
+        "BAFCED": 104,
+        "BAFDCE": 93,
+        "BAFDEC": 87,
+        "BAFECD": 102,
+        "BAFEDC": 111,
+        "BCADEF": 92,
+        "BCADFE": 85,
+        "BCAEDF": 66,
+        "BCAEFD": 70,
+        "BCAFDE": 85,
+        "BCAFED": 96,
+        "BCDAEF": 100,
+        "BCDAFE": 119,
+        "BCDEAF": 98,
+        "BCDEFA": 107,
+        "BCDFAE": 93,
+        "BCDFEA": 83,
+        "BCEADF": 72,
+        "BCEAFD": 76,
+        "BCEDAF": 96,
+        "BCEDFA": 81,
+        "BCEFAD": 100,
+        "BCEFDA": 81,
+        "BCFADE": 119,
+        "BCFAED": 104,
+        "BCFDAE": 93,
+        "BCFDEA": 83,
+        "BCFEAD": 102,
+        "BCFEDA": 107,
+        "BDACEF": 82,
+        "BDACFE": 101,
+        "BDAECF": 88,
+        "BDAEFC": 101,
+        "BDAFCE": 109,
+        "BDAFEC": 103,
+        "BDCAEF": 82,
+        "BDCAFE": 101,
+        "BDCEAF": 88,
+        "BDCEFA": 97,
+        "BDCFAE": 109,
+        "BDCFEA": 99,
+        "BDEACF": 80,
+        "BDEAFC": 99,
+        "BDECAF": 80,
+        "BDECFA": 95,
+        "BDEFAC": 93,
+        "BDEFCA": 89,
+        "BDFACE": 75,
+        "BDFAEC": 77,
+        "BDFCAE": 75,
+        "BDFCEA": 73,
+        "BDFEAC": 69,
+        "BDFECA": 65,
+        "BEACDF": 66,
+        "BEACFD": 70,
+        "BEADCF": 96,
+        "BEADFC": 85,
+        "BEAFCD": 100,
+        "BEAFDC": 85,
+        "BECADF": 66,
+        "BECAFD": 70,
+        "BECDAF": 96,
+        "BECDFA": 81,
+        "BECFAD": 100,
+        "BECFDA": 81,
+        "BEDACF": 90,
+        "BEDAFC": 109,
+        "BEDCAF": 90,
+        "BEDCFA": 105,
+        "BEDFAC": 79,
+        "BEDFCA": 75,
+        "BEFACD": 94,
+        "BEFADC": 109,
+        "BEFCAD": 94,
+        "BEFCDA": 105,
+        "BEFDAC": 79,
+        "BEFDCA": 75,
+        "BFACDE": 101,
+        "BFACED": 86,
+        "BFADCE": 109,
+        "BFADEC": 103,
+        "BFAECD": 92,
+        "BFAEDC": 101,
+        "BFCADE": 101,
+        "BFCAED": 86,
+        "BFCDAE": 109,
+        "BFCDEA": 99,
+        "BFCEAD": 92,
+        "BFCEDA": 97,
+        "BFDACE": 75,
+        "BFDAEC": 77,
+        "BFDCAE": 75,
+        "BFDCEA": 73,
+        "BFDEAC": 69,
+        "BFDECA": 65,
+        "BFEACD": 84,
+        "BFEADC": 99,
+        "BFECAD": 84,
+        "BFECDA": 95,
+        "BFEDAC": 93,
+        "BFEDCA": 89,
+        "CABDEF": 74,
+        "CABDFE": 67,
+        "CABEDF": 60,
+        "CABEFD": 64,
+        "CABFDE": 67,
+        "CABFED": 78,
+        "CADBEF": 76,
+        "CADBFE": 83,
+        "CADEBF": 76,
+        "CADEFB": 87,
+        "CADFBE": 69,
+        "CADFEB": 73,
+        "CAEBDF": 50,
+        "CAEBFD": 54,
+        "CAEDBF": 64,
+        "CAEDFB": 61,
+        "CAEFBD": 68,
+        "CAEFDB": 61,
+        "CAFBDE": 83,
+        "CAFBED": 80,
+        "CAFDBE": 69,
+        "CAFDEB": 73,
+        "CAFEBD": 80,
+        "CAFEDB": 87,
+        "CBADEF": 92,
+        "CBADFE": 85,
+        "CBAEDF": 66,
+        "CBAEFD": 70,
+        "CBAFDE": 85,
+        "CBAFED": 96,
+        "CBDAEF": 82,
+        "CBDAFE": 101,
+        "CBDEAF": 80,
+        "CBDEFA": 89,
+        "CBDFAE": 75,
+        "CBDFEA": 65,
+        "CBEADF": 66,
+        "CBEAFD": 70,
+        "CBEDAF": 90,
+        "CBEDFA": 75,
+        "CBEFAD": 94,
+        "CBEFDA": 75,
+        "CBFADE": 101,
+        "CBFAED": 86,
+        "CBFDAE": 75,
+        "CBFDEA": 65,
+        "CBFEAD": 84,
+        "CBFEDA": 89,
+        "CDABEF": 94,
+        "CDABFE": 101,
+        "CDAEBF": 84,
+        "CDAEFB": 95,
+        "CDAFBE": 103,
+        "CDAFEB": 107,
+        "CDBAEF": 82,
+        "CDBAFE": 101,
+        "CDBEAF": 82,
+        "CDBEFA": 91,
+        "CDBFAE": 91,
+        "CDBFEA": 81,
+        "CDEABF": 82,
+        "CDEAFB": 93,
+        "CDEBAF": 92,
+        "CDEBFA": 91,
+        "CDEFAB": 103,
+        "CDEFBA": 91,
+        "CDFABE": 87,
+        "CDFAEB": 81,
+        "CDFBAE": 75,
+        "CDFBEA": 67,
+        "CDFEAB": 79,
+        "CDFEBA": 77,
+        "CEABDF": 56,
+        "CEABFD": 60,
+        "CEADBF": 70,
+        "CEADFB": 67,
+        "CEAFBD": 74,
+        "CEAFDB": 67,
+        "CEBADF": 66,
+        "CEBAFD": 70,
+        "CEBDAF": 80,
+        "CEBDFA": 65,
+        "CEBFAD": 84,
+        "CEBFDA": 65,
+        "CEDABF": 80,
+        "CEDAFB": 91,
+        "CEDBAF": 80,
+        "CEDBFA": 79,
+        "CEDFAB": 77,
+        "CEDFBA": 65,
+        "CEFABD": 84,
+        "CEFADB": 91,
+        "CEFBAD": 84,
+        "CEFBDA": 79,
+        "CEFDAB": 77,
+        "CEFDBA": 65,
+        "CFABDE": 101,
+        "CFABED": 98,
+        "CFADBE": 103,
+        "CFADEB": 107,
+        "CFAEBD": 88,
+        "CFAEDB": 95,
+        "CFBADE": 101,
+        "CFBAED": 86,
+        "CFBDAE": 91,
+        "CFBDEA": 81,
+        "CFBEAD": 86,
+        "CFBEDA": 91,
+        "CFDABE": 87,
+        "CFDAEB": 81,
+        "CFDBAE": 75,
+        "CFDBEA": 67,
+        "CFDEAB": 79,
+        "CFDEBA": 77,
+        "CFEABD": 86,
+        "CFEADB": 93,
+        "CFEBAD": 96,
+        "CFEBDA": 91,
+        "CFEDAB": 103,
+        "CFEDBA": 91,
+        "DABCEF": 100,
+        "DABCFE": 119,
+        "DABECF": 100,
+        "DABEFC": 113,
+        "DABFCE": 109,
+        "DABFEC": 103,
+        "DACBEF": 94,
+        "DACBFE": 101,
+        "DACEBF": 84,
+        "DACEFB": 95,
+        "DACFBE": 103,
+        "DACFEB": 107,
+        "DAEBCF": 100,
+        "DAEBFC": 103,
+        "DAECBF": 90,
+        "DAECFB": 101,
+        "DAEFBC": 103,
+        "DAEFCB": 111,
+        "DAFBCE": 109,
+        "DAFBEC": 105,
+        "DAFCBE": 121,
+        "DAFCEB": 115,
+        "DAFEBC": 115,
+        "DAFECB": 113,
+        "DBACEF": 82,
+        "DBACFE": 101,
+        "DBAECF": 88,
+        "DBAEFC": 101,
+        "DBAFCE": 109,
+        "DBAFEC": 103,
+        "DBCAEF": 82,
+        "DBCAFE": 101,
+        "DBCEAF": 88,
+        "DBCEFA": 97,
+        "DBCFAE": 109,
+        "DBCFEA": 99,
+        "DBEACF": 82,
+        "DBEAFC": 101,
+        "DBECAF": 82,
+        "DBECFA": 97,
+        "DBEFAC": 95,
+        "DBEFCA": 91,
+        "DBFACE": 91,
+        "DBFAEC": 93,
+        "DBFCAE": 91,
+        "DBFCEA": 89,
+        "DBFEAC": 85,
+        "DBFECA": 81,
+        "DCABEF": 94,
+        "DCABFE": 101,
+        "DCAEBF": 84,
+        "DCAEFB": 95,
+        "DCAFBE": 103,
+        "DCAFEB": 107,
+        "DCBAEF": 100,
+        "DCBAFE": 119,
+        "DCBEAF": 100,
+        "DCBEFA": 109,
+        "DCBFAE": 109,
+        "DCBFEA": 99,
+        "DCEABF": 90,
+        "DCEAFB": 101,
+        "DCEBAF": 100,
+        "DCEBFA": 99,
+        "DCEFAB": 111,
+        "DCEFBA": 99,
+        "DCFABE": 121,
+        "DCFAEB": 115,
+        "DCFBAE": 109,
+        "DCFBEA": 101,
+        "DCFEAB": 113,
+        "DCFEBA": 111,
+        "DEABCF": 98,
+        "DEABFC": 101,
+        "DEACBF": 82,
+        "DEACFB": 93,
+        "DEAFBC": 101,
+        "DEAFCB": 109,
+        "DEBACF": 92,
+        "DEBAFC": 111,
+        "DEBCAF": 92,
+        "DEBCFA": 107,
+        "DEBFAC": 95,
+        "DEBFCA": 91,
+        "DECABF": 82,
+        "DECAFB": 93,
+        "DECBAF": 98,
+        "DECBFA": 97,
+        "DECFAB": 109,
+        "DECFBA": 97,
+        "DEFABC": 111,
+        "DEFACB": 103,
+        "DEFBAC": 95,
+        "DEFBCA": 91,
+        "DEFCAB": 103,
+        "DEFCBA": 107,
+        "DFABCE": 93,
+        "DFABEC": 89,
+        "DFACBE": 87,
+        "DFACEB": 81,
+        "DFAEBC": 89,
+        "DFAECB": 87,
+        "DFBACE": 75,
+        "DFBAEC": 77,
+        "DFBCAE": 75,
+        "DFBCEA": 73,
+        "DFBEAC": 71,
+        "DFBECA": 67,
+        "DFCABE": 87,
+        "DFCAEB": 81,
+        "DFCBAE": 93,
+        "DFCBEA": 85,
+        "DFCEAB": 87,
+        "DFCEBA": 85,
+        "DFEABC": 87,
+        "DFEACB": 79,
+        "DFEBAC": 81,
+        "DFEBCA": 77,
+        "DFECAB": 79,
+        "DFECBA": 83,
+        "EABCDF": 72,
+        "EABCFD": 76,
+        "EABDCF": 86,
+        "EABDFC": 75,
+        "EABFCD": 90,
+        "EABFDC": 75,
+        "EACBDF": 56,
+        "EACBFD": 60,
+        "EACDBF": 70,
+        "EACDFB": 67,
+        "EACFBD": 74,
+        "EACFDB": 67,
+        "EADBCF": 86,
+        "EADBFC": 89,
+        "EADCBF": 86,
+        "EADCFB": 97,
+        "EADFBC": 75,
+        "EADFCB": 83,
+        "EAFBCD": 90,
+        "EAFBDC": 89,
+        "EAFCBD": 90,
+        "EAFCDB": 97,
+        "EAFDBC": 75,
+        "EAFDCB": 83,
+        "EBACDF": 66,
+        "EBACFD": 70,
+        "EBADCF": 96,
+        "EBADFC": 85,
+        "EBAFCD": 100,
+        "EBAFDC": 85,
+        "EBCADF": 66,
+        "EBCAFD": 70,
+        "EBCDAF": 96,
+        "EBCDFA": 81,
+        "EBCFAD": 100,
+        "EBCFDA": 81,
+        "EBDACF": 80,
+        "EBDAFC": 99,
+        "EBDCAF": 80,
+        "EBDCFA": 95,
+        "EBDFAC": 69,
+        "EBDFCA": 65,
+        "EBFACD": 84,
+        "EBFADC": 99,
+        "EBFCAD": 84,
+        "EBFCDA": 95,
+        "EBFDAC": 69,
+        "EBFDCA": 65,
+        "ECABDF": 56,
+        "ECABFD": 60,
+        "ECADBF": 70,
+        "ECADFB": 67,
+        "ECAFBD": 74,
+        "ECAFDB": 67,
+        "ECBADF": 72,
+        "ECBAFD": 76,
+        "ECBDAF": 86,
+        "ECBDFA": 71,
+        "ECBFAD": 90,
+        "ECBFDA": 71,
+        "ECDABF": 86,
+        "ECDAFB": 97,
+        "ECDBAF": 86,
+        "ECDBFA": 85,
+        "ECDFAB": 83,
+        "ECDFBA": 71,
+        "ECFABD": 90,
+        "ECFADB": 97,
+        "ECFBAD": 90,
+        "ECFBDA": 85,
+        "ECFDAB": 83,
+        "ECFDBA": 71,
+        "EDABCF": 96,
+        "EDABFC": 99,
+        "EDACBF": 80,
+        "EDACFB": 91,
+        "EDAFBC": 99,
+        "EDAFCB": 107,
+        "EDBACF": 80,
+        "EDBAFC": 99,
+        "EDBCAF": 80,
+        "EDBCFA": 95,
+        "EDBFAC": 83,
+        "EDBFCA": 79,
+        "EDCABF": 80,
+        "EDCAFB": 91,
+        "EDCBAF": 96,
+        "EDCBFA": 95,
+        "EDCFAB": 107,
+        "EDCFBA": 95,
+        "EDFABC": 85,
+        "EDFACB": 77,
+        "EDFBAC": 69,
+        "EDFBCA": 65,
+        "EDFCAB": 77,
+        "EDFCBA": 81,
+        "EFABCD": 100,
+        "EFABDC": 99,
+        "EFACBD": 84,
+        "EFACDB": 91,
+        "EFADBC": 99,
+        "EFADCB": 107,
+        "EFBACD": 84,
+        "EFBADC": 99,
+        "EFBCAD": 84,
+        "EFBCDA": 95,
+        "EFBDAC": 83,
+        "EFBDCA": 79,
+        "EFCABD": 84,
+        "EFCADB": 91,
+        "EFCBAD": 100,
+        "EFCBDA": 95,
+        "EFCDAB": 107,
+        "EFCDBA": 95,
+        "EFDABC": 85,
+        "EFDACB": 77,
+        "EFDBAC": 69,
+        "EFDBCA": 65,
+        "EFDCAB": 77,
+        "EFDCBA": 81,
+        "FABCDE": 119,
+        "FABCED": 104,
+        "FABDCE": 109,
+        "FABDEC": 103,
+        "FABECD": 104,
+        "FABEDC": 113,
+        "FACBDE": 101,
+        "FACBED": 98,
+        "FACDBE": 103,
+        "FACDEB": 107,
+        "FACEBD": 88,
+        "FACEDB": 95,
+        "FADBCE": 109,
+        "FADBEC": 105,
+        "FADCBE": 121,
+        "FADCEB": 115,
+        "FADEBC": 115,
+        "FADECB": 113,
+        "FAEBCD": 104,
+        "FAEBDC": 103,
+        "FAECBD": 94,
+        "FAECDB": 101,
+        "FAEDBC": 103,
+        "FAEDCB": 111,
+        "FBACDE": 101,
+        "FBACED": 86,
+        "FBADCE": 109,
+        "FBADEC": 103,
+        "FBAECD": 92,
+        "FBAEDC": 101,
+        "FBCADE": 101,
+        "FBCAED": 86,
+        "FBCDAE": 109,
+        "FBCDEA": 99,
+        "FBCEAD": 92,
+        "FBCEDA": 97,
+        "FBDACE": 91,
+        "FBDAEC": 93,
+        "FBDCAE": 91,
+        "FBDCEA": 89,
+        "FBDEAC": 85,
+        "FBDECA": 81,
+        "FBEACD": 86,
+        "FBEADC": 101,
+        "FBECAD": 86,
+        "FBECDA": 97,
+        "FBEDAC": 95,
+        "FBEDCA": 91,
+        "FCABDE": 101,
+        "FCABED": 98,
+        "FCADBE": 103,
+        "FCADEB": 107,
+        "FCAEBD": 88,
+        "FCAEDB": 95,
+        "FCBADE": 119,
+        "FCBAED": 104,
+        "FCBDAE": 109,
+        "FCBDEA": 99,
+        "FCBEAD": 104,
+        "FCBEDA": 109,
+        "FCDABE": 121,
+        "FCDAEB": 115,
+        "FCDBAE": 109,
+        "FCDBEA": 101,
+        "FCDEAB": 113,
+        "FCDEBA": 111,
+        "FCEABD": 94,
+        "FCEADB": 101,
+        "FCEBAD": 104,
+        "FCEBDA": 99,
+        "FCEDAB": 111,
+        "FCEDBA": 99,
+        "FDABCE": 93,
+        "FDABEC": 89,
+        "FDACBE": 87,
+        "FDACEB": 81,
+        "FDAEBC": 89,
+        "FDAECB": 87,
+        "FDBACE": 75,
+        "FDBAEC": 77,
+        "FDBCAE": 75,
+        "FDBCEA": 73,
+        "FDBEAC": 71,
+        "FDBECA": 67,
+        "FDCABE": 87,
+        "FDCAEB": 81,
+        "FDCBAE": 93,
+        "FDCBEA": 85,
+        "FDCEAB": 87,
+        "FDCEBA": 85,
+        "FDEABC": 87,
+        "FDEACB": 79,
+        "FDEBAC": 81,
+        "FDEBCA": 77,
+        "FDECAB": 79,
+        "FDECBA": 83,
+        "FEABCD": 102,
+        "FEABDC": 101,
+        "FEACBD": 86,
+        "FEACDB": 93,
+        "FEADBC": 101,
+        "FEADCB": 109,
+        "FEBACD": 96,
+        "FEBADC": 111,
+        "FEBCAD": 96,
+        "FEBCDA": 107,
+        "FEBDAC": 95,
+        "FEBDCA": 91,
+        "FECABD": 86,
+        "FECADB": 93,
+        "FECBAD": 102,
+        "FECBDA": 97,
+        "FECDAB": 109,
+        "FECDBA": 97,
+        "FEDABC": 111,
+        "FEDACB": 103,
+        "FEDBAC": 95,
+        "FEDBCA": 91,
+        "FEDCAB": 103,
+        "FEDCBA": 107
+      },
+      "collected_order": [
+        "A",
+        "C",
+        "E",
+        "B",
+        "D",
+        "F"
+      ],
+      "commands": [
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "right",
+        "right",
+        "right",
+        "up",
+        "right",
+        "right",
+        "down",
+        "down",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down",
+        "down",
+        "left",
+        "left",
+        "down",
+        "down",
+        "left",
+        "left",
+        "up",
+        "up",
+        "left",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "left"
+      ],
+      "trace": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          6
+        ],
+        [
+          1,
+          7
+        ],
+        [
+          1,
+          8
+        ],
+        [
+          2,
+          8
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          8
+        ],
+        [
+          6,
+          8
+        ],
+        [
+          6,
+          9
+        ],
+        [
+          7,
+          9
+        ],
+        [
+          8,
+          9
+        ],
+        [
+          8,
+          8
+        ],
+        [
+          8,
+          7
+        ],
+        [
+          9,
+          7
+        ],
+        [
+          9,
+          6
+        ],
+        [
+          9,
+          5
+        ],
+        [
+          9,
+          4
+        ],
+        [
+          9,
+          3
+        ],
+        [
+          9,
+          2
+        ],
+        [
+          8,
+          2
+        ],
+        [
+          7,
+          2
+        ],
+        [
+          7,
+          1
+        ],
+        [
+          7,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          4,
+          6
+        ]
+      ],
+      "reference_rows": [
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 8
+        },
+        {
+          "direction": "right",
+          "count": 5
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 2
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "down",
+          "count": 5
+        },
+        {
+          "direction": "left",
+          "count": 2
+        },
+        {
+          "direction": "down",
+          "count": 2
+        },
+        {
+          "direction": "left",
+          "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 2
+        },
+        {
+          "direction": "left",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 4
+        },
+        {
+          "direction": "left",
+          "count": 1
+        }
+      ],
+      "python_reference": "for _ in range(1):\n    move_right()\nfor _ in range(8):\n    move_up()\nfor _ in range(5):\n    move_right()\nfor _ in range(1):\n    move_up()\nfor _ in range(2):\n    move_right()\nfor _ in range(2):\n    move_down()\nfor _ in range(1):\n    move_right()\nfor _ in range(5):\n    move_down()\nfor _ in range(2):\n    move_left()\nfor _ in range(2):\n    move_down()\nfor _ in range(2):\n    move_left()\nfor _ in range(2):\n    move_up()\nfor _ in range(1):\n    move_left()\nfor _ in range(1):\n    move_right()\nfor _ in range(4):\n    move_up()\nfor _ in range(1):\n    move_left()\n"
+    }
+  ]
+}

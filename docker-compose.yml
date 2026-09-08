@@ -1,0 +1,13 @@
+services:
+  coin-competition:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN}
+      TEACHER_KEY: ${TEACHER_KEY}
+      COIN_DATA_DIR: /app/data
+    ports:
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - ./data:/app/data

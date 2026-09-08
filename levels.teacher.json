@@ -1,0 +1,2841 @@
+{
+  "schema_version": "2.0.0",
+  "rules_version": "2.0.0",
+  "content_pack_version": "2.1.0",
+  "max_coins": 6,
+  "coordinate_system": "origin_bottom_left_x_right_y_up",
+  "teacher_only_fields": [
+    "expected_optimal_steps"
+  ],
+  "levels": [
+    {
+      "level_id": "L01",
+      "content_id": "coin_l01",
+      "content_version": "2.1.0",
+      "keyboard_id": "K01",
+      "python_id": "P01",
+      "title": "迈出第一步",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            2,
+            0
+          ]
+        }
+      ],
+      "walls": [],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "一次指令移动一格",
+      "objective": "向右找到金币，捡到即完成。",
+      "max_attempts": null,
+      "expected_optimal_steps": 2,
+      "python": {
+        "template_id": "call_slots_v2",
+        "editable_region": "only direction field in each call",
+        "editable_fields": [
+          "direction"
+        ],
+        "locked_parts": [
+          "move_ prefix",
+          "parentheses",
+          "line structure"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 2,
+        "min_rows": 2,
+        "max_rows": 2,
+        "can_add_delete_rows": false,
+        "count_range": null,
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L02",
+      "content_id": "coin_l02",
+      "content_version": "2.1.0",
+      "keyboard_id": "K02",
+      "python_id": "P02",
+      "title": "向上出发",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            3
+          ]
+        }
+      ],
+      "walls": [],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "y 向上增加",
+      "objective": "观察坐标，找到上方的金币。",
+      "max_attempts": null,
+      "expected_optimal_steps": 3,
+      "python": {
+        "template_id": "call_slots_v2",
+        "editable_region": "only direction field in each call",
+        "editable_fields": [
+          "direction"
+        ],
+        "locked_parts": [
+          "move_ prefix",
+          "parentheses",
+          "line structure"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 3,
+        "min_rows": 3,
+        "max_rows": 3,
+        "can_add_delete_rows": false,
+        "count_range": null,
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L03",
+      "content_id": "coin_l03",
+      "content_version": "2.1.0",
+      "keyboard_id": "K03",
+      "python_id": "P03",
+      "title": "拐个弯",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            3,
+            2
+          ]
+        }
+      ],
+      "walls": [],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "组合水平和竖直移动",
+      "objective": "换方向也能继续走；不必返回起点。",
+      "max_attempts": null,
+      "expected_optimal_steps": 5,
+      "python": {
+        "template_id": "call_slots_v2",
+        "editable_region": "only direction field in each call",
+        "editable_fields": [
+          "direction"
+        ],
+        "locked_parts": [
+          "move_ prefix",
+          "parentheses",
+          "line structure"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 5,
+        "min_rows": 5,
+        "max_rows": 5,
+        "can_add_delete_rows": false,
+        "count_range": null,
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L04",
+      "content_id": "coin_l04",
+      "content_version": "2.1.0",
+      "keyboard_id": "K04",
+      "python_id": "P04",
+      "title": "两枚都要",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            3
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            1
+          ]
+        }
+      ],
+      "walls": [],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "任意顺序收集",
+      "objective": "任意顺序捡完两枚金币。",
+      "max_attempts": null,
+      "expected_optimal_steps": 9,
+      "python": {
+        "template_id": "call_slots_v2",
+        "editable_region": "only direction field in each call",
+        "editable_fields": [
+          "direction"
+        ],
+        "locked_parts": [
+          "move_ prefix",
+          "parentheses",
+          "line structure"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 10,
+        "min_rows": 1,
+        "max_rows": 32,
+        "can_add_delete_rows": true,
+        "count_range": null,
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L05",
+      "content_id": "coin_l05",
+      "content_version": "2.1.0",
+      "keyboard_id": "K05",
+      "python_id": "P05",
+      "title": "换个顺序试试",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        2,
+        2
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            4
+          ]
+        }
+      ],
+      "walls": [],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "顺序影响不返程总距离",
+      "objective": "先试一种顺序，再比较另一种。",
+      "max_attempts": null,
+      "expected_optimal_steps": 8,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L06",
+      "content_id": "coin_l06",
+      "content_version": "2.1.0",
+      "keyboard_id": "K06",
+      "python_id": "P06",
+      "title": "两枚金币与路障",
+      "stage": "explore",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        1
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            4,
+            1
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            3
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "碰撞与绕行",
+      "objective": "绕开路障，捡完两枚金币。",
+      "max_attempts": null,
+      "expected_optimal_steps": 8,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L07",
+      "content_id": "coin_l07",
+      "content_version": "2.1.0",
+      "keyboard_id": "K07",
+      "python_id": "P07",
+      "title": "从缺口通过",
+      "stage": "guided",
+      "width": 5,
+      "height": 5,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            1
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "required_order": [
+        "A",
+        "B"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "给定顺序分段数步",
+      "objective": "按 A→B，数一数经过缺口要走几格。",
+      "max_attempts": null,
+      "expected_optimal_steps": 9,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L08",
+      "content_id": "coin_l08",
+      "content_version": "2.1.0",
+      "keyboard_id": "K08",
+      "python_id": "P08",
+      "title": "三枚与一道长墙",
+      "stage": "guided",
+      "width": 6,
+      "height": 6,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            5,
+            1
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            4,
+            5
+          ]
+        }
+      ],
+      "walls": [
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "required_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "障碍距离不同于坐标差",
+      "objective": "按 A→B→C，分别规划墙两侧的路段。",
+      "max_attempts": null,
+      "expected_optimal_steps": 17,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L09",
+      "content_id": "coin_l09",
+      "content_version": "2.1.0",
+      "keyboard_id": "K09",
+      "python_id": "P09",
+      "title": "三枚按顺序",
+      "stage": "guided",
+      "width": 7,
+      "height": 7,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            3
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            4
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            6,
+            1
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "required_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "同一顺序比较路线",
+      "objective": "按 A→B→C，比较 13 步和 15 步的路线。",
+      "max_attempts": null,
+      "expected_optimal_steps": 13,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L10",
+      "content_id": "coin_l10",
+      "content_version": "2.1.0",
+      "keyboard_id": "K10",
+      "python_id": "P10",
+      "title": "连续两个缺口",
+      "stage": "guided",
+      "width": 7,
+      "height": 7,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            2
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            4,
+            5
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            6,
+            1
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ]
+      ],
+      "required_order": [
+        "A",
+        "B",
+        "C"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "组合多段绕障",
+      "objective": "按 A→B→C，依次通过两道墙。",
+      "max_attempts": null,
+      "expected_optimal_steps": 15,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L11",
+      "content_id": "coin_l11",
+      "content_version": "2.1.0",
+      "keyboard_id": "K11",
+      "python_id": "P11",
+      "title": "四枚连续绕障",
+      "stage": "guided",
+      "width": 8,
+      "height": 8,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            3,
+            5
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            3,
+            1
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            7,
+            6
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "required_order": [
+        "B",
+        "C",
+        "A",
+        "D"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "四目标分段组合",
+      "objective": "按 B→C→A→D；到 A 的路并非一直向上。",
+      "max_attempts": null,
+      "expected_optimal_steps": 23,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L12",
+      "content_id": "coin_l12",
+      "content_version": "2.1.0",
+      "keyboard_id": "K12",
+      "python_id": "P12",
+      "title": "四枚途中有先后",
+      "stage": "guided",
+      "width": 8,
+      "height": 8,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            6,
+            1
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            3,
+            1
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            6,
+            6
+          ]
+        }
+      ],
+      "walls": [
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "required_order": [
+        "A",
+        "B",
+        "C",
+        "D"
+      ],
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "经过金币也会自动拾取",
+      "objective": "按 A→B→C→D，去 B 时别提前经过 C。",
+      "max_attempts": null,
+      "expected_optimal_steps": 20,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 6,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L13",
+      "content_id": "coin_l13",
+      "content_version": "2.1.0",
+      "keyboard_id": "K13",
+      "python_id": "P13",
+      "title": "四枚分区规划",
+      "stage": "challenge",
+      "width": 8,
+      "height": 8,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            3
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            7,
+            1
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            5,
+            6
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            1,
+            7
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "从给定顺序迁移到自主排序",
+      "objective": "四枚金币分在不同区域，自己比较顺序与通路。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 20,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L14",
+      "content_id": "coin_l14",
+      "content_version": "2.1.0",
+      "keyboard_id": "K14",
+      "python_id": "P14",
+      "title": "最近与顺路组合",
+      "stage": "challenge",
+      "width": 8,
+      "height": 8,
+      "start": [
+        3,
+        1
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            4
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            6,
+            0
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            7,
+            0
+          ]
+        }
+      ],
+      "walls": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "最近邻与成组访问的比较",
+      "objective": "比较最近的一枚与顺路的两枚，最多三次改进。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 17,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L15",
+      "content_id": "coin_l15",
+      "content_version": "2.1.0",
+      "keyboard_id": "K15",
+      "python_id": "P15",
+      "title": "五枚横墙两端",
+      "stage": "challenge",
+      "width": 9,
+      "height": 9,
+      "start": [
+        4,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            8,
+            2
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            2,
+            8
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            6,
+            7
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            4,
+            4
+          ]
+        }
+      ],
+      "walls": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          7,
+          3
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "比较分区与墙两端通路",
+      "objective": "五枚金币分布在墙两侧，比较先后访问的总成本。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 30,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L16",
+      "content_id": "coin_l16",
+      "content_version": "2.1.0",
+      "keyboard_id": "K16",
+      "python_id": "P16",
+      "title": "五枚双侧出口",
+      "stage": "challenge",
+      "width": 9,
+      "height": 9,
+      "start": [
+        4,
+        4
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            7,
+            7
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            1,
+            7
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            7,
+            1
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            4,
+            8
+          ]
+        }
+      ],
+      "walls": [
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "通过不同出口连接区域",
+      "objective": "规划左右和上方的五个目标，减少重复穿越。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 26,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L17",
+      "content_id": "coin_l17",
+      "content_version": "2.1.0",
+      "keyboard_id": "K17",
+      "python_id": "P17",
+      "title": "五枚凹形围墙",
+      "stage": "challenge",
+      "width": 9,
+      "height": 9,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            3,
+            3
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            8,
+            1
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            1,
+            7
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            7,
+            7
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            4,
+            8
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          7,
+          5
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "考虑凹形围墙的进出成本",
+      "objective": "不要漏掉围墙内的金币，先安排进出顺序。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 30,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L18",
+      "content_id": "coin_l18",
+      "content_version": "2.1.0",
+      "keyboard_id": "K18",
+      "python_id": "P18",
+      "title": "六枚三层区域",
+      "stage": "challenge",
+      "width": 10,
+      "height": 10,
+      "start": [
+        0,
+        4
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            2,
+            0
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            9,
+            4
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            6,
+            9
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            1,
+            8
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            8,
+            1
+          ]
+        },
+        {
+          "id": "F",
+          "position": [
+            5,
+            5
+          ]
+        }
+      ],
+      "walls": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          6
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          4,
+          8
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          6
+        ],
+        [
+          7,
+          3
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          8,
+          6
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "六目标分区规划",
+      "objective": "将六枚金币按区域组合，再比较跨区顺序。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 35,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L19",
+      "content_id": "coin_l19",
+      "content_version": "2.1.0",
+      "keyboard_id": "K19",
+      "python_id": "P19",
+      "title": "六枚回头有价值",
+      "stage": "challenge",
+      "width": 10,
+      "height": 10,
+      "start": [
+        4,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            9,
+            1
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            4,
+            9
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            1,
+            8
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            8,
+            8
+          ]
+        },
+        {
+          "id": "F",
+          "position": [
+            4,
+            4
+          ]
+        }
+      ],
+      "walls": [
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          6
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          3,
+          8
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          6
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          7,
+          4
+        ],
+        [
+          8,
+          4
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "必要回头与无效重复的区别",
+      "objective": "比较何时进入长通道，路可以回头但捡完就停。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 36,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    },
+    {
+      "level_id": "L20",
+      "content_id": "coin_l20",
+      "content_version": "2.1.0",
+      "keyboard_id": "K20",
+      "python_id": "P20",
+      "title": "六枚综合路线挑战",
+      "stage": "challenge",
+      "width": 10,
+      "height": 10,
+      "start": [
+        0,
+        0
+      ],
+      "coins": [
+        {
+          "id": "A",
+          "position": [
+            1,
+            8
+          ]
+        },
+        {
+          "id": "B",
+          "position": [
+            9,
+            2
+          ]
+        },
+        {
+          "id": "C",
+          "position": [
+            6,
+            9
+          ]
+        },
+        {
+          "id": "D",
+          "position": [
+            4,
+            2
+          ]
+        },
+        {
+          "id": "E",
+          "position": [
+            8,
+            7
+          ]
+        },
+        {
+          "id": "F",
+          "position": [
+            4,
+            6
+          ]
+        }
+      ],
+      "walls": [
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          3,
+          7
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          7
+        ],
+        [
+          5,
+          7
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          7
+        ],
+        [
+          7,
+          5
+        ],
+        [
+          7,
+          6
+        ],
+        [
+          7,
+          7
+        ]
+      ],
+      "required_order": null,
+      "pickup_policy": "automatic",
+      "return_required": false,
+      "stop_on_all_collected": true,
+      "max_commands": 256,
+      "knowledge": "六目标顺序与复杂通道联合规划",
+      "objective": "综合比较六枚金币的顺序与绕障路线，收集、比较、修改。",
+      "max_attempts": 3,
+      "expected_optimal_steps": 40,
+      "python": {
+        "template_id": "repeat_slots_v2",
+        "editable_region": "direction and count fields in each repeat block",
+        "editable_fields": [
+          "direction",
+          "count"
+        ],
+        "locked_parts": [
+          "for _ in range(...) header",
+          "colon",
+          "four-space indent",
+          "move_ prefix",
+          "parentheses"
+        ],
+        "allowed_functions": [
+          "move_up()",
+          "move_down()",
+          "move_left()",
+          "move_right()"
+        ],
+        "initial_rows": 8,
+        "min_rows": 1,
+        "max_rows": 24,
+        "can_add_delete_rows": true,
+        "count_range": [
+          0,
+          20
+        ],
+        "command_limit": 256,
+        "blank_input_type": "direction token typed with whitelist suggestions; integer count typed where available",
+        "initial_value": null,
+        "forbidden": [
+          "free source editing",
+          "move_to",
+          "pick_up",
+          "import",
+          "while",
+          "if",
+          "variables",
+          "nested loops",
+          "arbitrary expressions",
+          "eval",
+          "exec"
+        ]
+      }
+    }
+  ],
+  "assignments": [
+    {
+      "assignment_key": "K01",
+      "level_id": "L01",
+      "content_id": "coin_l01",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 1
+    },
+    {
+      "assignment_key": "P01",
+      "level_id": "L01",
+      "content_id": "coin_l01",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 1
+    },
+    {
+      "assignment_key": "K02",
+      "level_id": "L02",
+      "content_id": "coin_l02",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 2
+    },
+    {
+      "assignment_key": "P02",
+      "level_id": "L02",
+      "content_id": "coin_l02",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 2
+    },
+    {
+      "assignment_key": "K03",
+      "level_id": "L03",
+      "content_id": "coin_l03",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 3
+    },
+    {
+      "assignment_key": "P03",
+      "level_id": "L03",
+      "content_id": "coin_l03",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 3
+    },
+    {
+      "assignment_key": "K04",
+      "level_id": "L04",
+      "content_id": "coin_l04",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 4
+    },
+    {
+      "assignment_key": "P04",
+      "level_id": "L04",
+      "content_id": "coin_l04",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 4
+    },
+    {
+      "assignment_key": "K05",
+      "level_id": "L05",
+      "content_id": "coin_l05",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 5
+    },
+    {
+      "assignment_key": "P05",
+      "level_id": "L05",
+      "content_id": "coin_l05",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 5
+    },
+    {
+      "assignment_key": "K06",
+      "level_id": "L06",
+      "content_id": "coin_l06",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 6
+    },
+    {
+      "assignment_key": "P06",
+      "level_id": "L06",
+      "content_id": "coin_l06",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 6
+    },
+    {
+      "assignment_key": "K07",
+      "level_id": "L07",
+      "content_id": "coin_l07",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 7
+    },
+    {
+      "assignment_key": "P07",
+      "level_id": "L07",
+      "content_id": "coin_l07",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 7
+    },
+    {
+      "assignment_key": "K08",
+      "level_id": "L08",
+      "content_id": "coin_l08",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 8
+    },
+    {
+      "assignment_key": "P08",
+      "level_id": "L08",
+      "content_id": "coin_l08",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 8
+    },
+    {
+      "assignment_key": "K09",
+      "level_id": "L09",
+      "content_id": "coin_l09",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 9
+    },
+    {
+      "assignment_key": "P09",
+      "level_id": "L09",
+      "content_id": "coin_l09",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 9
+    },
+    {
+      "assignment_key": "K10",
+      "level_id": "L10",
+      "content_id": "coin_l10",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 10
+    },
+    {
+      "assignment_key": "P10",
+      "level_id": "L10",
+      "content_id": "coin_l10",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 10
+    },
+    {
+      "assignment_key": "K11",
+      "level_id": "L11",
+      "content_id": "coin_l11",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 11
+    },
+    {
+      "assignment_key": "P11",
+      "level_id": "L11",
+      "content_id": "coin_l11",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 11
+    },
+    {
+      "assignment_key": "K12",
+      "level_id": "L12",
+      "content_id": "coin_l12",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 12
+    },
+    {
+      "assignment_key": "P12",
+      "level_id": "L12",
+      "content_id": "coin_l12",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 12
+    },
+    {
+      "assignment_key": "K13",
+      "level_id": "L13",
+      "content_id": "coin_l13",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 13
+    },
+    {
+      "assignment_key": "P13",
+      "level_id": "L13",
+      "content_id": "coin_l13",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 13
+    },
+    {
+      "assignment_key": "K14",
+      "level_id": "L14",
+      "content_id": "coin_l14",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 14
+    },
+    {
+      "assignment_key": "P14",
+      "level_id": "L14",
+      "content_id": "coin_l14",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 14
+    },
+    {
+      "assignment_key": "K15",
+      "level_id": "L15",
+      "content_id": "coin_l15",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 15
+    },
+    {
+      "assignment_key": "P15",
+      "level_id": "L15",
+      "content_id": "coin_l15",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 15
+    },
+    {
+      "assignment_key": "K16",
+      "level_id": "L16",
+      "content_id": "coin_l16",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 16
+    },
+    {
+      "assignment_key": "P16",
+      "level_id": "L16",
+      "content_id": "coin_l16",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 16
+    },
+    {
+      "assignment_key": "K17",
+      "level_id": "L17",
+      "content_id": "coin_l17",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 17
+    },
+    {
+      "assignment_key": "P17",
+      "level_id": "L17",
+      "content_id": "coin_l17",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 17
+    },
+    {
+      "assignment_key": "K18",
+      "level_id": "L18",
+      "content_id": "coin_l18",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 18
+    },
+    {
+      "assignment_key": "P18",
+      "level_id": "L18",
+      "content_id": "coin_l18",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 18
+    },
+    {
+      "assignment_key": "K19",
+      "level_id": "L19",
+      "content_id": "coin_l19",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 19
+    },
+    {
+      "assignment_key": "P19",
+      "level_id": "L19",
+      "content_id": "coin_l19",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 19
+    },
+    {
+      "assignment_key": "K20",
+      "level_id": "L20",
+      "content_id": "coin_l20",
+      "content_version": "2.1.0",
+      "mode": "keyboard",
+      "sequence": 20
+    },
+    {
+      "assignment_key": "P20",
+      "level_id": "L20",
+      "content_id": "coin_l20",
+      "content_version": "2.1.0",
+      "mode": "python_blank",
+      "sequence": 20
+    }
+  ]
+}
