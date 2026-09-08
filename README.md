@@ -49,7 +49,7 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-`data/` 必须放在持久化磁盘并定期备份。Nginx 示例位于 `deploy/nginx.coin-competition.conf`；把域名替换后启用，再配置 HTTPS。`PUBLIC_ORIGIN` 必须与学生访问的 HTTPS 地址完全一致。
+`data/` 必须放在持久化磁盘并定期备份。Nginx 示例位于 `deploy/nginx.coin-competition.conf`；把域名替换后启用，再配置 HTTPS。`PUBLIC_ORIGIN` 必须与学生实际访问地址完全一致，例如临时 HTTP 地址 `http://124.222.173.226:8106`，或正式 HTTPS 地址 `https://coin.example.com`。玩家 Cookie 会根据该地址的协议自动设置安全属性。
 
 40 名学生无需分别启动进程。一个 Node 进程与一个 SQLite 数据库即可；客户端埋点已经合批，SQLite 使用 WAL、`busy_timeout=5000` 和 `synchronous=NORMAL`。若后续扩大到数百人或多台应用服务器，再迁移 PostgreSQL。
 

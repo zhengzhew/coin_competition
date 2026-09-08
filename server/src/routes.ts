@@ -1,4 +1,4 @@
-import { Router, type NextFunction, type Request, type Response } from 'express';
+import { Router, type CookieOptions, type NextFunction, type Request, type Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import {
   calculateScore,
@@ -19,6 +19,22 @@ const TERMINAL = new Set(['success', 'order_violation', 'command_limit']);
 
 function now() {
   return new Date().toISOString();
+}
+
+function playerCookieOptions(): CookieOptions {
+  const publicOrigin = process.env.PUBLIC_ORIGIN || '';
+  let secure = false;
+  try {
+    secure = new URL(publicOrigin).protocol === 'https:';
+  } catch {
+    secure = false;
+  }
+  return {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure,
+    maxAge: 1000 * 60 * 60 * 24 * 180,
+  };
 }
 
 function studentLevel(level: LevelDef) {
@@ -92,12 +108,7 @@ apiRouter.post('/players/bootstrap', (req, res) => {
     VALUES (?, ?, ?, ?)
   `).run(id, randomPlayer(), timestamp, timestamp);
   const player = database.prepare('SELECT * FROM players WHERE player_uuid = ?').get(id) as Record<string, unknown>;
-  res.cookie('player_uuid', id, {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60 * 24 * 180,
-  });
+  res.cookie('player_uuid', id, playerCookieOptions());
   res.status(201).json({ ...player, resumed: false });
 });
 
@@ -120,7 +131,7 @@ apiRouter.post('/players/switch', requirePlayer, (_req, res) => {
     INSERT INTO players (player_uuid, display_name, created_at, updated_at)
     VALUES (?, ?, ?, ?)
   `).run(id, randomPlayer(), timestamp, timestamp);
-  res.cookie('player_uuid', id, { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 180 });
+  res.cookie('player_uuid', id, playerCookieOptions());
   res.status(201).json(database.prepare('SELECT * FROM players WHERE player_uuid = ?').get(id));
 });
 
