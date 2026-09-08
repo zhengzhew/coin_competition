@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import './TeacherDashboard.css';
 
 type Numeric = number | null;
@@ -36,18 +36,25 @@ export default function TeacherDashboard() {
   const [clearConfirming, setClearConfirming] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'keyboard' | 'python_blank'>('all');
+  const [uuidDraft, setUuidDraft] = useState('');
+  const [levelDraft, setLevelDraft] = useState('');
+  const [query, setQuery] = useState('');
+  const requestId = useRef(0);
 
   const load = useCallback(async (authKey = key) => {
     if (!authKey) return false;
+    const id = ++requestId.current;
     setLoading(true);
     try {
-      const response = await fetch('/api/teacher/dashboard', { headers: { 'x-teacher-key': authKey } });
+      const response = await fetch(`/api/teacher/dashboard?${query}`, { headers: { 'x-teacher-key': authKey } });
       if (!response.ok) throw new Error(response.status === 401 ? '教师密钥不正确' : '暂时无法读取看板数据');
-      setData(await response.json()); setError(null); return true;
+      const next = await response.json();
+      if (id !== requestId.current) return false;
+      setData(next); setError(null); return true;
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : '读取失败'); return false;
-    } finally { setLoading(false); }
-  }, [key]);
+      if (id === requestId.current) setError(reason instanceof Error ? reason.message : '读取失败'); return false;
+    } finally { if (id === requestId.current) setLoading(false); }
+  }, [key, query]);
 
   useEffect(() => {
     if (!key) return;
@@ -67,7 +74,7 @@ export default function TeacherDashboard() {
   const logout = () => { sessionStorage.removeItem('coin_teacher_key'); setKey(''); setData(null); setError(null); };
 
   const download = async (kind: 'attempts' | 'events', format: 'csv' | 'jsonl') => {
-    const response = await fetch(`/api/teacher/export?kind=${kind}&format=${format}`, { headers: { 'x-teacher-key': key } });
+    const response = await fetch(`/api/teacher/export?kind=${kind}&format=${format}&${query}`, { headers: { 'x-teacher-key': key } });
     if (!response.ok) { setError('导出失败，请重新登录'); return; }
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
@@ -119,8 +126,22 @@ export default function TeacherDashboard() {
     <main className="dashboard">
       <section className="dashboard-title"><div><span>课堂实时概览</span><h1>金币路径规划学习数据</h1><p>自动每 15 秒刷新，成绩以服务端回放结果为准。</p></div><div className="export-actions"><button onClick={() => void download('attempts', 'csv')}>导出成绩 CSV</button><button onClick={() => void download('events', 'jsonl')}>导出埋点 JSONL</button><button className="danger" onClick={() => { setClearConfirming(true); setNotice(null); }}>清空所有数据</button></div></section>
 
+      <form className="dashboard-filters" onSubmit={(event) => {
+        event.preventDefault();
+        setQuery(new URLSearchParams({ uuid: uuidDraft.trim(), level: levelDraft }).toString());
+      }}>
+        <label>学生 UUID<input value={uuidDraft} onChange={(event) => setUuidDraft(event.target.value)} placeholder="完整 UUID 或开头几位" /></label>
+        <label>关卡<select value={levelDraft} onChange={(event) => setLevelDraft(event.target.value)}>
+          <option value="">全部关卡</option>
+          {Array.from({ length: 20 }, (_, index) => { const id = `L${String(index + 1).padStart(2, '0')}`; return <option key={id} value={id}>{id} · 第 {index + 1} 关</option>; })}
+        </select></label>
+        <button type="submit" disabled={loading}>查询</button>
+        <button type="button" onClick={() => { setUuidDraft(''); setLevelDraft(''); setQuery(''); }}>重置筛选</button>
+        <small>当前：{new URLSearchParams(query).get('uuid') || '全部学生'} · {new URLSearchParams(query).get('level') || '全部关卡'}。统计和导出均按此范围，挑战记录显示最近 30 次。</small>
+      </form>
+
       {clearConfirming && <section className="clear-confirm" role="alertdialog" aria-labelledby="clear-data-title">
-        <div><b id="clear-data-title">确认清空所有课堂数据？</b><small>学生身份、挑战成绩和行为埋点都会永久删除，20 关配置不会改变。</small></div>
+        <div><b id="clear-data-title">确认清空所有课堂数据？</b><small>此操作不受筛选条件限制。全部学生身份、挑战成绩和行为埋点都会永久删除，20 关配置不会改变。</small></div>
         <button onClick={() => setClearConfirming(false)} disabled={clearing}>取消</button>
         <button className="danger" onClick={() => void clearAllData()} disabled={clearing}>{clearing ? '正在清空…' : '确认清空'}</button>
       </section>}

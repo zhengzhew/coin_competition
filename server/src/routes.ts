@@ -314,8 +314,28 @@ apiRouter.get('/teacher/summary', teacherGuard, (_req, res) => {
   res.json({ players: players.count, attempts: attempts.count, events: events.count, progress });
 });
 
-apiRouter.get('/teacher/dashboard', teacherGuard, (_req, res) => {
-  const database = getDb();
+function filteredTeacherDb(req: Request) {
+  const uuid = typeof req.query.uuid === 'string' ? req.query.uuid.trim().toLowerCase() : '';
+  const level = typeof req.query.level === 'string' ? req.query.level.trim().toUpperCase() : '';
+  const prefix = `WITH
+    attempts AS (SELECT * FROM main.attempts WHERE
+      ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
+      ($level = '' OR 'L' || substr(assignment_key, 2) = $level)),
+    events AS (SELECT * FROM main.events WHERE
+      ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
+      ($level = '' OR level_id = $level)),
+    players AS (SELECT * FROM main.players WHERE
+      ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
+      ($level = '' OR player_uuid IN (SELECT player_uuid FROM attempts UNION SELECT player_uuid FROM events))) `;
+  return { prepare(sql: string) {
+    const statement = getDb().prepare(prefix + sql);
+    const params = { $uuid: uuid, $level: level };
+    return { get: () => statement.get(params), all: () => statement.all(params) };
+  } };
+}
+
+apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
+  const database = filteredTeacherDb(req);
   const overview = database.prepare(`
     SELECT
       (SELECT COUNT(*) FROM players) AS players,
@@ -359,7 +379,7 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (_req, res) => {
   const recentAttempts = database.prepare(`
     SELECT a.attempt_id, a.assignment_key, a.mode, a.trial_index, a.status, a.steps,
       a.collisions, a.collected_count, a.score, a.started_at, a.finalized_at,
-      p.display_name, substr(p.player_uuid, 1, 8) AS player_code,
+      p.display_name, p.player_uuid AS player_code,
       COALESCE(p.language_experience, 'unknown') AS language_experience
     FROM attempts a JOIN players p ON p.player_uuid = a.player_uuid
     ORDER BY a.started_at DESC LIMIT 30
@@ -397,12 +417,13 @@ function csvCell(value: unknown) {
 }
 
 apiRouter.get('/teacher/export', teacherGuard, (req, res) => {
+  const database = filteredTeacherDb(req);
   const kind = req.query.kind === 'events' ? 'events' : 'attempts';
   const format = req.query.format === 'csv' ? 'csv' : 'jsonl';
   const rows = kind === 'events'
-    ? getDb().prepare(`SELECT event_json FROM events ORDER BY server_received_at, stream_id, seq`).all()
+    ? database.prepare(`SELECT event_json FROM events ORDER BY server_received_at, stream_id, seq`).all()
         .map((row: any) => JSON.parse(row.event_json))
-    : getDb().prepare(`
+    : database.prepare(`
         SELECT a.*, p.display_name, p.language_experience FROM attempts a
         JOIN players p ON p.player_uuid = a.player_uuid
         ORDER BY a.player_uuid, a.assignment_key, a.trial_index

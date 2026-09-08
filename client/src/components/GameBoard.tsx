@@ -1,11 +1,26 @@
-import { useMemo } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, LevelDef } from '@coin-path/shared';
 import './GameBoard.css';
 
 interface Props { level: LevelDef; state: GameState; }
 
 export default function GameBoard({ level, state }: Props) {
-  const cellSize = level.width <= 5 ? 54 : level.width <= 7 ? 42 : level.width === 8 ? 34 : 30;
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const [available, setAvailable] = useState({ width: 0, height: 0 });
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const observer = new ResizeObserver(([entry]) => {
+      setAvailable({ width: entry.contentRect.width, height: entry.contentRect.height });
+    });
+    observer.observe(viewport);
+    return () => observer.disconnect();
+  }, []);
+  // Reserve the frame, coordinate labels and grid gaps; fill the remaining space.
+  const cellSize = Math.max(1, Math.floor(Math.min(
+    (available.width - 48 - (level.width - 1)) / level.width,
+    (available.height - 58 - (level.height - 1)) / level.height,
+  )));
   const walls = useMemo(() => new Set(level.walls.map(([x, y]) => `${x},${y}`)), [level.walls]);
   const coins = useMemo(() => new Map(level.coins.map((coin) => [`${coin.position[0]},${coin.position[1]}`, coin])), [level.coins]);
   const trace = useMemo(() => new Set(state.trace.map(([x, y]) => `${x},${y}`)), [state.trace]);
@@ -40,6 +55,7 @@ export default function GameBoard({ level, state }: Props) {
   }
 
   return (
+    <div className="board-viewport" ref={viewportRef}>
     <div className="game-board">
       <div className="board-with-y">
         <div className="board-coords-y">
@@ -52,6 +68,7 @@ export default function GameBoard({ level, state }: Props) {
         {Array.from({ length: level.width }, (_, index) => <span key={index} style={{ width: cellSize }}>{index}</span>)}
       </div>
       <div className="axis-hint">x →　　y ↑</div>
+    </div>
     </div>
   );
 }

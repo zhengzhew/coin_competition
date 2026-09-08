@@ -44,6 +44,11 @@ export default function App() {
   const gameRef = useRef<GameState | null>(null);
   const telemetryRef = useRef<TelemetryClient | null>(null);
   const commandChain = useRef<Promise<void>>(Promise.resolve());
+  const levelEntryRef = useRef<{ entered_at: string; mono: number; reason: string } | null>(null);
+
+  const markLevelEntry = (reason: string) => {
+    levelEntryRef.current = { entered_at: new Date().toISOString(), mono: performance.now(), reason };
+  };
 
   const commitGame = (state: GameState) => {
     gameRef.current = state;
@@ -51,6 +56,7 @@ export default function App() {
   };
 
   const selectLevel = useCallback((level: LevelDef) => {
+    markLevelEntry('level_selected');
     levelRef.current = level;
     setCurrentLevel(level);
     commitGame(createGameState(level));
@@ -106,6 +112,7 @@ export default function App() {
       });
       if (!response.ok) throw new Error();
       setPlayer(await response.json());
+      markLevelEntry('onboarding_completed');
     } catch { setMessage('学习经历保存失败，请检查服务器连接。'); }
   };
 
@@ -117,6 +124,7 @@ export default function App() {
   const resetGame = useCallback((stopRemote = true) => {
     const level = levelRef.current;
     if (!level) return;
+    markLevelEntry('retry');
     if (stopRemote && attemptRef.current && gameRef.current?.status === 'running') stopRemoteAttempt();
     attemptRef.current = null; setAttempt(null);
     commitGame(createGameState(level));
@@ -130,12 +138,23 @@ export default function App() {
     if (modeRef.current === nextMode) return;
     resetGame();
     modeRef.current = nextMode; setMode(nextMode);
+    markLevelEntry('mode_changed');
     telemetryRef.current?.track('mode_changed', `mode.${nextMode}`, { mode: nextMode });
   };
 
   const beginAttempt = async (preserveProgram: boolean): Promise<AttemptInfo | null> => {
     const level = levelRef.current;
     if (!level) return null;
+    // Capture the click before the request so server latency is excluded.
+    const entry = levelEntryRef.current;
+    const preparation = modeRef.current === 'keyboard' && entry ? {
+      level_entered_at: entry.entered_at,
+      start_clicked_at: new Date().toISOString(),
+      entry_to_start_ms: Math.max(0, Math.round(performance.now() - entry.mono)),
+      entry_reason: entry.reason,
+      preparation_id: createUuid(),
+    } : null;
+    if (preparation) telemetryRef.current?.track('level_start_clicked', 'attempt.start', preparation);
     if (attemptRef.current && gameRef.current?.status === 'running') stopRemoteAttempt();
     commitGame(createGameState(level));
     setScore(null); setMessage(null); setEditorError(null);
@@ -150,11 +169,12 @@ export default function App() {
       if (!response.ok) throw new Error(body.error || '无法开始本轮');
       const next = body as AttemptInfo;
       attemptRef.current = next; setAttempt(next);
-      telemetryRef.current?.track('attempt_started', 'attempt.start', { assignment_key: assignmentKey, trial_index: next.trial_index });
+      telemetryRef.current?.track('attempt_started', 'attempt.start', { assignment_key: assignmentKey, trial_index: next.trial_index, ...preparation });
       return next;
     } catch (error) {
       const next = { attempt_id: `local-${createUuid()}`, trial_index: 1, assignment_key: assignmentKey };
       attemptRef.current = next; setAttempt(next);
+      if (preparation) telemetryRef.current?.track('local_attempt_started', 'attempt.start', preparation);
       setMessage(error instanceof Error ? `${error.message}；已进入本机练习，不记录正式成绩。` : '已进入本机练习。');
       return next;
     }
@@ -363,7 +383,7 @@ export default function App() {
                 </div>
                 {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">开始本关</button>
                   : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">{currentLevel.step_limit ? '结束并结算' : '停止本轮'}</button>
-                  : <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
+                  : !score && <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
               </section> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
 
               {score && <section className="score-panel">
