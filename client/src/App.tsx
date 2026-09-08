@@ -181,6 +181,7 @@ export default function App() {
 
   const acceptServerResult = (result: ServerResult) => {
     setScore(result.score);
+    setMessage(null);
     const current = gameRef.current;
     if (current && result.status !== 'running') commitGame({ ...current, status: result.status });
     telemetryRef.current?.track('attempt_verified', 'attempt.result', {
@@ -210,7 +211,11 @@ export default function App() {
         if (server?.is_terminal) acceptServerResult(server);
       } catch (error) { setMessage(error instanceof Error ? error.message : '指令提交失败'); }
     });
-    if (nextState?.status !== 'running') setMessage('路线已结束，正在核验成绩…');
+    if (nextState?.status !== 'running') {
+      setMessage(currentAttempt.attempt_id.startsWith('local-')
+        ? '本机练习已完成，本次不记录正式成绩。'
+        : '路线已结束，正在核验成绩…');
+    }
   }, []);
 
   useEffect(() => {
