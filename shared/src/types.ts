@@ -116,7 +116,7 @@ export interface Assignment {
   assignment_key: string;  // "K01", "P01", etc.
   level_id: string;
   mode: Mode;
-  max_attempts: number | null;  // null for explore/teach stages
+  max_attempts: number | null;  // Current policy: 3 formal attempts in every stage
   player_uuid: string;
 }
 

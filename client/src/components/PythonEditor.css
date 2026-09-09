@@ -31,3 +31,27 @@
 .editor-error { margin:8px 0; padding:7px 9px; border-radius:6px; color:#963f2c; background:#fbe8e1; font-size:10px; line-height:1.5; }
 .run-btn { width:100%; margin-top:10px; padding:12px; border:1px solid #1c4935; border-radius:9px; color:#fff; background:var(--forest-2); font-weight:800; }
 .run-btn:disabled { opacity:.5; cursor:not-allowed; }
+
+/* Match the surrounding landscape canvas rather than fixed pixel sizes. */
+@media(min-width:1000px) {
+  .app .python-editor { flex-shrink:0; }
+  .app .editor-header { align-items:center; gap:.5cqw; margin-bottom:.85cqw; }
+  .app .editor-kicker { font-size:.8cqw; letter-spacing:.09em; }
+  .app .editor-header h3 { margin:.15cqw 0 0; font:700 1.05cqw system-ui,sans-serif; }
+  .app .editor-hint { font-size:.73cqw; line-height:1.5; }
+  .app .command-palette { gap:.45cqw; padding:.65cqw; margin-bottom:.85cqw; border-radius:.65cqw; }
+  .app .command-palette strong { font-size:.78cqw; margin-bottom:.15cqw; }
+  .app .command-palette button { flex-direction:column; justify-content:center; gap:.35cqw; padding:.55cqw .25cqw; border-radius:.5cqw; }
+  .app .command-palette button span { width:1.65cqw; height:1.65cqw; border-radius:.35cqw; font-size:1cqw; }
+  .app .command-palette button code { font: .82cqw/1.4 Consolas,monospace; white-space:nowrap; }
+  .app .editor-rows { min-height:7cqw; max-height:15cqw; padding:.5cqw; border-radius:.65cqw; scrollbar-width:thin; scrollbar-color:#657d70 #1e2925; }
+  .app .editor-empty { padding:1cqw .5cqw; color:#adbbb3; font-size:.8cqw; line-height:1.7; }
+  .app .editor-row { min-height:2.8cqw; gap:.2cqw; font:.88cqw/1.5 Consolas,monospace; }
+  .app .row-number { width:1.2cqw; flex-shrink:0; margin-right:.25cqw; color:#91a398; font-size:.75cqw; }
+  .app .code-input { padding:.35cqw .2cqw; border-radius:.3cqw; font:.88cqw/1.4 Consolas,monospace; }
+  .app .count-input { width:2.7cqw; flex-shrink:0; }
+  .app .row-btn { width:1.65cqw; height:1.65cqw; flex-shrink:0; padding:0; border-radius:.35cqw; font-size:1.15cqw; }
+  .app .row-limit { margin:.5cqw 0 0; font-size:.75cqw; }
+  .app .editor-error { margin:.6cqw 0; padding:.5cqw .65cqw; border-radius:.4cqw; font-size:.8cqw; }
+  .app .run-btn { margin-top:.85cqw; padding:.8cqw; border-radius:.6cqw; font-size:1cqw; }
+}

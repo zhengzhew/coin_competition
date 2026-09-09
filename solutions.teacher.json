@@ -1,5 +1,5 @@
 {
-  "fixture_sha256": "caddb12eedb392d0434ff1b37a124adf3ad2a330f7619cafe59ad1ac16ce5b23",
+  "fixture_sha256": "182699b4824b30ef735edfe9e15e428fac8043f77fdba46ff017a89b39003b67",
   "content_version": "3.0.0",
   "solutions": [
     {
@@ -568,17 +568,18 @@
     },
     {
       "level_id": "L13",
-      "expected_optimal_steps": 11,
+      "expected_optimal_steps": 12,
       "expected_max_value": null,
       "commands": [
         "down",
-        "down",
         "right",
+        "down",
         "down",
         "down",
         "right",
         "right",
         "up",
+        "right",
         "up",
         "up",
         "up"
@@ -586,7 +587,7 @@
       "reference_rows": [
         {
           "direction": "down",
-          "count": 2
+          "count": 1
         },
         {
           "direction": "right",
@@ -594,7 +595,53 @@
         },
         {
           "direction": "down",
+          "count": 3
+        },
+        {
+          "direction": "right",
           "count": 2
+        },
+        {
+          "direction": "up",
+          "count": 1
+        },
+        {
+          "direction": "right",
+          "count": 1
+        },
+        {
+          "direction": "up",
+          "count": 3
+        }
+      ],
+      "python_reference": "move_down(1)\nmove_right(1)\nmove_down(3)\nmove_right(2)\nmove_up(1)\nmove_right(1)\nmove_up(3)"
+    },
+    {
+      "level_id": "L14",
+      "expected_optimal_steps": 16,
+      "expected_max_value": null,
+      "commands": [
+        "down",
+        "down",
+        "down",
+        "down",
+        "right",
+        "right",
+        "up",
+        "up",
+        "up",
+        "up",
+        "right",
+        "right",
+        "down",
+        "down",
+        "down",
+        "down"
+      ],
+      "reference_rows": [
+        {
+          "direction": "down",
+          "count": 4
         },
         {
           "direction": "right",
@@ -603,42 +650,6 @@
         {
           "direction": "up",
           "count": 4
-        }
-      ],
-      "python_reference": "move_down(2)\nmove_right(1)\nmove_down(2)\nmove_right(2)\nmove_up(4)"
-    },
-    {
-      "level_id": "L14",
-      "expected_optimal_steps": 14,
-      "expected_max_value": null,
-      "commands": [
-        "right",
-        "right",
-        "right",
-        "right",
-        "down",
-        "down",
-        "left",
-        "left",
-        "left",
-        "left",
-        "right",
-        "right",
-        "down",
-        "down"
-      ],
-      "reference_rows": [
-        {
-          "direction": "right",
-          "count": 4
-        },
-        {
-          "direction": "down",
-          "count": 2
-        },
-        {
-          "direction": "left",
-          "count": 4
         },
         {
           "direction": "right",
@@ -646,14 +657,14 @@
         },
         {
           "direction": "down",
-          "count": 2
+          "count": 4
         }
       ],
-      "python_reference": "move_right(4)\nmove_down(2)\nmove_left(4)\nmove_right(2)\nmove_down(2)"
+      "python_reference": "move_down(4)\nmove_right(2)\nmove_up(4)\nmove_right(2)\nmove_down(4)"
     },
     {
       "level_id": "L15",
-      "expected_optimal_steps": 14,
+      "expected_optimal_steps": 18,
       "expected_max_value": null,
       "commands": [
         "right",
@@ -665,11 +676,15 @@
         "left",
         "left",
         "left",
-        "left",
+        "right",
         "right",
         "right",
         "down",
-        "down"
+        "down",
+        "left",
+        "left",
+        "left",
+        "left"
       ],
       "reference_rows": [
         {
@@ -682,18 +697,22 @@
         },
         {
           "direction": "left",
-          "count": 4
+          "count": 3
         },
         {
           "direction": "right",
-          "count": 2
+          "count": 3
         },
         {
           "direction": "down",
           "count": 2
+        },
+        {
+          "direction": "left",
+          "count": 4
         }
       ],
-      "python_reference": "move_right(4)\nmove_down(2)\nmove_left(4)\nmove_right(2)\nmove_down(2)"
+      "python_reference": "move_right(4)\nmove_down(2)\nmove_left(3)\nmove_right(3)\nmove_down(2)\nmove_left(4)"
     },
     {
       "level_id": "L16",

@@ -17,6 +17,7 @@
     "build": "npm run build -w shared && npm run build -w server && npm run build -w client",
     "start": "npm start -w server",
     "test": "npm test -w shared && node scripts/verify-content.mjs",
+    "test:policy": "npm run build -w shared && npm run build -w server && node scripts/verify-attempt-policy.mjs",
     "loadtest": "node scripts/loadtest.mjs",
     "typecheck": "tsc -b"
   },

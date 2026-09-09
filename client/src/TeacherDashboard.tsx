@@ -10,7 +10,7 @@ interface EventRow { event_type: string; count: number; }
 interface ActivityRow { hour: string; count: number; }
 interface RecentAttempt {
   attempt_id: string; assignment_key: string; mode: string; trial_index: number; status: string;
-  steps: number; collisions: number; collected_count: number; score: Numeric; started_at: string;
+  steps: number; collisions: number; collected_count: number; score: Numeric; final_score: Numeric; started_at: string;
   finalized_at: string | null; display_name: string; player_code: string; language_experience: string;
 }
 interface DashboardData {
@@ -124,7 +124,7 @@ export default function TeacherDashboard() {
       <div className="teacher-actions"><span className={loading ? 'syncing' : ''}>{loading ? '同步中…' : `更新于 ${formatTime(data.generated_at)}`}</span><button onClick={() => void load()}>刷新</button><a href="/">学生端</a><button onClick={logout}>退出</button></div>
     </header>
     <main className="dashboard">
-      <section className="dashboard-title"><div><span>课堂实时概览</span><h1>金币路径规划学习数据</h1><p>自动每 15 秒刷新，成绩以服务端回放结果为准。</p></div><div className="export-actions"><button onClick={() => void download('attempts', 'csv')}>导出成绩 CSV</button><button onClick={() => void download('events', 'jsonl')}>导出埋点 JSONL</button><button className="danger" onClick={() => { setClearConfirming(true); setNotice(null); }}>清空所有数据</button></div></section>
+      <section className="dashboard-title"><div><span>课堂实时概览</span><h1>金币路径规划学习数据</h1><p>每关每种模式限 3 次正式尝试，最终分取前三次最高分；练习不计分。</p></div><div className="export-actions"><button onClick={() => void download('attempts', 'csv')}>导出成绩 CSV</button><button onClick={() => void download('events', 'jsonl')}>导出埋点 JSONL</button><button className="danger" onClick={() => { setClearConfirming(true); setNotice(null); }}>清空所有数据</button></div></section>
 
       <form className="dashboard-filters" onSubmit={(event) => {
         event.preventDefault();
@@ -152,7 +152,7 @@ export default function TeacherDashboard() {
         <Metric label="学生人数" value={data.overview.players} note="独立 UUID" tone="forest" />
         <Metric label="挑战轮次" value={data.overview.attempts} note={`${data.overview.active_attempts} 轮进行中`} tone="sand" />
         <Metric label="成功完成" value={data.overview.successes} note={`完成率 ${completion}%`} tone="green" />
-        <Metric label="平均得分" value={scoreText(data.overview.average_score)} note="满分 100" tone="gold" />
+        <Metric label="最终平均分" value={scoreText(data.overview.average_score)} note="每关取前三次最高分" tone="gold" />
         <Metric label="行为事件" value={data.overview.events} note="点击、输入与移动" tone="clay" />
       </section>
 
@@ -160,7 +160,7 @@ export default function TeacherDashboard() {
         <article className="dash-card"><CardTitle eyebrow="模式比较" title="键盘与 Python 表现" />
           <div className="mode-cards">{data.modes.length ? data.modes.map((row) => <div className="mode-row" key={row.mode}>
             <div className="mode-icon">{row.mode === 'keyboard' ? '⌨' : '</>'}</div><div className="mode-copy"><b>{modeLabel(row.mode)}</b><small>{row.players} 人 · {row.attempts} 轮</small><div className="progress"><i style={{ width: `${percent(row.successes, row.attempts)}%` }} /></div></div>
-            <div className="mode-number"><b>{scoreText(row.average_score)}</b><small>平均分</small></div><div className="mode-number"><b>{percent(row.successes, row.attempts)}%</b><small>完成率</small></div>
+            <div className="mode-number"><b>{scoreText(row.average_score)}</b><small>最终平均分</small></div><div className="mode-number"><b>{percent(row.successes, row.attempts)}%</b><small>完成率</small></div>
           </div>) : <Empty />}</div>
         </article>
         <article className="dash-card"><CardTitle eyebrow="学情分组" title="编程经历对比" />
@@ -178,10 +178,10 @@ export default function TeacherDashboard() {
       </section>
 
       <article className="dash-card level-card"><div className="table-heading"><CardTitle eyebrow="关卡表现" title="40 个任务的数据进度" /><div className="table-tabs"><button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>全部</button><button className={filter === 'keyboard' ? 'active' : ''} onClick={() => setFilter('keyboard')}>键盘</button><button className={filter === 'python_blank' ? 'active' : ''} onClick={() => setFilter('python_blank')}>Python</button></div></div>
-        <div className="table-scroll"><table><thead><tr><th>任务</th><th>模式</th><th>学生</th><th>轮次</th><th>完成率</th><th>平均分</th><th>平均步数</th><th>平均碰撞</th></tr></thead><tbody>{filteredLevels.map((row) => <tr key={row.assignment_key}><td><b>{row.assignment_key}</b><small>{row.level_id}</small></td><td><span className={`mode-tag ${row.mode}`}>{modeLabel(row.mode)}</span></td><td>{row.players}</td><td>{row.attempts}</td><td><strong>{percent(row.successes, row.attempts)}%</strong></td><td>{scoreText(row.average_score)}</td><td>{scoreText(row.average_steps)}</td><td>{scoreText(row.average_collisions)}</td></tr>)}</tbody></table>{!filteredLevels.length && <Empty />}</div>
+        <div className="table-scroll"><table><thead><tr><th>任务</th><th>模式</th><th>学生</th><th>轮次</th><th>完成率</th><th>最终平均分</th><th>平均步数</th><th>平均碰撞</th></tr></thead><tbody>{filteredLevels.map((row) => <tr key={row.assignment_key}><td><b>{row.assignment_key}</b><small>{row.level_id}</small></td><td><span className={`mode-tag ${row.mode}`}>{modeLabel(row.mode)}</span></td><td>{row.players}</td><td>{row.attempts}</td><td><strong>{percent(row.successes, row.attempts)}%</strong></td><td>{scoreText(row.average_score)}</td><td>{scoreText(row.average_steps)}</td><td>{scoreText(row.average_collisions)}</td></tr>)}</tbody></table>{!filteredLevels.length && <Empty />}</div>
       </article>
 
-      <article className="dash-card recent-card"><CardTitle eyebrow="实时记录" title="最近 30 次挑战" /><div className="table-scroll"><table><thead><tr><th>学生</th><th>学情</th><th>任务</th><th>第几次</th><th>结果</th><th>步数</th><th>碰撞</th><th>得分</th><th>开始时间</th></tr></thead><tbody>{data.recent_attempts.map((row) => <tr key={row.attempt_id}><td><b>{row.display_name}</b><small>{row.player_code}</small></td><td>{languageLabels[row.language_experience] || row.language_experience}</td><td><span className={`mode-tag ${row.mode}`}>{row.assignment_key}</span></td><td>{row.trial_index}</td><td><span className={`result-tag ${row.status}`}>{statusLabel(row.status)}</span></td><td>{row.steps}</td><td>{row.collisions}</td><td><strong>{scoreText(row.score)}</strong></td><td>{formatTime(row.started_at)}</td></tr>)}</tbody></table>{!data.recent_attempts.length && <Empty />}</div></article>
+      <article className="dash-card recent-card"><CardTitle eyebrow="实时记录" title="最近 30 次挑战" /><div className="table-scroll"><table><thead><tr><th>学生</th><th>学情</th><th>任务</th><th>第几次</th><th>结果</th><th>步数</th><th>碰撞</th><th>本次得分</th><th>本关最高分</th><th>开始时间</th></tr></thead><tbody>{data.recent_attempts.map((row) => <tr key={row.attempt_id}><td><b>{row.display_name}</b><small>{row.player_code}</small></td><td>{languageLabels[row.language_experience] || row.language_experience}</td><td><span className={`mode-tag ${row.mode}`}>{row.assignment_key}</span></td><td>{row.trial_index}</td><td><span className={`result-tag ${row.status}`}>{statusLabel(row.status)}</span></td><td>{row.steps}</td><td>{row.collisions}</td><td><strong>{scoreText(row.score)}</strong></td><td>{scoreText(row.final_score)}</td><td>{formatTime(row.started_at)}</td></tr>)}</tbody></table>{!data.recent_attempts.length && <Empty />}</div></article>
     </main>
   </div>;
 }

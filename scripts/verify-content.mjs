@@ -43,6 +43,23 @@ for (const [offset, level] of pack.levels.slice(15).entries()) {
 }
 
 const level6 = pack.levels[5];
+// Screenshot replacements, in top-origin [row, column] coordinates.
+const replacementMaps = [
+  { coins: [[0,4],[1,0],[1,4],[3,3]], walls: [[0,2],[1,2],[2,2],[3,2]], route: [['down',4],['right',3],['up',3],['right',1],['up',1]], steps: 12 },
+  { coins: [[0,4],[2,2],[4,1],[4,4]], walls: [[0,1],[1,1],[2,1],[3,1],[1,3],[2,3],[3,3],[4,3]], route: [['down',4],['right',2],['up',4],['right',2],['down',4]], steps: 16 },
+  { coins: [[0,3],[2,1],[4,0],[4,4]], walls: [[1,0],[1,1],[1,2],[1,3],[3,0],[3,1],[3,2],[3,3]], route: [['right',4],['down',2],['left',3],['right',3],['down',2],['left',4]], steps: 18 },
+];
+for (const [offset, expected] of replacementMaps.entries()) {
+  const level = pack.levels[12 + offset];
+  const convert = points => points.map(([row, column]) => [column, 4 - row]);
+  assert.deepEqual(level.coins.map(coin => coin.position), convert(expected.coins));
+  assert.deepEqual(level.walls, convert(expected.walls));
+  const commands = expected.route.flatMap(([direction, count]) => Array(count).fill(direction));
+  const result = replay(level, commands, null);
+  assert.equal(result.status, 'success');
+  assert.equal(result.collisions, 0);
+  assert.equal(result.steps, expected.steps);
+}
 const level7 = pack.levels[6];
 assert.deepEqual(level6.coins.map((coin) => coin.position).sort(), level7.coins.map((coin) => coin.position).sort(), 'L06/L07 must use the same map');
 assert.equal(pack.levels.slice(0, 5).some((level) => /最短|最优步数|最小步数/.test(`${level.objective}${level.rule_hint}`)), false, 'L01-L05 must not preview shortest-path wording');

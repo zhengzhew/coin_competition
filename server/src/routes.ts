@@ -16,6 +16,11 @@ import { getLevelForAssignment, loadLevels } from './levels.js';
 export const apiRouter = Router();
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
 const TERMINAL = new Set(['success', 'command_limit']);
+const ATTEMPT_LIMIT = 3;
+// Historical rounds remain available, but only the first three completed rounds count.
+const BEST_SCORES = `SELECT player_uuid, assignment_key, mode, MAX(COALESCE(score, 0)) AS final_score
+  FROM attempts WHERE trial_index <= 3 AND status != 'running'
+  GROUP BY player_uuid, assignment_key, mode`;
 
 function now() {
   return new Date().toISOString();
@@ -39,7 +44,7 @@ function playerCookieOptions(): CookieOptions {
 
 function studentLevel(level: LevelDef) {
   const { expected_optimal_steps: _answer, expected_max_value: _valueAnswer, ...safe } = level;
-  return safe;
+  return { ...safe, max_attempts: ATTEMPT_LIMIT };
 }
 
 function randomPlayer() {
@@ -145,12 +150,13 @@ apiRouter.get('/assignments/:id', requirePlayer, (req, res) => {
     SELECT attempt_id, trial_index, status, steps, collisions, collected_count, score, started_at, finalized_at
     FROM attempts WHERE assignment_key = ? AND player_uuid = ? ORDER BY trial_index
   `).all(key, id);
-  const limit = level.max_attempts ?? (level.stage === 'challenge' ? 3 : null);
+  const limit = ATTEMPT_LIMIT;
   res.json({
     assignment_key: key,
     mode: key.startsWith('K') ? 'keyboard' : 'python_blank',
     level: studentLevel(level),
     attempts,
+    final_score: (getDb().prepare(`SELECT final_score FROM (${BEST_SCORES}) WHERE player_uuid = ? AND assignment_key = ?`).get(id, key) as { final_score: number } | undefined)?.final_score ?? null,
     remaining_attempts: limit === null ? null : Math.max(0, limit - attempts.length),
   });
 });
@@ -165,8 +171,8 @@ apiRouter.post('/attempts', requirePlayer, (req, res) => {
   const count = database.prepare(`
     SELECT COUNT(*) AS count FROM attempts WHERE assignment_key = ? AND player_uuid = ?
   `).get(key, id) as { count: number };
-  const limit = level.max_attempts ?? (level.stage === 'challenge' ? 3 : null);
-  if (limit !== null && count.count >= limit) return res.status(409).json({ error: `本关最多尝试 ${limit} 次` });
+  const limit = ATTEMPT_LIMIT;
+  if (count.count >= limit) return res.status(409).json({ code: 'ATTEMPT_LIMIT_REACHED', error: `本关 ${limit} 次正式尝试已用完` });
 
   const timestamp = now();
   database.prepare(`
@@ -174,13 +180,13 @@ apiRouter.post('/attempts', requirePlayer, (req, res) => {
     VALUES (?, ?, ?, ?, ?)
   `).run(key, level.level_id, mode, id, timestamp);
   database.prepare(`
-    UPDATE attempts SET status = 'abandoned', finalized_at = ?
+    UPDATE attempts SET status = 'abandoned', score = COALESCE(score, 0), finalized_at = ?
     WHERE assignment_key = ? AND player_uuid = ? AND status = 'running'
   `).run(timestamp, key, id);
   const attemptId = uuidv4();
   database.prepare(`
-    INSERT INTO attempts (attempt_id, assignment_key, player_uuid, mode, trial_index, started_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO attempts (attempt_id, assignment_key, player_uuid, mode, trial_index, started_at, score)
+    VALUES (?, ?, ?, ?, ?, ?, 0)
   `).run(attemptId, key, id, mode, count.count + 1, timestamp);
   res.status(201).json({ attempt_id: attemptId, assignment_key: key, mode, trial_index: count.count + 1 });
 });
@@ -242,7 +248,7 @@ apiRouter.post('/attempts/:id/finalize', requirePlayer, (req, res) => {
 
 apiRouter.post('/attempts/:id/stop', requirePlayer, (req, res) => {
   const result = getDb().prepare(`
-    UPDATE attempts SET status = 'stopped', finalized_at = ?
+    UPDATE attempts SET status = 'stopped', score = COALESCE(score, 0), finalized_at = ?
     WHERE attempt_id = ? AND player_uuid = ? AND status = 'running'
   `).run(now(), String(req.params.id), playerId(req)!);
   if (!result.changes) return res.status(409).json({ error: '轮次不存在或已经结束' });
@@ -306,9 +312,10 @@ apiRouter.get('/teacher/summary', teacherGuard, (_req, res) => {
   const attempts = database.prepare(`SELECT COUNT(*) AS count FROM attempts`).get() as { count: number };
   const events = database.prepare(`SELECT COUNT(*) AS count FROM events`).get() as { count: number };
   const progress = database.prepare(`
+    WITH best_scores AS (${BEST_SCORES})
     SELECT assignment_key, mode, COUNT(*) AS attempts,
       SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
-      ROUND(AVG(score), 1) AS average_score
+      (SELECT ROUND(AVG(final_score), 1) FROM best_scores b WHERE b.assignment_key = attempts.assignment_key) AS average_score
     FROM attempts GROUP BY assignment_key, mode ORDER BY assignment_key
   `).all();
   res.json({ players: players.count, attempts: attempts.count, events: events.count, progress });
@@ -321,6 +328,7 @@ function filteredTeacherDb(req: Request) {
     attempts AS (SELECT * FROM main.attempts WHERE
       ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
       ($level = '' OR 'L' || substr(assignment_key, 2) = $level)),
+    best_scores AS (${BEST_SCORES}),
     events AS (SELECT * FROM main.events WHERE
       ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
       ($level = '' OR level_id = $level)),
@@ -342,13 +350,13 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
       (SELECT COUNT(*) FROM attempts) AS attempts,
       (SELECT COUNT(*) FROM attempts WHERE status = 'success') AS successes,
       (SELECT COUNT(*) FROM attempts WHERE status = 'running') AS active_attempts,
-      (SELECT ROUND(AVG(score), 1) FROM attempts WHERE score IS NOT NULL) AS average_score,
+      (SELECT ROUND(AVG(final_score), 1) FROM best_scores) AS average_score,
       (SELECT COUNT(*) FROM events) AS events
   `).get();
   const modes = database.prepare(`
     SELECT mode, COUNT(*) AS attempts, COUNT(DISTINCT player_uuid) AS players,
       SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
-      ROUND(AVG(score), 1) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
+      (SELECT ROUND(AVG(final_score), 1) FROM best_scores b WHERE b.mode = attempts.mode) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
       ROUND(AVG(collisions), 1) AS average_collisions
     FROM attempts GROUP BY mode ORDER BY mode
   `).all();
@@ -356,7 +364,9 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
     SELECT COALESCE(p.language_experience, 'unknown') AS language_experience,
       COUNT(DISTINCT p.player_uuid) AS players, COUNT(a.attempt_id) AS attempts,
       SUM(CASE WHEN a.status = 'success' THEN 1 ELSE 0 END) AS successes,
-      ROUND(AVG(a.score), 1) AS average_score, ROUND(AVG(a.steps), 1) AS average_steps
+      (SELECT ROUND(AVG(b.final_score), 1) FROM best_scores b JOIN players bp ON bp.player_uuid = b.player_uuid
+        WHERE COALESCE(bp.language_experience, 'unknown') = COALESCE(p.language_experience, 'unknown')) AS average_score,
+      ROUND(AVG(a.steps), 1) AS average_steps
     FROM players p LEFT JOIN attempts a ON a.player_uuid = p.player_uuid
     GROUP BY COALESCE(p.language_experience, 'unknown') ORDER BY players DESC
   `).all();
@@ -364,7 +374,7 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
     SELECT assignment_key, 'L' || substr(assignment_key, 2) AS level_id, mode,
       COUNT(DISTINCT player_uuid) AS players, COUNT(*) AS attempts,
       SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
-      ROUND(AVG(score), 1) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
+      (SELECT ROUND(AVG(final_score), 1) FROM best_scores b WHERE b.assignment_key = attempts.assignment_key) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
       ROUND(AVG(collisions), 1) AS average_collisions
     FROM attempts GROUP BY assignment_key, mode ORDER BY assignment_key
   `).all();
@@ -379,6 +389,7 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
   const recentAttempts = database.prepare(`
     SELECT a.attempt_id, a.assignment_key, a.mode, a.trial_index, a.status, a.steps,
       a.collisions, a.collected_count, a.score, a.started_at, a.finalized_at,
+      (SELECT final_score FROM best_scores b WHERE b.player_uuid = a.player_uuid AND b.assignment_key = a.assignment_key) AS final_score,
       p.display_name, p.player_uuid AS player_code,
       COALESCE(p.language_experience, 'unknown') AS language_experience
     FROM attempts a JOIN players p ON p.player_uuid = a.player_uuid
@@ -424,7 +435,10 @@ apiRouter.get('/teacher/export', teacherGuard, (req, res) => {
     ? database.prepare(`SELECT event_json FROM events ORDER BY server_received_at, stream_id, seq`).all()
         .map((row: any) => JSON.parse(row.event_json))
     : database.prepare(`
-        SELECT a.*, p.display_name, p.language_experience FROM attempts a
+        SELECT a.*, p.display_name, p.language_experience,
+          (SELECT final_score FROM best_scores b WHERE b.player_uuid = a.player_uuid AND b.assignment_key = a.assignment_key) AS final_score,
+          CASE WHEN a.trial_index <= 3 THEN 1 ELSE 0 END AS counts_toward_final
+        FROM attempts a
         JOIN players p ON p.player_uuid = a.player_uuid
         ORDER BY a.player_uuid, a.assignment_key, a.trial_index
       `).all();

@@ -29,6 +29,10 @@ export default function App() {
   const [levels, setLevels] = useState<LevelDef[]>([]);
   const [currentLevel, setCurrentLevel] = useState<LevelDef | null>(null);
   const [mode, setMode] = useState<Mode>('keyboard');
+  const [modeSelected, setModeSelected] = useState(false);
+  const [litDirection, setLitDirection] = useState<Direction | null>(null);
+  const lightTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (lightTimer.current !== null) window.clearTimeout(lightTimer.current); }, []);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [attempt, setAttempt] = useState<AttemptInfo | null>(null);
   const [score, setScore] = useState<ScoreResult | null>(null);
@@ -37,6 +41,19 @@ export default function App() {
   const [message, setMessage] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ remaining_attempts: number; final_score: number | null } | null>(null);
+  const startingRef = useRef(false);
+
+  useEffect(() => {
+    if (!player || !currentLevel) return;
+    let cancelled = false;
+    setProgress(null);
+    const key = mode === 'keyboard' ? currentLevel.keyboard_id : currentLevel.python_id;
+    void fetch(`/api/assignments/${key}`, { credentials: 'include' })
+      .then(response => response.ok ? response.json() : null)
+      .then(data => { if (!cancelled) setProgress(data); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [player, currentLevel, mode, attempt, score, gameState?.status]);
 
   const levelRef = useRef<LevelDef | null>(null);
   const modeRef = useRef<Mode>('keyboard');
@@ -103,19 +120,6 @@ export default function App() {
     return () => telemetry.stop();
   }, [player?.player_uuid]);
 
-  const chooseExperience = async (language: NonNullable<Player['language_experience']>) => {
-    telemetryRef.current?.track('profile_experience_selected', `onboarding.experience.${language}`, { language });
-    try {
-      const response = await fetch('/api/players/profile', {
-        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ language_experience: language }),
-      });
-      if (!response.ok) throw new Error();
-      setPlayer(await response.json());
-      markLevelEntry('onboarding_completed');
-    } catch { setMessage('学习经历保存失败，请检查服务器连接。'); }
-  };
-
   const stopRemoteAttempt = (current = attemptRef.current) => {
     if (!current || current.attempt_id.startsWith('local-')) return;
     void fetch(`/api/attempts/${current.attempt_id}/stop`, { method: 'POST', credentials: 'include' });
@@ -134,17 +138,17 @@ export default function App() {
     telemetryRef.current?.track('attempt_reset', 'attempt.reset', {});
   }, []);
 
-  const changeMode = (nextMode: Mode) => {
-    if (modeRef.current === nextMode) return;
-    resetGame();
+  const chooseMode = (nextMode: Mode) => {
     modeRef.current = nextMode; setMode(nextMode);
-    markLevelEntry('mode_changed');
-    telemetryRef.current?.track('mode_changed', `mode.${nextMode}`, { mode: nextMode });
+    setModeSelected(true);
+    markLevelEntry('onboarding_completed');
+    telemetryRef.current?.track('mode_selected', `onboarding.mode.${nextMode}`, { mode: nextMode });
   };
 
   const beginAttempt = async (preserveProgram: boolean): Promise<AttemptInfo | null> => {
     const level = levelRef.current;
-    if (!level) return null;
+    if (!level || startingRef.current) return null;
+    startingRef.current = true;
     // Capture the click before the request so server latency is excluded.
     const entry = levelEntryRef.current;
     const preparation = modeRef.current === 'keyboard' && entry ? {
@@ -166,17 +170,23 @@ export default function App() {
         body: JSON.stringify({ assignment_key: assignmentKey }),
       });
       const body = await response.json();
+      if (response.status === 409 && body.code === 'ATTEMPT_LIMIT_REACHED') {
+        const next = { attempt_id: `local-${createUuid()}`, trial_index: 0, assignment_key: assignmentKey };
+        attemptRef.current = next; setAttempt(next);
+        setMessage('3 次正式尝试已用完，当前为练习模式，不计算成绩。');
+        return next;
+      }
       if (!response.ok) throw new Error(body.error || '无法开始本轮');
       const next = body as AttemptInfo;
       attemptRef.current = next; setAttempt(next);
       telemetryRef.current?.track('attempt_started', 'attempt.start', { assignment_key: assignmentKey, trial_index: next.trial_index, ...preparation });
       return next;
     } catch (error) {
-      const next = { attempt_id: `local-${createUuid()}`, trial_index: 1, assignment_key: assignmentKey };
-      attemptRef.current = next; setAttempt(next);
-      if (preparation) telemetryRef.current?.track('local_attempt_started', 'attempt.start', preparation);
-      setMessage(error instanceof Error ? `${error.message}；已进入本机练习，不记录正式成绩。` : '已进入本机练习。');
-      return next;
+      attemptRef.current = null; setAttempt(null);
+      setMessage(error instanceof Error ? `${error.message}；请检查连接后重试。` : '无法开始，请稍后重试。');
+      return null;
+    } finally {
+      startingRef.current = false;
     }
   };
 
@@ -224,6 +234,9 @@ export default function App() {
   const executeKeyboard = useCallback((direction: Direction) => {
     const currentAttempt = attemptRef.current;
     if (!currentAttempt || modeRef.current !== 'keyboard' || gameRef.current?.status !== 'running') return;
+    setLitDirection(direction);
+    if (lightTimer.current !== null) window.clearTimeout(lightTimer.current);
+    lightTimer.current = window.setTimeout(() => setLitDirection(null), 180);
     const nextState = applyLocalCommand(direction, 'keyboard');
     commandChain.current = commandChain.current.then(async () => {
       try {
@@ -275,6 +288,12 @@ export default function App() {
       if (state?.status !== 'running') break;
     }
     setAnimating(false);
+    if (currentAttempt.attempt_id.startsWith('local-')) {
+      const state = gameRef.current;
+      if (state?.status === 'running') commitGame({ ...state, status: 'stopped' });
+      setMessage('练习已完成，本次不计算成绩。');
+      return;
+    }
     try {
       let server = await sendCommands(currentAttempt, validation.expanded, programSnapshot);
       if (server && !server.is_terminal) {
@@ -310,7 +329,10 @@ export default function App() {
   if (loadingError) return <div className="fatal"><b>项目未能启动</b><span>{loadingError}</span><small>请确认服务端已运行，再刷新页面。</small></div>;
   if (!player || !currentLevel || !gameState) return <div className="loading"><span className="loader" />正在准备淘金地图…</div>;
 
-  const currentAssignment = mode === 'keyboard' ? currentLevel.keyboard_id : currentLevel.python_id;
+  const practiceCompleted = Boolean(attempt?.attempt_id.startsWith('local-')) && gameState.status !== 'running';
+  const displayMessage = practiceCompleted ? '练习结束，不计分。' : message || (gameState.status === 'success' && !score ? '金币已全部收集，正在等待服务端确认。' : null);
+  const currentLevelIndex = levels.findIndex(level => level.level_id === currentLevel.level_id);
+  const nextLevel = currentLevelIndex >= 0 ? levels[currentLevelIndex + 1] : undefined;
   const active = Boolean(attempt) && gameState.status === 'running';
   const totalValue = currentLevel.coins.reduce((sum, coin) => sum + (coin.value ?? 1), 0);
   const collectedValue = currentLevel.coins
@@ -321,26 +343,21 @@ export default function App() {
 
   return (
     <div className="app">
-      {!player.language_experience && <div className="onboarding" role="dialog" aria-modal="true">
+      {!modeSelected && <div className="onboarding" role="dialog" aria-modal="true">
         <div className="onboarding-card">
           <span className="eyebrow">身份已经生成</span><h1>欢迎来到旷野淘金</h1>
           <div className="identity-card"><img src="/assets/car.png" alt="" /><div><small>你的玩家名</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
-          <p>请选择你学过的编程语言。它只用于比较两组同学的学习表现，不影响关卡内容。</p>
+          <p>请选择本次挑战的操作模式，进入后不再切换。</p>
           <div className="experience-grid">
-            <button onClick={() => chooseExperience('python')} data-track-id="onboarding.experience.python">学过 Python</button>
-            <button onClick={() => chooseExperience('cpp')} data-track-id="onboarding.experience.cpp">只学过 C++</button>
-            <button onClick={() => chooseExperience('both')} data-track-id="onboarding.experience.both">两种都学过</button>
-            <button onClick={() => chooseExperience('none')} data-track-id="onboarding.experience.none">都没学过</button>
+            <button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard">⌨ 键盘操控<small>使用方向键 / WASD，也可点击方向按钮</small></button>
+            <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank">&lt;/&gt; 代码操控<small>编排移动指令，运行代码完成挑战</small></button>
           </div>
         </div>
       </div>}
 
       <header className="app-header">
         <div className="brand"><div className="brand-mark">◆</div><div><span>校园挑战</span><b>旷野淘金</b></div></div>
-        <div className="mode-switch" aria-label="操作模式">
-          <button className={mode === 'keyboard' ? 'active' : ''} onClick={() => changeMode('keyboard')} data-track-id="mode.keyboard">⌨ 键盘操控</button>
-          <button className={mode === 'python_blank' ? 'active' : ''} onClick={() => changeMode('python_blank')} data-track-id="mode.python_blank">&lt;/&gt; 代码操控</button>
-        </div>
+        <div className="current-mode" aria-label="当前操作模式">{modeSelected ? (mode === 'keyboard' ? '⌨ 键盘操控' : '</> 代码操控') : '请选择操作模式'}</div>
         <div className="header-actions">
           <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
             <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
@@ -353,13 +370,13 @@ export default function App() {
         <main className="game-area">
           <section className="mission-card">
             <div className="mission-number">{currentLevel.level_id.slice(1)}</div>
-            <div className="mission-copy"><span>{currentAssignment} · {currentLevel.category_label ?? stageLabel(currentLevel.stage)}</span><h1>{currentLevel.title}</h1><p>{currentLevel.objective}</p><small>{currentLevel.rule_hint}</small></div>
+            <div className="mission-copy"><h1>{currentLevel.title}</h1></div>
             <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{totalValue} 点金币价值</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
           </section>
 
           <div className="workspace-grid">
             <section className="board-panel">
-              <div className="panel-heading"><div><span>实时地图</span><b>{currentLevel.category === 'budget' ? '算好预算，再选目标' : '先想顺序，再走路线'}</b></div><div className="legend"><span><i className="legend-start" />起点</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />封闭区</span>}{hasChest && <span><i className="legend-chest" />金币箱 ×3</span>}</div></div>
+              <div className="panel-heading"><div><span>本关任务</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div><div className="legend"><span><i className="legend-start" />起点</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />封闭区</span>}{hasChest && <span><i className="legend-chest" />金币箱 ×3</span>}</div></div>
               <GameBoard level={currentLevel} state={gameState} />
               <div className="status-bar">
                 <div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
@@ -370,18 +387,25 @@ export default function App() {
             </section>
 
             <aside className="control-column">
+              <section className="attempt-summary" aria-label="本关成绩与尝试次数">
+                <div className="attempt-summary-metrics">
+                  <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前模式' : attempt ? '正式尝试' : '剩余正式机会'}</span><strong>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</strong></div>
+                  <div><span>本关最高分</span><strong>{progress?.final_score ?? '—'}<small> 分</small></strong></div>
+                </div>
+                <p>每种模式各 3 次，取最高分；练习不计分。</p>
+              </section>
               {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
 
               {mode === 'keyboard' ? <section className="keyboard-card">
                 <div className="mini-heading"><span>方向控制</span><small>方向键 / WASD</small></div>
                 <div className="dpad">
-                  <button className="dpad-btn up" onClick={() => executeKeyboard('up')} disabled={!active} data-track-id="move.up" aria-label="向上">↑</button>
-                  <button className="dpad-btn left" onClick={() => executeKeyboard('left')} disabled={!active} data-track-id="move.left" aria-label="向左">←</button>
+                  <button className={`dpad-btn up${litDirection === 'up' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('up')} disabled={!active} data-track-id="move.up" aria-label="向上">↑</button>
+                  <button className={`dpad-btn left${litDirection === 'left' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('left')} disabled={!active} data-track-id="move.left" aria-label="向左">←</button>
                   <div className="dpad-core">◆</div>
-                  <button className="dpad-btn right" onClick={() => executeKeyboard('right')} disabled={!active} data-track-id="move.right" aria-label="向右">→</button>
-                  <button className="dpad-btn down" onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
+                  <button className={`dpad-btn right${litDirection === 'right' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('right')} disabled={!active} data-track-id="move.right" aria-label="向右">→</button>
+                  <button className={`dpad-btn down${litDirection === 'down' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
                 </div>
-                {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">开始本关</button>
+                {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">{progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '开始本关'}</button>
                   : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">{currentLevel.step_limit ? '结束并结算' : '停止本轮'}</button>
                   : !score && <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
               </section> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
@@ -391,10 +415,13 @@ export default function App() {
                 {currentLevel.step_limit
                   ? <><div className="score-parts"><span>价值 {score.collected_value} / {score.total_value}</span><span>预算 {score.steps} / {currentLevel.step_limit} 步</span></div><p>{score.collected_value === score.optimal_value ? `你拿到了预算内最高的 ${score.optimal_value} 点价值！` : `预算内最高可得 ${score.optimal_value} 点，再比较一下目标价值和绕行距离。`}</p></>
                   : <><div className="score-parts"><span>金币 {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : '全部金币都已收集，操控任务完成！'}</p></>}
-                <button onClick={() => resetGame(false)} data-track-id="attempt.reset_after_score">重新挑战</button>
+                {score.total_score >= 100
+                  ? nextLevel
+                    ? <button onClick={() => selectLevel(nextLevel)} data-track-id="attempt.next_level">下一关</button>
+                    : <p role="status">最后一关已满分完成！</p>
+                  : <button onClick={() => resetGame(false)} data-track-id="attempt.reset_after_score">重新挑战</button>}
               </section>}
-              {message && <div className="message" role="status">{message}</div>}
-              {gameState.status === 'success' && !score && <div className="message success">金币已全部收集，正在等待服务端确认。</div>}
+              {displayMessage && <div className={`message${practiceCompleted ? ' success' : ''}`} role="status">{displayMessage}</div>}
             </aside>
           </div>
         </main>
@@ -402,10 +429,6 @@ export default function App() {
       <footer><span>玩家操作与时间节点已记录</span><span>{currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
     </div>
   );
-}
-
-function stageLabel(stage: LevelDef['stage']) {
-  return ({ explore: '探索阶段', guided: '引导阶段', challenge: '挑战阶段' })[stage];
 }
 
 function circledNumber(number: number) {

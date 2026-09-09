@@ -32,14 +32,14 @@ const source = [
   { title: '寻路练习三', category: 'optimal_free', objective: '同关卡8玩法，全新地图，金币数量取上限（5枚）。', coins: [[0,1],[1,3],[2,0],[3,4],[4,2]], optimal: 14, knowledge: '在更多路径组合中寻找较优方案' },
   { title: '寻路收尾', category: 'optimal_free', objective: '同关卡8玩法，全新地图，作为本层收尾关。', coins: [[0,3],[2,1],[2,4],[4,0],[4,2]], optimal: 14, knowledge: '独立分析并优化完整路线' },
   { title: '绕障教学', category: 'obstacle_guided', objective: '地图新增若干封闭格（不可进入），必须严格按给定顺序拾取全部金币。', ordered: true, walls: [[1,2],[2,2]], coins: [[1,0,1],[3,0,2],[4,3,3],[1,4,4]], optimal: 11, knowledge: '按指定顺序绕开封闭区' },
-  { title: '绕障练习一', category: 'obstacle_free', objective: '拾取全部金币，先后顺序不限，地图含少量障碍物。', walls: [[1,1]], coins: [[0,3],[2,0],[3,3],[4,1]], optimal: 11, knowledge: '在简单障碍环境中自主绕行' },
-  { title: '绕障练习二', category: 'obstacle_free', objective: '同关卡13玩法，全新地图，障碍物数量增加。', walls: [[1,1],[1,3]], coins: [[0,2],[2,0],[2,4],[4,2]], optimal: 14, knowledge: '比较多种绕行路线' },
-  { title: '绕障收尾', category: 'obstacle_free', objective: '同关卡13玩法，全新地图，障碍物布局更复杂，作为本层收尾关。', walls: [[1,1],[1,3],[3,1],[3,3]], coins: [[0,2],[2,0],[2,4],[4,2]], optimal: 14, knowledge: '在复杂障碍布局中独立规划' },
+  { title: '绕障练习一', category: 'obstacle_free', objective: '拾取全部金币，先后顺序不限。绕过中间的竖墙，从底部唯一缺口通过。', walls: [[0,2],[1,2],[2,2],[3,2]], coins: [[0,4],[1,0],[1,4],[3,3]], optimal: 12, knowledge: '发现唯一缺口并绕过贯穿地图的隔墙' },
+  { title: '绕障练习二', category: 'obstacle_free', objective: '拾取全部金币，先后顺序不限。两道竖墙的缺口上下错开，需要多次绕行。', walls: [[0,1],[1,1],[2,1],[3,1],[1,3],[2,3],[3,3],[4,3]], coins: [[0,4],[2,2],[4,1],[4,4]], optimal: 16, knowledge: '通过交错缺口多次改变方向，规划连续绕行路线' },
+  { title: '绕障收尾', category: 'obstacle_free', objective: '拾取全部金币，先后顺序不限。两道横墙的缺口都在右侧，需要往返穿梭寻找通路。', walls: [[1,0],[1,1],[1,2],[1,3],[3,0],[3,1],[3,2],[3,3]], coins: [[0,3],[2,1],[4,0],[4,4]], optimal: 18, knowledge: '在同侧缺口的横向隔墙间往返，综合规划路线' },
   { title: '预算入门', category: 'budget', grid: 7, stepLimit: 20, expectedMaxValue: 5, objective: '地图扩大到 7×7，步数预算 20 步以内，尽量拾取更多金币（本关认真规划路线即可拿满全部 5 枚）。', walls: [[1,1],[2,1],[4,5],[5,5]], coins: [[0,4],[3,0],[5,2],[6,6],[2,6]], knowledge: '在宽松预算内规划完整收集路线' },
   { title: '预算收紧', category: 'budget', grid: 7, stepLimit: 16, expectedMaxValue: 5, objective: '仍是 7×7 地图，步数预算 16 步以内，尽量拾取更多金币（全新地图，6 枚金币，预算不足以全部拿到，需要取舍）。', walls: [[1,1],[1,2],[4,4],[4,5],[2,5],[5,1]], coins: [[0,6],[2,0],[3,6],[5,0],[6,4],[4,2]], knowledge: '在有限步数中主动取舍目标' },
   { title: '精打细算', category: 'budget', grid: 8, stepLimit: 19, expectedMaxValue: 5, objective: '地图扩大到 8×8，步数预算 19 步以内，尽量拾取更多金币（全新地图，7 枚金币，预算进一步收紧）。', walls: [[1,1],[1,2],[3,3],[3,4],[5,2],[6,6],[2,6]], coins: [[0,3],[2,7],[3,0],[5,5],[6,1],[7,7],[4,4]], knowledge: '在复杂地图中估算路线收益' },
   { title: '金币箱登场', category: 'budget', grid: 8, stepLimit: 17, expectedMaxValue: 6, objective: '仍是 8×8 地图，步数预算 17 步以内，尽量拾取更多金币价值；地图新增"金币箱"（价值 3 枚金币）。', walls: [[1,1],[2,1],[4,4],[4,5],[6,2],[6,3],[3,6]], coins: [[0,5],[2,0],[3,7],[5,1],[6,7],[4,3],[7,0,null,3,'chest']], knowledge: '比较普通金币与金币箱的路线价值' },
-  { title: '终极挑战', category: 'budget', grid: 9, stepLimit: 22, expectedMaxValue: 8, objective: '全系列最大地图 9×9，步数预算 22 步以内，尽量拾取更多金币价值；金币箱价值 3 枚金币。', walls: [[1,1],[1,2],[2,6],[3,3],[3,4],[5,5],[6,1],[6,7],[7,3]], coins: [[0,4],[2,0],[3,8],[5,0],[6,8],[8,2],[7,6],[0,8,null,3,'chest']], knowledge: '综合运用规划、避障、预算与价值取舍' },
+  { title: '终极挑战', category: 'budget', grid: 9, stepLimit: 22, expectedMaxValue: 8, objective: '全系列最大地图 9×9，步数预算 22 步以内，尽量拾取更多金币价值；金币箱价值 3 枚金币。', walls: [[1,1],[1,2],[2,6],[3,3],[3,4],[5,5],[6,1],[6,7],[7,3]], coins: [[0,4],[2,0],[3,8],[5,0],[6,8],[8,1],[7,6],[0,8,null,3,'chest']], knowledge: '综合运用规划、避障、预算与价值取舍' },
 ];
 
 function toPosition(grid, point) {
