@@ -78,7 +78,7 @@ test('only level two requires checkpoint order; level one accepts the reverse ci
 
 test('final scoring targets and 0/60/80/100 tiers respect mode and actual actions',()=>{
   const levels=robotLevels();
-  assert.deepEqual(levels.map(l=>[l.optimal_actions,l.optimal_code_lines]),[[19,3],[27,4],[26,5],[25,7],[35,7],[28,8]]);
+  assert.deepEqual(levels.map(l=>[l.optimal_actions,l.optimal_code_lines]),[[19,3],[27,4],[26,4],[25,7],[35,7],[28,8]]);
   levels.forEach((level,i)=>{
     const rows=curriculumReferencePrograms()[i],commands=validateAndExpand(rows,level.python).expanded!;
     const source=generatePythonSource(rows,level.python),result=replay(level,commands,null);

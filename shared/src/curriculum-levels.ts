@@ -36,7 +36,7 @@ export function buildCurriculumLevels(base:LevelDef):LevelDef[] {
     level_id:`FL${31+i}`,keyboard_id:`FK${31+i}`,python_id:`FP${31+i}`,content_id:`future_916_${i+1}`,content_version:'future-loop-3.0.0',
     title:titles[i],stage:i<2?'explore':i<4?'guided':'challenge',category:i<2?'intro':i<4?'ordered':'optimal_free',category_label:i<2?'循环基础':i<4?'城市任务':'鱼骨挑战',
     objective:objectives[i],rule_hint:hints[i],knowledge:objectives[i],initial_facing:level.robot!.facing,
-    optimal_actions:[19,27,26,25,35,28][i],optimal_code_lines:[3,4,5,7,7,8][i],expected_optimal_steps:undefined,show_optimal_feedback:false,
+    optimal_actions:[19,27,26,25,35,28][i],optimal_code_lines:[3,4,4,7,7,8][i],expected_optimal_steps:undefined,show_optimal_feedback:false,
     required_order:null,step_limit:null,max_commands:256,max_attempts:3,
     python:{...base.python},
   }));
