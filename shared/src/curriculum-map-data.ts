@@ -1,0 +1,989 @@
+// Generated from the supplied map exports by scripts/import-916-maps.mjs.
+import type { LevelDef } from './types.js';
+export const curriculumMapData: Record<string,LevelDef> = {
+  "2": {
+    "level_id": "CUSTOM01",
+    "keyboard_id": "CUSTOM_K01",
+    "python_id": "CUSTOM_P01",
+    "content_id": "custom_map",
+    "content_version": "1.0.0",
+    "title": "循环2",
+    "stage": "explore",
+    "category": "intro",
+    "category_label": "驾驶与夹爪",
+    "width": 11,
+    "height": 9,
+    "start": [
+      2,
+      1
+    ],
+    "coins": [
+      {
+        "id": "A",
+        "position": [
+          1,
+          5
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "B",
+        "position": [
+          2,
+          0
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "C",
+        "position": [
+          6,
+          6
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "D",
+        "position": [
+          7,
+          1
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "E",
+        "position": [
+          3,
+          1
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "G",
+        "position": [
+          2,
+          4
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      }
+    ],
+    "walls": [],
+    "required_order": null,
+    "step_limit": null,
+    "max_commands": 256,
+    "max_attempts": 3,
+    "show_optimal_feedback": false,
+    "optimal_code_lines": 4,
+    "robot": {
+      "facing": "down",
+      "cells": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          4,
+          1,
+          0
+        ],
+        [
+          5,
+          1,
+          0
+        ],
+        [
+          7,
+          1,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          6,
+          2,
+          0
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          0
+        ],
+        [
+          0,
+          4,
+          0
+        ],
+        [
+          1,
+          4,
+          0
+        ],
+        [
+          2,
+          4,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          5,
+          4,
+          0
+        ],
+        [
+          4,
+          5,
+          0
+        ],
+        [
+          5,
+          5,
+          0
+        ],
+        [
+          7,
+          5,
+          0
+        ],
+        [
+          2,
+          6,
+          0
+        ],
+        [
+          4,
+          6,
+          0
+        ],
+        [
+          5,
+          6,
+          0
+        ],
+        [
+          6,
+          6,
+          0
+        ],
+        [
+          4,
+          7,
+          0
+        ],
+        [
+          6,
+          4,
+          0
+        ],
+        [
+          6,
+          1,
+          0
+        ],
+        [
+          2,
+          5,
+          0
+        ],
+        [
+          6,
+          5,
+          0
+        ],
+        [
+          1,
+          5,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          3,
+          5,
+          0
+        ]
+      ],
+      "deliveries": {}
+    },
+    "python": {
+      "robot": true,
+      "template_id": "repeat_slots_v2",
+      "initial_rows": 0,
+      "min_rows": 1,
+      "max_rows": 40,
+      "can_add_delete_rows": true,
+      "count_range": [
+        1,
+        20
+      ],
+      "allowed_functions": [
+        "forward",
+        "backward",
+        "turn_left",
+        "turn_right",
+        "grab",
+        "release"
+      ]
+    },
+    "objective": "控制智能车，到指定地点巡逻",
+    "rule_hint": "",
+    "knowledge": "",
+    "initial_facing": "down"
+  },
+  "3": {
+    "level_id": "CUSTOM01",
+    "keyboard_id": "CUSTOM_K01",
+    "python_id": "CUSTOM_P01",
+    "content_id": "custom_map",
+    "content_version": "1.0.0",
+    "title": "循环3",
+    "stage": "explore",
+    "category": "intro",
+    "category_label": "驾驶与夹爪",
+    "width": 11,
+    "height": 9,
+    "start": [
+      2,
+      1
+    ],
+    "coins": [
+      {
+        "id": "D",
+        "position": [
+          2,
+          5
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "A",
+        "position": [
+          1,
+          5
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "B",
+        "position": [
+          7,
+          5
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "E",
+        "position": [
+          6,
+          5
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "C",
+        "position": [
+          6,
+          0
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "F",
+        "position": [
+          6,
+          1
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      }
+    ],
+    "walls": [
+      [
+        1,
+        4
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        5,
+        3
+      ],
+      [
+        7,
+        4
+      ]
+    ],
+    "required_order": null,
+    "step_limit": null,
+    "max_commands": 256,
+    "max_attempts": 3,
+    "show_optimal_feedback": false,
+    "robot": {
+      "facing": "up",
+      "cells": [
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          5,
+          1,
+          0
+        ],
+        [
+          6,
+          1,
+          0
+        ],
+        [
+          7,
+          1,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          3,
+          2,
+          0
+        ],
+        [
+          4,
+          2,
+          0
+        ],
+        [
+          6,
+          2,
+          0
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          5,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          0
+        ],
+        [
+          7,
+          3,
+          0
+        ],
+        [
+          1,
+          4,
+          0
+        ],
+        [
+          2,
+          4,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          6,
+          4,
+          0
+        ],
+        [
+          7,
+          4,
+          0
+        ],
+        [
+          1,
+          5,
+          0
+        ],
+        [
+          2,
+          5,
+          0
+        ],
+        [
+          3,
+          5,
+          0
+        ],
+        [
+          4,
+          5,
+          0
+        ],
+        [
+          5,
+          5,
+          0
+        ],
+        [
+          6,
+          5,
+          0
+        ],
+        [
+          8,
+          5,
+          0
+        ],
+        [
+          0,
+          6,
+          0
+        ],
+        [
+          2,
+          6,
+          0
+        ],
+        [
+          5,
+          6,
+          0
+        ],
+        [
+          6,
+          6,
+          0
+        ],
+        [
+          4,
+          7,
+          0
+        ],
+        [
+          5,
+          7,
+          0
+        ],
+        [
+          7,
+          7,
+          0
+        ],
+        [
+          7,
+          5,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ]
+      ],
+      "deliveries": {
+        "A": [
+          2,
+          6
+        ],
+        "B": [
+          6,
+          6
+        ],
+        "C": [
+          7,
+          1
+        ]
+      }
+    },
+    "python": {
+      "robot": true,
+      "template_id": "repeat_slots_v2",
+      "initial_rows": 0,
+      "min_rows": 1,
+      "max_rows": 40,
+      "can_add_delete_rows": true,
+      "count_range": [
+        1,
+        20
+      ],
+      "allowed_functions": [
+        "forward",
+        "backward",
+        "turn_left",
+        "turn_right",
+        "grab",
+        "release"
+      ]
+    },
+    "objective": "试试夹取货物，然后运送到指定位置松开",
+    "rule_hint": "",
+    "knowledge": "",
+    "initial_facing": "up"
+  },
+  "5": {
+    "level_id": "CUSTOM01",
+    "keyboard_id": "CUSTOM_K01",
+    "python_id": "CUSTOM_P01",
+    "content_id": "custom_map",
+    "content_version": "1.0.0",
+    "title": "循环5",
+    "stage": "explore",
+    "category": "intro",
+    "category_label": "驾驶与夹爪",
+    "width": 12,
+    "height": 6,
+    "start": [
+      0,
+      1
+    ],
+    "coins": [
+      {
+        "id": "A",
+        "position": [
+          3,
+          0
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "B",
+        "position": [
+          6,
+          0
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "C",
+        "position": [
+          9,
+          0
+        ],
+        "value": 1,
+        "type": "coin"
+      },
+      {
+        "id": "D",
+        "position": [
+          3,
+          2
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "E",
+        "position": [
+          6,
+          2
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      },
+      {
+        "id": "F",
+        "position": [
+          9,
+          2
+        ],
+        "value": 1,
+        "type": "checkpoint"
+      }
+    ],
+    "walls": [
+      [
+        3,
+        3
+      ],
+      [
+        6,
+        3
+      ],
+      [
+        9,
+        3
+      ]
+    ],
+    "required_order": null,
+    "step_limit": null,
+    "max_commands": 256,
+    "max_attempts": 3,
+    "show_optimal_feedback": false,
+    "optimal_code_lines": 4,
+    "robot": {
+      "facing": "right",
+      "cells": [
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          7,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          4,
+          1,
+          0
+        ],
+        [
+          5,
+          1,
+          0
+        ],
+        [
+          6,
+          1,
+          0
+        ],
+        [
+          7,
+          1,
+          0
+        ],
+        [
+          8,
+          1,
+          0
+        ],
+        [
+          9,
+          1,
+          0
+        ],
+        [
+          10,
+          1,
+          0
+        ],
+        [
+          11,
+          1,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          3,
+          2,
+          0
+        ],
+        [
+          4,
+          2,
+          0
+        ],
+        [
+          5,
+          2,
+          0
+        ],
+        [
+          6,
+          2,
+          0
+        ],
+        [
+          7,
+          2,
+          0
+        ],
+        [
+          8,
+          2,
+          0
+        ],
+        [
+          9,
+          2,
+          0
+        ],
+        [
+          10,
+          2,
+          0
+        ],
+        [
+          11,
+          2,
+          0
+        ],
+        [
+          1,
+          3,
+          0
+        ],
+        [
+          2,
+          3,
+          0
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          4,
+          3,
+          0
+        ],
+        [
+          5,
+          3,
+          0
+        ],
+        [
+          6,
+          3,
+          0
+        ],
+        [
+          7,
+          3,
+          0
+        ],
+        [
+          8,
+          3,
+          0
+        ],
+        [
+          9,
+          3,
+          0
+        ],
+        [
+          2,
+          4,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          5,
+          4,
+          0
+        ],
+        [
+          7,
+          4,
+          0
+        ],
+        [
+          8,
+          4,
+          0
+        ],
+        [
+          9,
+          4,
+          0
+        ],
+        [
+          10,
+          4,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          3,
+          4,
+          0
+        ],
+        [
+          3,
+          5,
+          0
+        ],
+        [
+          6,
+          4,
+          0
+        ],
+        [
+          6,
+          5,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "deliveries": {
+        "A": [
+          4,
+          1
+        ],
+        "B": [
+          7,
+          1
+        ],
+        "C": [
+          10,
+          1
+        ]
+      }
+    },
+    "python": {
+      "robot": true,
+      "template_id": "repeat_slots_v2",
+      "initial_rows": 0,
+      "min_rows": 1,
+      "max_rows": 40,
+      "can_add_delete_rows": true,
+      "count_range": [
+        1,
+        20
+      ],
+      "allowed_functions": [
+        "forward",
+        "backward",
+        "turn_left",
+        "turn_right",
+        "grab",
+        "release"
+      ]
+    },
+    "objective": "看看地图和货物，怎么准确地将物品送到对应位置？",
+    "rule_hint": "",
+    "knowledge": "",
+    "initial_facing": "right"
+  }
+};

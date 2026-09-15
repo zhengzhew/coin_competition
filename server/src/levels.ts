@@ -1,4 +1,4 @@
-import { futureLevel, levelIdForAssignment, type Competition, type LevelDef } from '@coin-path/shared';
+import { futureLevel, robotLevels, legacyRobotLevels, levelIdForAssignment, type Competition, type LevelDef } from '@coin-path/shared';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,14 +33,14 @@ export function getLevel(levelId: string): LevelDef | undefined {
 }
 
 export function competitionLevels(competition: Competition): LevelDef[] {
-  return competition === 'future' ? loadLevels().map(futureLevel) : loadLevels();
+  return competition === 'future' ? robotLevels() : loadLevels();
 }
 
 export function allLevels(): LevelDef[] {
-  return [...loadLevels(), ...competitionLevels('future')];
+  return [...loadLevels(), ...loadLevels().map(futureLevel), ...legacyRobotLevels(), ...competitionLevels('future')];
 }
 
 export function getLevelForAssignment(assignmentKey: string): LevelDef | undefined {
-  if (!/^F?[KP](0[1-9]|1\d|20)$/.test(assignmentKey)) return undefined;
+  if (!/^(?:[KP](?:0[1-9]|1\d|20)|F[KP](?:0[1-9]|1\d|2[0-6]|3[1-6]))$/.test(assignmentKey)) return undefined;
   return getLevel(levelIdForAssignment(assignmentKey));
 }

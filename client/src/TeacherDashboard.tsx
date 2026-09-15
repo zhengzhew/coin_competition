@@ -97,7 +97,7 @@ export default function TeacherDashboard() {
       <section className="metric-grid"><Metric label="正式参与学生" value={s.students} note={`${s.journeys} 个学生×关卡×模式样本`} /><Metric label="首次平均分" value={fmt(s.first_score)} note={`${s.first_n} 个有效首轮成绩`} /><Metric label="最终平均分" value={fmt(s.best_score)} note="每个样本取前三次最高分" /><Metric label="满分达成率" value={fmt(s.mastery_rate, '%')} note={`${s.mastered} / ${s.journeys} 个已开始样本`} /><Metric label="重试提升" value={fmt(s.gain, ' 分')} note={`${s.gain_n} 个有首轮及重试成绩的配对样本`} /></section>
       <nav className="analysis-tabs" aria-label="分析视角">{[['design','关卡诊断'],['students','学生与逐次成绩'],['quality','口径与数据管理']].map(([id,title]) => <button key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{title}</button>)}</nav>
       {tab === 'design' && <>
-        <div className="analysis-note">预算关“已结算”不等于达成目标，统一用 <b>100 分</b>衡量满分达成。诊断是待验证线索，不是定论；少于 5 个首轮样本不作诊断。</div>
+        <div className="analysis-note">按对应模式上限衡量满分达成：未来城市新六关键盘 <b>80 分</b>、代码 <b>100 分</b>；其他关卡为 100 分。诊断是待验证线索，不是定论；少于 5 个首轮样本不作诊断。</div>
         <section className="dashboard-grid half">{data.insights.modes.filter(row => !params.get('mode') || params.get('mode') === row.mode).map(row => <article className="dash-card" key={row.mode}><Title title={modeName(row.mode)} note={`${row.students} 人 · ${row.journeys} 个关卡样本`} /><div className="comparison-metrics"><div><span>首次 → 最终</span><b>{fmt(row.first_score)} → {fmt(row.best_score)}</b></div><div><span>重试比例</span><b>{fmt(row.retry_rate, '%')}</b></div><div><span>次数耗尽未满分</span><b>{row.exhausted}</b></div></div><p className="analysis-caption">模式由学生自选，关卡覆盖可能不同。请筛选同一关卡比较，不将差异解释为因果。</p></article>)}</section>
         <article className="dash-card level-card"><Title title="哪里太易，哪里容易卡住？" note="按关卡顺序观察难度梯度" /><div className="table-scroll"><table><thead><tr>{['关卡 / 模式','样本 / 首轮有效','首轮均分 / 满分率','最终均分 / 满分率','重试提升 / 配对数','次数耗尽未满分','准备中位秒 / 样本','执行中位秒 / 样本','平均碰撞','观察与下一步'].map(t => <th key={t}>{t}</th>)}</tr></thead><tbody>{data.insights.levels.map(row => <tr key={row.assignment_key}><td><b>{row.level_id} · {row.title}</b><small>{modeName(row.mode)} · {row.budget ? '预算取舍' : '完整收集'}</small></td><td>{row.journeys} / {row.first_n}</td><td>{fmt(row.first_score)} / {fmt(row.first_mastery, '%')}</td><td>{fmt(row.best_score)} / {fmt(row.mastery_rate, '%')}</td><td>{fmt(row.gain)} / {row.gain_n}</td><td>{row.exhausted}</td><td>{row.mode === 'keyboard' ? `${fmt(row.preparation_s)} / ${row.preparation_n}` : '未采集'}</td><td>{fmt(row.duration_s)} / {row.duration_n}</td><td>{fmt(row.collisions)}</td><td className="diagnosis-cell">{row.diagnosis}</td></tr>)}</tbody></table></div></article>
       </>}
@@ -108,7 +108,7 @@ export default function TeacherDashboard() {
       {tab === 'quality' && <>
         <article className="dash-card level-card"><Title title="先确认数据能回答什么" note="缺失不等于 0，行为数量不等于学习效果" /><dl className="definitions">
           <dt>计分样本</dt><dd>按 UUID＋关卡＋模式分组，只看前三次正式尝试。进行中不计入均分；停止、放弃保留已记录成绩。当前 {s.attempts} 次正式尝试，{s.active} 次进行中。</dd>
-          <dt>满分达成率</dt><dd>至少一次 100 分的样本 / 所有已开始样本。进行中也在分母内；首轮满分率仅以有效首轮成绩为分母。</dd>
+          <dt>满分达成率</dt><dd>至少一次达到对应模式最高分的样本 / 所有已开始样本（未来城市新六关键盘 80 分，其他为 100 分）。进行中也在分母内；首轮满分率仅以有效首轮成绩为分母。</dd>
           <dt>重试提升</dt><dd>有效首轮＋至少一次有效重试的配对样本：最高分减首轮分。单次尝试不混入；不能等同于长期学习效果。</dd>
           <dt>准备时间</dt><dd>键盘进入关卡到点击开始，按正式轮次关联去重后取中位数，覆盖 {s.preparation_n} / {s.preparation_eligible} 次。代码模式尚未采集同口径数据，不做横向比较。</dd>
           <dt>执行时间与碰撞</dt><dd>开始到结算/停止的墙钟时间，含停顿和离开页面；不含代码编写时间。碰撞是结束轮次的平均次数，不等同于能力。</dd>

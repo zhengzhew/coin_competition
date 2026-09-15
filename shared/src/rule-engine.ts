@@ -9,6 +9,7 @@ import {
   type ScoreResult,
   DIRECTIONS,
 } from './types.js';
+import { stepRobot } from './robot.js';
 
 // ===== Initialization =====
 
@@ -24,6 +25,7 @@ export function createGameState(level: LevelDef): GameState {
   }
 
   return {
+    robot: level.robot ? {facing:level.robot.facing,holding:null,closed:false,cargo:Object.fromEntries(level.coins.filter(c=>c.type!=='checkpoint').map(c=>[c.id,c.position])),checkpoints:Object.fromEntries(level.coins.filter(c=>c.type==='checkpoint').map(c=>[c.id,c.position])),config:level.robot,...(level.robot.automation?{automation:{tick:0,cart_cargo:null,last_result:'ready' as const}}:{})} : undefined,
     x: level.start[0],
     y: level.start[1],
     width: level.width,
@@ -50,6 +52,7 @@ export function step(
   maxCommands = 256,
   stepLimit?: number | null,
 ): StepResult {
+  if(state.robot) return stepRobot(state,command,maxCommands);
   if (state.status !== 'running') {
     return {
       state,
@@ -62,7 +65,7 @@ export function step(
     };
   }
 
-  const [dx, dy] = DIRECTIONS[command.direction];
+  const [dx, dy] = DIRECTIONS[command.direction as Direction];
   const nx = state.x + dx;
   const ny = state.y + dy;
   const posKey = `${nx},${ny}`;

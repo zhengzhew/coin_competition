@@ -18,7 +18,7 @@
     "start": "npm start -w server",
     "test": "npm test -w shared && node scripts/verify-content.mjs",
     "test:future": "npm run build -w shared && npm run build -w server && node scripts/verify-future-city.mjs",
-    "test:future:browser": "npm run build && node scripts/verify-future-browser.mjs",
+    "test:future:browser": "npm run build && node scripts/verify-curriculum-browser.mjs",
     "test:policy": "npm run build -w shared && npm run build -w server && node scripts/verify-attempt-policy.mjs && node scripts/verify-insights.mjs",
     "loadtest": "node scripts/loadtest.mjs",
     "typecheck": "tsc -b"

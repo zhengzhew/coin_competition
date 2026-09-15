@@ -29,6 +29,10 @@ html[data-competition="future"], html[data-competition="future"] body { backgrou
 .future-city .level-btn.active { color: #ffffff; background: linear-gradient(110deg,#279fb3,#2696aa); border-color: #2393a5; box-shadow: 0 0 18px #3793a323; }
 .app.future-city .level-btn.active small { color: #efffff; }
 .app.future-city .mission-card { background: linear-gradient(100deg,#fffffff5,#f8fcf0f5); border-color: #d5e4dc; }
+.app.future-city .robot-workspace { grid-template-rows:auto minmax(0,1fr); }
+.app.future-city .robot-workspace > .mission-card { grid-column:1; grid-row:1; width:100%; margin:0; }
+.app.future-city .robot-workspace > .board-panel { grid-column:1; grid-row:2; }
+.app.future-city .robot-workspace > .control-column { grid-column:2; grid-row:1 / span 2; }
 .future-city .mission-number { color: #927017; border-color: #eed083; background: #fff0bb; border-radius: 12px; }
 .future-city .mission-meta span { color: #43774e; background: #e6f2df; border-color: #cbdcba; }
 .future-city .mission-meta strong { color: #856414; background: #fff0bf; border-color: #efd589; }
@@ -43,6 +47,10 @@ html[data-competition="future"], html[data-competition="future"] body { backgrou
 .future-city .legend-start { background: #dcecb6; border-color: #8cb46e; }
 .future-city .legend-wall { background: #72a9a4; border: 1px solid #477f80; }
 .future-city .legend-chest { background: #f5bf35; border-color: #d49d20; }
+.future-city .robot-legend { flex-wrap:wrap; justify-content:flex-end; gap:6px 10px; }
+.future-city .legend-patrol { background:#078fae; border:2px solid #c0f0f1; border-radius:50% 50% 50% 0; transform:rotate(-45deg); }
+.future-city .legend-cargo { background:#f2bd68; border:2px solid #df812c; border-radius:2px; }
+.future-city .legend-dock { background:#fff6dc; border:2px dashed #8661cf; border-radius:1px; }
 .app.future-city .game-board {
   border: 1px solid #98c8d1; border-radius: 12px; background: linear-gradient(135deg,#f9fffef5,#e4f5f5f5);
   box-shadow: 0 0 0 5px #ffffff80, 0 14px 40px #4b81942b, inset 0 1px #ffffff;

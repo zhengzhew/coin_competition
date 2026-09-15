@@ -3,6 +3,8 @@ import type { GameState, LevelDef } from '@coin-path/shared';
 import ProjectedBoard from './CityBoard';
 import type { CityScene, CameraView } from './ThreeCityScene';
 import './CityBoard3D.css';
+import RobotFallback from './RobotFallback';
+import FactoryStatus from './FactoryStatus';
 
 export default function CityBoard3D({ level, state }: { level: LevelDef; state: GameState }) {
   const host = useRef<HTMLDivElement>(null);
@@ -43,7 +45,7 @@ export default function CityBoard3D({ level, state }: { level: LevelDef; state: 
       setNotice('');
     } catch { setNotice('当前窗口暂不支持全屏。'); }
   };
-  if (fallback) return <><small className="city3d-fallback" role="status">已切换到轻量地图</small><ProjectedBoard level={level} state={state} /></>;
+  if (fallback) return <><small className="city3d-fallback" role="status">已切换到轻量地图</small><FactoryStatus level={level} state={state}/>{level.robot?<div className="robot-fallback-stage"><RobotFallback level={level} state={state}/><svg className="robot-map-compass" viewBox="-90 -90 180 180" role="img" aria-label="地图指南针：北、东、南、西"><circle r="86" fill="#ffffffeb" stroke="#b9d8db" strokeWidth="2"/><path d="M 0 -52 L -12 0 L 0 -10 L 12 0 Z" fill="#087b96"/><path d="M 0 52 L -12 0 L 0 10 L 12 0 Z" fill="#8b548f"/><g fill="#246c79" textAnchor="middle" dominantBaseline="central" fontSize="22" fontWeight="700"><text y="-70">北</text><text x="70">东</text><text y="70">南</text><text x="-70">西</text></g></svg></div>:<ProjectedBoard level={level} state={state} />}</>;
 
   return <div className="board-viewport city3d-viewport">
     <div className="city3d-toolbar" aria-label="地图视角">
@@ -58,16 +60,18 @@ export default function CityBoard3D({ level, state }: { level: LevelDef; state: 
         <button onClick={() => void toggleFullscreen()} data-track-id="camera.fullscreen">{fullscreen ? '退出全屏' : '全屏'}</button>
       </div>
     </div>
+    <FactoryStatus level={level} state={state}/>
     <div ref={host} className="city3d-stage board-grid" data-level-id={level.level_id}>
       {!ready && <span className="city3d-loading">正在准备城市…</span>}
     </div>
-    <div className="city3d-help">{notice || (view === 'follow' ? '拖动旋转 · 滚轮缩放 · 跟随飞空车' : '拖动旋转 · 滚轮缩放 · 右键平移')}</div>
+    <div className="city3d-help">{notice || (level.robot?.automation?'G 拉杆 · R 复位 · 空格等待 · 每次行动推进一拍':level.robot ? 'W 前进 · S 后退 · A / D 转向 · G 夹取 · R 松开' : view === 'follow' ? '拖动旋转 · 滚轮缩放 · 按车旁箭头辨认方向' : '拖动旋转 · 滚轮缩放 · 右键平移 · 按车旁箭头辨认方向')}</div>
     <div className="city3d-accessible" role="grid" aria-label={`${level.width} 乘 ${level.height} 3D 方格地图`} aria-rowcount={level.height} aria-colcount={level.width}>
       {Array.from({length:level.height},(_,row) => { const y=level.height-row-1; return <div role="row" key={y}>
         {Array.from({length:level.width},(_,x) => { const wall=level.walls.some(([wx,wy])=>wx===x&&wy===y); const car=state.x===x&&state.y===y;
           const coin=level.coins.find(c=>c.position[0]===x&&c.position[1]===y&&!state.collected.includes(c.id));
+          const dock=Object.entries(level.robot?.deliveries??{}).find(([,p])=>p[0]===x&&p[1]===y)?.[0];
           return <span role="gridcell" key={x} data-track-id={`board.cell.${x}.${y}`} data-car={car || undefined}
-            aria-label={`坐标 ${x},${y}${wall ? ' 高楼障碍' : ''}${car ? ' 飞空车' : ''}${coin ? ` 能源 ${coin.id}` : ''}`} />;
+            aria-label={`坐标 ${x},${y}${wall ? ' 障碍' : ''}${car ? ' 飞空车' : ''}${coin ? ` ${coin.type==='checkpoint'?'巡逻点':level.robot?'货物':'能源'} ${coin.type==='checkpoint'&&!level.robot?.checkpoint_order?'':coin.id}` : ''}${dock?` 交货点 ${dock}`:''}`} />;
         })}
       </div>; })}
     </div>

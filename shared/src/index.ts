@@ -4,3 +4,6 @@ export * from './solver.js';
 export * from './python-template.js';
 export * from './uuid.js';
 export * from './competitions.js';
+export * from './robot.js';
+export * from './robot-scoring.js';
+export * from './robot-levels.js';

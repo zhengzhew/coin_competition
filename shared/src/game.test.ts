@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   createGameState, createUuid, generateInitialRows, generatePythonSource, step, replay, solve,
-  validateAndExpand, type LevelDef,
+  validateAndExpand, legacyRobotLevels as robotLevels, countCodeLines, type Action, type LevelDef,
 } from './index.js';
 
 const level: LevelDef = {
@@ -100,4 +100,53 @@ test('UUID generation falls back to getRandomValues when randomUUID is unavailab
 test('UUID generation prefers the native randomUUID implementation', () => {
   const expected = '11111111-2222-4333-8444-555555555555';
   assert.equal(createUuid({ randomUUID: () => expected }), expected);
+});
+
+test('robot turns in place, reverses relative to heading, and never automatically collects cargo',()=>{
+  const level=robotLevels()[1];let state=createGameState(level);
+  const run=(direction:Action)=>{state=step(state,{direction,command_index:state.consumed_commands+1,command_id:'test',source:'keyboard'},null,level.coins.length).state;};
+  run('forward');assert.equal(state.collisions,1);assert.equal(state.steps,0);assert.equal(state.collected.length,0);
+  run('turn_right');assert.deepEqual([state.x,state.y],[1,4]);assert.equal(state.robot!.facing,'right');assert.equal(state.steps,0);
+  run('forward');assert.deepEqual([state.x,state.y],[2,4]);
+  run('backward');assert.deepEqual([state.x,state.y],[1,4]);assert.equal(state.robot!.facing,'right');
+  run('turn_left');run('grab');assert.equal(state.robot!.holding,'A');assert.equal(state.collected.length,0);
+  run('release');assert.deepEqual(state.robot!.cargo.A,[1,5]);assert.equal(state.collected.length,0);
+  run('grab');run('turn_left');run('turn_left');run('release');assert.deepEqual(state.collected,['A']);assert.equal(state.robot!.holding,null);
+});
+
+test('all six cargo scenes complete with the same repeated program and server replay',()=>{
+  const cycle:Action[]=['grab','turn_right','turn_right','release','turn_right','turn_right','turn_right','forward','forward','forward','turn_left'];
+  for(const level of robotLevels()) {
+    const rows=[{row_id:'loop',direction:'repeat',count:String(level.coins.length),children:cycle.map((direction,i)=>({row_id:String(i),direction,count:'1'}))}];
+    const compiled=validateAndExpand(rows,level.python);assert.equal(compiled.valid,true);
+    const result=replay(level,compiled.expanded!,null);assert.equal(result.status,'success');assert.equal(result.collisions,0);
+    assert.equal(result.collected_order.length,level.coins.length);assert.equal(result.steps,3*(level.coins.length-1));
+    assert.equal(result.robot!.holding,null);
+  }
+});
+
+test('robot empty grabs, illegal release, edges and loop limits preserve cargo',()=>{
+  const level=robotLevels()[0];let state=createGameState(level);
+  const run=(direction:Action)=>{state=step(state,{direction,command_index:state.consumed_commands+1,command_id:'test',source:'keyboard'},null,1).state;};
+  run('grab');run('turn_right');run('forward');run('turn_left');run('release');
+  assert.equal(state.robot!.holding,'A','cannot release over a gap');assert.equal(state.robot!.closed,true);
+  run('forward');assert.equal(state.collisions,1);
+  const invalid=validateAndExpand([{row_id:'x',direction:'repeat',count:'20',children:[{row_id:'y',direction:'forward',count:'20'}]}],level.python);
+  assert.equal(invalid.valid,false);
+  assert.equal(validateAndExpand([{row_id:'x',direction:'up',count:'1'}],level.python).valid,false);
+  assert.equal(validateAndExpand([{row_id:'x',direction:'repeat',count:'2',children:[]}],level.python).valid,false);
+});
+
+test('code line targets are achievable; loop count and move count do not inflate written lines',()=>{
+  for(const level of robotLevels()) {
+    const actions=level.coins.length===1?['grab','turn_right','turn_right','release']:['grab','turn_right','turn_right','release','turn_left','forward','turn_left'];
+    const body=actions.map((direction,i)=>({row_id:String(i),direction,count:direction==='forward'?'3':'1'}));
+    const rows=level.coins.length===1?body:[{row_id:'loop',direction:'repeat',count:String(level.coins.length),children:body}];
+    assert.equal(countCodeLines(rows),level.optimal_code_lines);
+    const compiled=validateAndExpand(rows,level.python);assert.equal(compiled.valid,true);
+    const result=replay(level,compiled.expanded!,null);assert.equal(result.status,'success');assert.equal(result.collisions,0);
+    assert.equal(result.collected_order.length,level.coins.length);
+  }
+  assert.equal(countCodeLines([]),0);
+  assert.equal(countCodeLines([{row_id:'loop',direction:'repeat',count:'20',children:[{row_id:'f',direction:'forward',count:'20'}]}]),2);
 });

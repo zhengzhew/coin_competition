@@ -100,12 +100,15 @@ try {
     return {offset:camera.map((n,i)=>n-target[i]),position:c.dataset.position,view:c.dataset.view};
   });
   const beforeDrag=await readFollow();
+  assert.equal(await page.locator('.city3d-directions [data-direction]').count(),4);
+  const guideBefore=await page.locator('.city3d-directions [data-direction=up]').getAttribute('data-screen-direction');
   await page.mouse.move(followBox.x+followBox.width*.5,followBox.y+followBox.height*.5);
   await page.mouse.down();
   await page.mouse.move(followBox.x+followBox.width*.7,followBox.y+followBox.height*.55,{steps:12});
   await page.mouse.up();
   await page.waitForTimeout(1000);
   const afterDrag=await readFollow();
+  assert.notEqual(await page.locator('.city3d-directions [data-direction=up]').getAttribute('data-screen-direction'),guideBefore,'direction guide follows camera rotation');
   assert.equal(afterDrag.view,'follow');
   assert.equal(afterDrag.position,beforeDrag.position);
   assert.ok(Math.hypot(...afterDrag.offset.map((n,i)=>n-beforeDrag.offset[i]))>.5,'follow drag rotates camera');

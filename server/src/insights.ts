@@ -40,14 +40,17 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
     const completed = rows.filter(scored);
     const first = rows.find(a => a.trial_index === 1 && scored(a));
     const best = completed.length ? Math.max(...completed.map(a => a.score!)) : null;
+    const level=levels.find(level=>level.keyboard_id===rows[0].assignment_key||level.python_id===rows[0].assignment_key);
+    const maxScore=level?.optimal_actions!==undefined&&rows[0].mode==='keyboard'?80:100;
     return {
       player_uuid: rows[0].player_uuid, display_name: rows[0].display_name,
       assignment_key: rows[0].assignment_key, level_id: levelIdForAssignment(rows[0].assignment_key), mode: rows[0].mode,
       attempts: rows.length, ended: rows.filter(ended).length,
       first_score: first?.score ?? null, best_score: best,
       gain: first && completed.length >= 2 ? round(best! - first.score!) : null,
-      mastered: best !== null && best >= 100,
-      exhausted: rows.length >= 3 && rows.every(ended) && best !== null && best < 100,
+      max_score:maxScore,
+      mastered: best !== null && best >= maxScore,
+      exhausted: rows.length >= 3 && rows.every(ended) && best !== null && best < maxScore,
       scores: rows.map(a => ({ trial: a.trial_index, score: scored(a) ? a.score : null, status: a.status })),
     };
   });
@@ -63,7 +66,7 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
       students: new Set(rows.map(a => a.player_uuid)).size, journeys: groups.length, attempts: rows.length,
       ended: finished.length, active: rows.length - finished.length,
       first_n: first.length, first_score: mean(first.map(g => g.first_score!)),
-      first_mastery: first.length ? round(first.filter(g => g.first_score! >= 100).length / first.length * 100) : null,
+      first_mastery: first.length ? round(first.filter(g => g.first_score! >= g.max_score).length / first.length * 100) : null,
       best_score: mean(groups.flatMap(g => g.best_score === null ? [] : [g.best_score])),
       mastered: groups.filter(g => g.mastered).length,
       mastery_rate: groups.length ? round(groups.filter(g => g.mastered).length / groups.length * 100) : null,

@@ -35,12 +35,18 @@ try {
   const player = await bootstrap.json();
   assert.equal((await json('/players/bootstrap', {})).player_uuid, player.player_uuid);
   const coins = await json('/levels');
-  const future = await json('/levels?competition=future');
+  const currentFuture = await json('/levels?competition=future');
+  assert.equal(currentFuture.length,6);
+  await json('/levels/FL37', undefined, 404);
+  await json('/assignments/FK37', undefined, 404);
+  await json('/assignments/FP37', undefined, 404);
+  assert.ok(currentFuture.every(level=>level.robot));
+  const future = await Promise.all(Array.from({length:20},(_,i)=>json(`/levels/FL${String(i+1).padStart(2,'0')}`)));
   const solutions = JSON.parse(readFileSync(new URL('../solutions.teacher.json', import.meta.url))).solutions;
   assert.equal(coins.length, 20);
   assert.equal(future.length, 20);
   await json('/levels?competition=unknown', undefined, 400);
-  await json('/assignments/FK21', undefined, 404);
+  await json('/assignments/FK27', undefined, 404);
   for (let index = 0; index < 20; index++) {
     const original = coins[index], city = future[index];
     for (const property of ['width','height','start','walls','coins','required_order','step_limit','show_optimal_feedback','max_commands','max_attempts','python']) {
@@ -94,7 +100,7 @@ try {
     const dashboard = await json(`/teacher/dashboard?competition=${competition}`);
     assert.equal(dashboard.overview.attempts, competition === 'future' ? 42 : 40);
     assert.equal(dashboard.overview.events, 1);
-    assert.equal(dashboard.insights.levels.length, 40);
+    assert.equal(dashboard.insights.levels.length, competition === 'future' ? 64 : 40);
     assert.ok(dashboard.insights.levels.every(level => level.level_id.startsWith('F') === (competition === 'future')));
     const filtered = await json(`/teacher/dashboard?competition=${competition}&level=${competition === 'future' ? 'FL01' : 'L01'}&mode=keyboard`);
     assert.equal(filtered.insights.levels.length, 1);

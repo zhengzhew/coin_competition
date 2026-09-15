@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  createGameState, createUuid, generateInitialRows, generatePythonSource, step, validateAndExpand,
-  type Direction, type GameState, type GameStatus, type LevelDef, type Mode,
+  createGameState, createUuid, generateInitialRows, generatePythonSource, step, validateAndExpand, countCodeLines,
+  type Direction, type Action, type GameState, type GameStatus, type LevelDef, type Mode,
   type ScoreResult, type TemplateRow,
 } from '@coin-path/shared';
 import GameBoard from './components/GameBoard';
 import LevelNav from './components/LevelNav';
 import PythonEditor from './components/PythonEditor';
+import RobotEditor from './components/RobotEditor';
+import {robotSceneTheme} from './components/robot-scene-theme';
 import { TelemetryClient } from './telemetry';
 import './App.css';
 import { competition, isFuture, skin } from './theme';
@@ -32,13 +34,14 @@ export default function App() {
   const [currentLevel, setCurrentLevel] = useState<LevelDef | null>(null);
   const [mode, setMode] = useState<Mode>('keyboard');
   const [modeSelected, setModeSelected] = useState(false);
-  const [litDirection, setLitDirection] = useState<Direction | null>(null);
+  const [litDirection, setLitDirection] = useState<Action | null>(null);
   const lightTimer = useRef<number | null>(null);
   useEffect(() => () => { if (lightTimer.current !== null) window.clearTimeout(lightTimer.current); }, []);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [attempt, setAttempt] = useState<AttemptInfo | null>(null);
   const [score, setScore] = useState<ScoreResult | null>(null);
   const [rows, setRows] = useState<TemplateRow[]>([]);
+  const [submittedLines,setSubmittedLines]=useState<number|null>(null);
   const [animating, setAnimating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
@@ -75,11 +78,13 @@ export default function App() {
   };
 
   const selectLevel = useCallback((level: LevelDef) => {
+    const preserveProgram=!!level.robot&&levelRef.current?.level_id===level.level_id;
+    setSubmittedLines(null);
     markLevelEntry('level_selected');
     levelRef.current = level;
     setCurrentLevel(level);
     commitGame(createGameState(level));
-    setRows(generateInitialRows(level.python));
+    if(!preserveProgram)setRows(generateInitialRows(level.python));
     setAttempt(null); attemptRef.current = null;
     setScore(null); setMessage(null); setEditorError(null);
     telemetryRef.current?.track('level_selected', `nav.level.${level.level_id}`, { level_id: level.level_id, coin_count: level.coins.length });
@@ -129,6 +134,7 @@ export default function App() {
   };
 
   const resetGame = useCallback((stopRemote = true) => {
+    setSubmittedLines(null);
     const level = levelRef.current;
     if (!level) return;
     markLevelEntry('retry');
@@ -136,7 +142,7 @@ export default function App() {
     attemptRef.current = null; setAttempt(null);
     commitGame(createGameState(level));
     setScore(null); setMessage(null); setEditorError(null);
-    setRows(generateInitialRows(level.python));
+    if(!level.robot)setRows(generateInitialRows(level.python));
     commandChain.current = Promise.resolve();
     telemetryRef.current?.track('attempt_reset', 'attempt.reset', {});
   }, []);
@@ -165,7 +171,7 @@ export default function App() {
     if (attemptRef.current && gameRef.current?.status === 'running') stopRemoteAttempt();
     commitGame(createGameState(level));
     setScore(null); setMessage(null); setEditorError(null);
-    if (!preserveProgram) setRows(generateInitialRows(level.python));
+    if (!preserveProgram&&!level.robot) setRows(generateInitialRows(level.python));
     const assignmentKey = modeRef.current === 'keyboard' ? level.keyboard_id : level.python_id;
     try {
       const response = await fetch('/api/attempts', {
@@ -193,7 +199,7 @@ export default function App() {
     }
   };
 
-  const applyLocalCommand = (direction: Direction, source: Mode) => {
+  const applyLocalCommand = (direction: Action, source: Mode) => {
     const level = levelRef.current;
     const state = gameRef.current;
     if (!level || !state || state.status !== 'running') return null;
@@ -203,6 +209,7 @@ export default function App() {
       direction, command_index: commandIndex, command_id: createUuid(), source,
     }, level.required_order, level.coins.length, level.max_commands, level.step_limit);
     commitGame(result.state);
+    if(level.robot) setMessage(result.event.type==='action_empty' ? (level.robot.automation?(result.state.robot?.automation?.last_result==='latched'?'先按 R 复位拉杆。':'请面向开关，等货物与物流车同时到位。'):direction==='grab'?'车头前一格没有可夹取的货物。':'前方无法放置，请换一个空格。') : result.event.type==='collision'?'前方无法通行。':null);
     telemetryRef.current?.track(result.event.type, 'game.board', { ...result.event });
     if (result.event.type === 'order_violation') {
       setMessage(isFuture ? '请先收集当前编号的能源芯。' : '这枚金币还没轮到，已保留在地图上；请先拾取当前编号。');
@@ -223,7 +230,7 @@ export default function App() {
     });
   };
 
-  const sendCommands = async (currentAttempt: AttemptInfo, commands: Direction[], programSnapshot?: string) => {
+  const sendCommands = async (currentAttempt: AttemptInfo, commands: Action[], programSnapshot?: string) => {
     if (currentAttempt.attempt_id.startsWith('local-')) return null;
     const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/commands`, {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
@@ -234,7 +241,7 @@ export default function App() {
     return body as ServerResult;
   };
 
-  const executeKeyboard = useCallback((direction: Direction) => {
+  const executeKeyboard = useCallback((direction: Action) => {
     const currentAttempt = attemptRef.current;
     if (!currentAttempt || modeRef.current !== 'keyboard' || gameRef.current?.status !== 'running') return;
     setLitDirection(direction);
@@ -260,8 +267,10 @@ export default function App() {
       w: 'up', a: 'left', s: 'down', d: 'right', W: 'up', A: 'left', S: 'down', D: 'right',
     };
     const handler = (event: KeyboardEvent) => {
-      if (event.target instanceof HTMLInputElement || modeRef.current !== 'keyboard') return;
-      const direction = keyMap[event.key];
+      if (event.target instanceof HTMLElement && (event.target.matches('input,textarea,select') || event.target.isContentEditable) || modeRef.current !== 'keyboard') return;
+      const robotKeys: Record<string,Action>={w:'forward',s:'backward',a:'turn_left',d:'turn_right',g:'grab',r:'release',arrowup:'forward',arrowdown:'backward',arrowleft:'turn_left',arrowright:'turn_right'};
+      if(levelRef.current?.robot?.automation)robotKeys[' ']='wait';
+      const direction = levelRef.current?.robot ? robotKeys[event.key.toLowerCase()] : keyMap[event.key];
       if (!direction) return;
       event.preventDefault();
       executeKeyboard(direction);
@@ -282,11 +291,12 @@ export default function App() {
     setEditorError(null);
     const currentAttempt = await beginAttempt(true);
     if (!currentAttempt) return;
+    setSubmittedLines(countCodeLines(rows));
     const programSnapshot = generatePythonSource(rows, level.python);
-    telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length });
+    telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length, code_line_count:countCodeLines(rows), optimal_code_lines:level.optimal_code_lines });
     setAnimating(true);
     for (const direction of validation.expanded) {
-      await sleep(95);
+      await sleep(level.robot?320:95);
       const state = applyLocalCommand(direction, 'python_blank');
       if (state?.status !== 'running') break;
     }
@@ -348,7 +358,7 @@ export default function App() {
     <div className={`app${isFuture ? ' future-city' : ''}`}>
       {!modeSelected && <div className="onboarding" role="dialog" aria-modal="true">
         <div className="onboarding-card">
-          <span className="eyebrow">{isFuture ? '飞行任务 · 测试赛' : '身份已经生成'}</span><h1>欢迎来到{skin.title}</h1>
+          <span className="eyebrow">{isFuture ? '循环搬运 · 测试赛' : '身份已经生成'}</span><h1>欢迎来到{skin.title}</h1>
           <div className="identity-card"><img src={skin.vehicle} alt="" /><div><small>{isFuture ? '你的领航员身份' : '你的玩家名'}</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
           <p>{isFuture ? '选择操控方式，本次挑战中保持不变。' : '请选择本次挑战的操作模式，进入后不再切换。'}</p>
           <div className="experience-grid">
@@ -371,20 +381,26 @@ export default function App() {
       <div className="app-body">
         <LevelNav levels={levels} currentLevelId={currentLevel.level_id} onSelect={selectLevel} />
         <main className="game-area">
-          <section className="mission-card">
-            <div className="mission-number">{currentLevel.level_id.slice(-2)}</div>
+          {!currentLevel.robot && <section className="mission-card">
+            <div className="mission-number">{currentLevel.robot?String(currentLevelIndex+1).padStart(2,'0'):currentLevel.level_id.slice(-2)}</div>
             <div className="mission-copy"><h1>{currentLevel.title}</h1></div>
-            <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{totalValue} 点{isFuture ? '能源' : '金币价值'}</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
-          </section>
+            <div className="mission-meta"><span>{currentLevel.robot?'立体城市':`${currentLevel.width}×${currentLevel.height}`}</span><span>{totalValue} {isFuture ? '箱货物' : '点金币价值'}</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
+          </section>}
 
-          <div className="workspace-grid">
+          <div className={`workspace-grid${currentLevel.robot?' robot-workspace':''}`}>
+            {currentLevel.robot && <section className="mission-card"><div className="mission-number">{String(currentLevelIndex+1).padStart(2,'0')}</div><div className="mission-copy"><h1>{currentLevel.title}</h1></div></section>}
             <section className="board-panel">
-              <div className="panel-heading"><div><span>{isFuture ? '飞行目标' : '本关任务'}</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div><div className="legend"><span><i className="legend-start" />{isFuture ? '空港' : '起点'}</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />{isFuture ? '高楼' : '封闭区'}</span>}{hasChest && <span><i className="legend-chest" />{isFuture ? '超级芯' : '金币箱'} ×3</span>}</div></div>
+              <div className="panel-heading"><div><span>{currentLevel.robot?robotSceneTheme(currentLevel).name:'本关任务'}</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div>
+                {currentLevel.robot?<div className="legend robot-legend">
+                  {currentLevel.coins.some(c=>c.type==='checkpoint')&&<span><i className="legend-patrol"/>巡逻点</span>}
+                  {Object.keys(currentLevel.robot.deliveries).length>0&&<><span><i className="legend-cargo"/>货物</span><span><i className="legend-dock"/>交货点</span></>}
+                </div>:<div className="legend"><span><i className="legend-start" />{isFuture ? '任务站' : '起点'}</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />{isFuture ? '高楼' : '封闭区'}</span>}{hasChest && <span><i className="legend-chest" />{isFuture ? '超级芯' : '金币箱'} ×3</span>}</div>}
+              </div>
               <GameBoard level={currentLevel} state={gameState} />
               <div className="status-bar">
-                <div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
-                <div><small>碰撞次数</small><b>{gameState.collisions}</b></div>
-                <div><small>{isFuture ? '已收集能源' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
+                {currentLevel.robot ? <div data-track-id="status.actions"><small>行动次数{currentLevel.optimal_actions!==undefined&&` · 最优 ≤ ${currentLevel.optimal_actions}`}</small><b>{gameState.consumed_commands}</b></div> : <><div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
+                <div><small>碰撞次数</small><b>{gameState.collisions}</b></div></>}
+                <div><small>{isFuture ? '已完成目标' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
                 <div className={`status-pill status-${gameState.status}`}>{statusLabel(gameState.status)}</div>
               </div>
             </section>
@@ -395,30 +411,35 @@ export default function App() {
                   <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前模式' : attempt ? '正式尝试' : '剩余正式机会'}</span><strong>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</strong></div>
                   <div><span>本关最高分</span><strong>{progress?.final_score ?? '—'}<small> 分</small></strong></div>
                 </div>
-                <p>{isFuture ? '3 次取最高分，练习不计分。' : '每种模式各 3 次，取最高分；练习不计分。'}</p>
+                <p>{isFuture ? '3 次取最高分，练习不计分。' : '每种模式各 3 次，取最高分；练习不计分。'}</p>{currentLevel.optimal_actions!==undefined&&<p data-track-id="score.rules">完成 60 分 · 行动最优 80 分{mode==='python_blank'?' · 代码最优 100 分':''}</p>}
               </section>
               {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
 
               {mode === 'keyboard' ? <section className="keyboard-card">
-                <div className="mini-heading"><span>方向控制</span><small>方向键 / WASD</small></div>
-                <div className="dpad">
+                <div className="mini-heading"><span>{currentLevel.robot?'驾驶与夹爪':'方向控制'}</span><small>{currentLevel.robot?'相对车头方向':'方向键 / WASD'}</small></div>
+                {currentLevel.robot ? <><div className="robot-controls">
+                  {([['forward','W','前进一格'],['turn_left','A','左转 90°'],['backward','S','后退一格'],['turn_right','D','右转 90°'],['grab','G','夹取'],['release','R','松开']] as const).map(([action,key,label])=><button key={action} className={litDirection===action?'is-lit':''} disabled={!active} onClick={()=>executeKeyboard(action)} data-track-id={`move.${action}`}><kbd>{key}</kbd>{currentLevel.robot?.automation&&action==='grab'?'拉杆':currentLevel.robot?.automation&&action==='release'?'复位':label}</button>)}
+                  {currentLevel.robot.automation&&<button className="factory-wait" disabled={!active} onClick={()=>executeKeyboard('wait')} data-track-id="move.wait"><kbd>空格</kbd>等待一拍</button>}
+                </div><p className="robot-holding">{currentLevel.robot.automation?(gameState.robot?.closed?'拉杆已拉下 · R 复位':'面向开关 · G 拉杆'):gameState.robot?.holding?`夹爪持有：${gameState.robot.holding}`:gameState.robot?.closed?'夹爪已合拢 · 空':'夹爪已张开'}</p></> : <div className="dpad">
                   <button className={`dpad-btn up${litDirection === 'up' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('up')} disabled={!active} data-track-id="move.up" aria-label="向上">↑</button>
                   <button className={`dpad-btn left${litDirection === 'left' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('left')} disabled={!active} data-track-id="move.left" aria-label="向左">←</button>
                   <div className="dpad-core">◆</div>
                   <button className={`dpad-btn right${litDirection === 'right' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('right')} disabled={!active} data-track-id="move.right" aria-label="向右">→</button>
                   <button className={`dpad-btn down${litDirection === 'down' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
-                </div>
+                </div>}
                 {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">{progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '开始本关'}</button>
                   : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">{currentLevel.step_limit ? '结束并结算' : '停止本轮'}</button>
                   : !score && <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
-              </section> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
+              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={()=>resetGame()} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
 
               {score && <section className="score-panel">
-                <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ 100</em></div>
-                {currentLevel.step_limit
+                <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ {score.max_score??100}</em></div>
+                {score.optimal_actions!==undefined
+                  ? <><div className="score-parts"><span>完成 {score.collection_score}/60</span><span>行动 {score.action_score}/20</span>{mode==='python_blank'&&<span>代码 {score.code_score}/20</span>}</div><p data-track-id="score.thresholds">行动 {score.action_count} / {score.optimal_actions} 次{mode==='python_blank'&&` · 代码 ${score.code_lines??'未核验'} / ${score.optimal_code_lines} 行`}</p><p>{score.total_score===0?'完成全部目标后得 60 分。':score.total_score===60?'任务完成，减少行动次数可得 80 分。':score.total_score===80?(mode==='keyboard'?'行动次数达标，已获键盘模式最高分！':'行动次数达标，精简代码可得 100 分。'):'行动次数与代码行数均达标！'}</p></>
+                  : currentLevel.step_limit
                   ? <><div className="score-parts"><span>价值 {score.collected_value} / {score.total_value}</span><span>预算 {score.steps} / {currentLevel.step_limit} 步</span></div><p>{score.collected_value === score.optimal_value ? `你拿到了预算内最高的 ${score.optimal_value} 点价值！` : `预算内最高可得 ${score.optimal_value} 点，再比较一下目标价值和绕行距离。`}</p></>
-                  : <><div className="score-parts"><span>{skin.resourceName} {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : (isFuture ? '能源收集完成！' : '全部金币都已收集，操控任务完成！')}</p></>}
-                {score.total_score >= 100
+                  : <><div className="score-parts"><span>{currentLevel.robot?'目标':skin.resourceName} {score.collection_score}/60</span><span>{currentLevel.robot?'完成':'路线'} {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : (isFuture ? '本轮已结算，查看完成目标。' : '全部金币都已收集，操控任务完成！')}</p></>}
+                {score.total_score >= (score.max_score??100)
                   ? nextLevel
                     ? <button onClick={() => selectLevel(nextLevel)} data-track-id="attempt.next_level">下一关</button>
                     : <p role="status">最后一关已满分完成！</p>
@@ -429,7 +450,7 @@ export default function App() {
           </div>
         </main>
       </div>
-      <footer><span>{isFuture ? '未来城市 · 飞行任务' : '玩家操作与时间节点已记录'}</span><span>{isFuture ? '测试操作将记录，用于任务分析' : currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
+      <footer><span>{isFuture ? '未来城市 · 循环挑战' : '玩家操作与时间节点已记录'}</span><span>{isFuture ? '测试操作将记录，用于任务分析' : currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
     </div>
   );
 }

@@ -1,4 +1,6 @@
 import { type Direction, type LevelDef, DIRECTIONS } from './types.js';
+import type { Action, RobotState } from './types.js';
+import { createGameState, step } from './rule-engine.js';
 
 // ===== BFS Solver =====
 
@@ -89,6 +91,7 @@ function countBits(n: number): number {
 // ===== Replay (Server-side verification) =====
 
 export interface ReplayResult {
+  robot?: RobotState;
   status: 'success' | 'order_violation' | 'command_limit' | 'incomplete' | 'stopped';
   steps: number;
   collisions: number;
@@ -100,9 +103,17 @@ export interface ReplayResult {
 
 export function replay(
   level: LevelDef,
-  commands: Direction[],
+  commands: Action[],
   requiredOrder: string[] | null,
 ): ReplayResult {
+  if(level.robot) {
+    let state=createGameState(level);
+    for(const [i,direction] of commands.entries()) {
+      state=step(state,{direction,command_index:i+1,command_id:String(i),source:'keyboard'},null,level.coins.length,level.max_commands).state;
+      if(state.status!=='running')break;
+    }
+    return {status:state.status==='running'?'incomplete':state.status as ReplayResult['status'],steps:state.steps,collisions:state.collisions,consumed_commands:state.consumed_commands,collected_order:state.collected,end:[state.x,state.y],trace:state.trace,robot:state.robot};
+  }
   const { width, height, start, coins, walls } = level;
   const wallSet = new Set(walls.map(([x, y]) => `${x},${y}`));
   const coinMap = new Map<string, string>();
@@ -121,7 +132,7 @@ export function replay(
 
   for (const dir of commands) {
     consumed++;
-    const [dx, dy] = DIRECTIONS[dir];
+    const [dx, dy] = DIRECTIONS[dir as Direction];
     const nx = x + dx;
     const ny = y + dy;
 

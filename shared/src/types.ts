@@ -1,6 +1,24 @@
 // ===== Core Game Types =====
 
 export type Direction = 'up' | 'down' | 'left' | 'right';
+export type RobotAction = 'forward' | 'backward' | 'turn_left' | 'turn_right' | 'grab' | 'release' | 'wait';
+export type Action = Direction | RobotAction;
+export interface RobotConfig {
+  automation?: {belt:[number,number][];cart_path:[number,number][];switch:[number,number];loading:[number,number];dock:[number,number]};
+  checkpoint_order?: string[];
+  facing: Direction;
+  cells: [number, number, number][]; // x, y, platform height
+  deliveries: Record<string, [number, number]>;
+}
+export interface RobotState {
+  automation?: {tick:number;cart_cargo:string|null;last_result:'ready'|'loaded'|'missed'|'latched'|'reset'};
+  facing: Direction;
+  holding: string | null;
+  closed: boolean;
+  cargo: Record<string, [number, number]>;
+  checkpoints?: Record<string, [number, number]>;
+  config: RobotConfig;
+}
 
 export const DIRECTIONS: Record<Direction, [number, number]> = {
   right: [1, 0],
@@ -18,10 +36,14 @@ export interface CoinDef {
   id: string;          // e.g. "A", "B", "C"
   position: [number, number]; // [x, y]
   value?: number;
-  type?: 'coin' | 'chest';
+  type?: 'coin' | 'chest' | 'checkpoint';
 }
 
 export interface LevelDef {
+  optimal_actions?: number;
+  optimal_code_lines?: number;
+  initial_facing?: Direction;
+  robot?: RobotConfig;
   content_id?: string;
   content_version?: string;
   level_id: string;        // "L01".."L20"
@@ -50,6 +72,7 @@ export interface LevelDef {
 }
 
 export interface PythonConfig {
+  robot?: boolean;
   template_id: 'call_slots_v2' | 'repeat_slots_v2';
   initial_rows: number;
   min_rows: number;
@@ -62,6 +85,7 @@ export interface PythonConfig {
 // ===== Game State =====
 
 export interface GameState {
+  robot?: RobotState;
   x: number;
   y: number;
   width: number;
@@ -89,7 +113,7 @@ export type GameStatus =
   | 'expired';
 
 export interface Command {
-  direction: Direction;
+  direction: Action;
   command_index: number;
   command_id: string;
   source: 'keyboard' | 'python_blank';
@@ -101,10 +125,10 @@ export interface StepResult {
 }
 
 export interface DomainEvent {
-  type: 'move_success' | 'collision' | 'coin_collected' | 'order_violation' | 'all_collected' | 'budget_exhausted' | 'command_limit';
+  type: 'move_success' | 'collision' | 'coin_collected' | 'order_violation' | 'all_collected' | 'budget_exhausted' | 'command_limit' | 'turned' | 'grabbed' | 'released' | 'delivered' | 'action_empty' | 'waited';
   command_index: number;
   position: [number, number];
-  direction: Direction;
+  direction: Action;
   coin_id?: string;
   collected_order?: string[];
   steps?: number;
@@ -143,6 +167,14 @@ export interface Attempt {
 // ===== Scoring =====
 
 export interface ScoreResult {
+  action_score?: number;
+  code_score?: number;
+  action_count?: number;
+  optimal_actions?: number;
+  code_lines?: number;
+  optimal_code_lines?: number;
+  code_verified?: boolean;
+  max_score?: number;
   collection_score: number;   // 0-60
   route_score: number;        // 0-40
   total_score: number;        // 0-100

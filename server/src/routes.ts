@@ -2,11 +2,13 @@ import { Router, type CookieOptions, type NextFunction, type Request, type Respo
 import { v4 as uuidv4 } from 'uuid';
 import {
   calculateScore,
+  scoreRobotChallenge,
   replay,
   solve,
-  type Direction,
+  type Direction, type Action, ROBOT_ACTIONS,
   type GameState,
   type LevelDef,
+  type Mode,
   type ReplayResult,
   type TelemetryEvent,
 } from '@coin-path/shared';
@@ -74,7 +76,12 @@ function teacherGuard(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-function scoreReplay(level: LevelDef, result: ReplayResult) {
+function scoreReplay(level: LevelDef, result: ReplayResult, mode:Mode, commands:Action[], source?:unknown) {
+  if(level.robot&&level.optimal_actions!==undefined)return scoreRobotChallenge(level,result,mode,commands,source);
+  if(level.robot) {
+    const ratio=result.collected_order.length/level.coins.length;
+    return {collection_score:Math.round(60*ratio),route_score:result.status==='success'?40:0,total_score:Math.round(60*ratio)+(result.status==='success'?40:0),collected_count:result.collected_order.length,total_coins:level.coins.length,steps:result.steps,collected_value:result.collected_order.length,total_value:level.coins.length};
+  }
   const optimal = level.expected_optimal_steps ?? solve(level, level.required_order)?.length ?? result.steps;
   const coinValues = Object.fromEntries(level.coins.map((coin) => [coin.id, coin.value ?? 1]));
   const state: GameState = {
@@ -201,16 +208,16 @@ apiRouter.post('/attempts/:id/commands', requirePlayer, (req, res) => {
   if (!attempt) return res.status(404).json({ error: '轮次不存在' });
   if (attempt.status !== 'running') return res.status(409).json({ error: '轮次已经结束' });
   const incoming = req.body?.commands;
-  if (!Array.isArray(incoming) || incoming.some((item) => !VALID_DIRECTIONS.has(item))) {
-    return res.status(422).json({ error: 'commands 只能包含 up/down/left/right' });
-  }
-
   const level = getLevelForAssignment(String(attempt.assignment_key));
   if (!level) return res.status(500).json({ error: '关卡数据缺失' });
+  const allowed = level.robot ? new Set<string>(ROBOT_ACTIONS.filter(action=>level.python.allowed_functions.includes(action))) : VALID_DIRECTIONS;
+  if (!Array.isArray(incoming) || incoming.length>level.max_commands || incoming.some((item) => !allowed.has(item))) {
+    return res.status(422).json({ error: '指令不属于当前关卡，或超出指令上限' });
+  }
   const previous = JSON.parse(String(attempt.commands || '[]')) as Direction[];
-  const commands = [...previous, ...incoming as Direction[]].slice(0, level.max_commands);
+  const commands = [...previous, ...incoming as Action[]].slice(0, level.max_commands);
   const result = replay(level, commands, level.required_order);
-  const score = scoreReplay(level, result);
+  const score = scoreReplay(level, result, attempt.mode as Mode, commands, req.body?.program_snapshot ?? attempt.program_snapshot);
   const isTerminal = TERMINAL.has(result.status);
   database.prepare(`
     UPDATE attempts SET commands = ?, program_snapshot = COALESCE(?, program_snapshot),
@@ -239,7 +246,7 @@ apiRouter.post('/attempts/:id/finalize', requirePlayer, (req, res) => {
   const result = level.step_limit && replayed.status === 'incomplete'
     ? { ...replayed, status: 'success' as const }
     : replayed;
-  const score = scoreReplay(level, result);
+  const score = scoreReplay(level, result, attempt.mode as Mode, commands, attempt.program_snapshot);
   database.prepare(`
     UPDATE attempts SET status = ?, steps = ?, collisions = ?, collected_count = ?,
       collected_order = ?, score = ?, finalized_at = ? WHERE attempt_id = ?

@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "tsc && node --test dist/game.test.js"
+    "test": "tsc && node --test dist/game.test.js dist/checkpoint.test.js dist/curriculum.test.js"
   },
   "devDependencies": {
     "tsx": "^4.19.0",

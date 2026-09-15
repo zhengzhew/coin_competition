@@ -8,10 +8,18 @@
 .future-city .city3d-stage.board-grid { display: block; flex: 1 1 0; position: relative; width: 100%; min-height: 0; overflow: hidden; border: 1px solid #d3e5e3; border-radius: 10px; background: #eef7f5; }
 .city3d-stage canvas { width: 100%; height: 100%; display: block; touch-action: none; outline: none; cursor: grab; }
 .city3d-stage canvas:active { cursor: grabbing; }
+.city3d-directions { position: absolute; width: 180px; height: 180px; transform: translate(-50%,-50%); pointer-events: none; overflow: visible; }
+.city3d-directions path { stroke: #fff; stroke-width: 1.5px; stroke-linejoin: round; paint-order: stroke; }
+.city3d-directions text { font: 700 12px system-ui,sans-serif; stroke: #fff; stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; }
+.robot-map-compass,.city3d-directions.robot-map-compass {position:absolute;width:100px;height:100px;right:12px;top:12px;left:auto;transform:none;pointer-events:none;z-index:2;}
+.city3d-directions.robot-map-compass text {font-size:22px;stroke-width:2px;}
+.robot-fallback-stage {position:relative;flex:1;min-height:220px;}
 .city3d-help { flex-shrink: 0; color: #688789; font: 10px/1.4 system-ui,sans-serif; text-align: center; }
 .city3d-accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .city3d-loading { position: absolute; inset: 0; display: grid; place-items: center; color: #51828d; font-size: 12px; }
 .city3d-fallback { color: #688789; font-size: 10px; }
+.factory-status {display:flex;flex-wrap:wrap;gap:5px 13px;align-items:center;flex-shrink:0;background:#f0f4f1;border-radius:6px;padding:6px 9px;color:#52777b;font-size:11px;}
+.factory-status strong {margin-left:auto;color:#8c7040;}.factory-status.ready {background:#e0f3de;}.factory-status.ready strong{color:#268267;}
 .future-city .workspace-grid:fullscreen { width: 100vw; height: 100vh; max-width: none; padding: 18px; background: #e9f5f0; grid-template-columns: minmax(0,1fr) clamp(260px,25vw,390px); }
 @media (min-width: 1000px) { .city3d-toolbar button { font-size: .76cqw; padding: .35cqw .6cqw; } .city3d-help { font-size: .68cqw; } }
 @media (max-width: 760px) { .city3d-toolbar button { padding: 4px 5px; font-size: 9px; } .city3d-help { font-size: 8px; } }

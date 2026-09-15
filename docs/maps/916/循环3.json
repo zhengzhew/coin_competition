@@ -1,0 +1,319 @@
+{
+  "level_id": "CUSTOM01",
+  "keyboard_id": "CUSTOM_K01",
+  "python_id": "CUSTOM_P01",
+  "content_id": "custom_map",
+  "content_version": "1.0.0",
+  "title": "循环3",
+  "stage": "explore",
+  "category": "intro",
+  "category_label": "驾驶与夹爪",
+  "width": 11,
+  "height": 9,
+  "start": [
+    2,
+    1
+  ],
+  "coins": [
+    {
+      "id": "D",
+      "position": [
+        2,
+        5
+      ],
+      "value": 1,
+      "type": "checkpoint"
+    },
+    {
+      "id": "A",
+      "position": [
+        1,
+        5
+      ],
+      "value": 1,
+      "type": "coin"
+    },
+    {
+      "id": "B",
+      "position": [
+        7,
+        5
+      ],
+      "value": 1,
+      "type": "coin"
+    },
+    {
+      "id": "E",
+      "position": [
+        6,
+        5
+      ],
+      "value": 1,
+      "type": "checkpoint"
+    },
+    {
+      "id": "C",
+      "position": [
+        6,
+        0
+      ],
+      "value": 1,
+      "type": "coin"
+    },
+    {
+      "id": "F",
+      "position": [
+        6,
+        1
+      ],
+      "value": 1,
+      "type": "checkpoint"
+    }
+  ],
+  "walls": [
+    [
+      1,
+      4
+    ],
+    [
+      3,
+      2
+    ],
+    [
+      5,
+      3
+    ],
+    [
+      7,
+      4
+    ]
+  ],
+  "required_order": null,
+  "step_limit": null,
+  "max_commands": 256,
+  "max_attempts": 3,
+  "show_optimal_feedback": false,
+  "robot": {
+    "facing": "up",
+    "cells": [
+      [
+        1,
+        1,
+        0
+      ],
+      [
+        2,
+        1,
+        0
+      ],
+      [
+        3,
+        1,
+        0
+      ],
+      [
+        5,
+        1,
+        0
+      ],
+      [
+        6,
+        1,
+        0
+      ],
+      [
+        7,
+        1,
+        0
+      ],
+      [
+        2,
+        2,
+        0
+      ],
+      [
+        3,
+        2,
+        0
+      ],
+      [
+        4,
+        2,
+        0
+      ],
+      [
+        6,
+        2,
+        0
+      ],
+      [
+        2,
+        3,
+        0
+      ],
+      [
+        3,
+        3,
+        0
+      ],
+      [
+        5,
+        3,
+        0
+      ],
+      [
+        6,
+        3,
+        0
+      ],
+      [
+        7,
+        3,
+        0
+      ],
+      [
+        1,
+        4,
+        0
+      ],
+      [
+        2,
+        4,
+        0
+      ],
+      [
+        4,
+        4,
+        0
+      ],
+      [
+        6,
+        4,
+        0
+      ],
+      [
+        7,
+        4,
+        0
+      ],
+      [
+        1,
+        5,
+        0
+      ],
+      [
+        2,
+        5,
+        0
+      ],
+      [
+        3,
+        5,
+        0
+      ],
+      [
+        4,
+        5,
+        0
+      ],
+      [
+        5,
+        5,
+        0
+      ],
+      [
+        6,
+        5,
+        0
+      ],
+      [
+        8,
+        5,
+        0
+      ],
+      [
+        0,
+        6,
+        0
+      ],
+      [
+        2,
+        6,
+        0
+      ],
+      [
+        5,
+        6,
+        0
+      ],
+      [
+        6,
+        6,
+        0
+      ],
+      [
+        4,
+        7,
+        0
+      ],
+      [
+        5,
+        7,
+        0
+      ],
+      [
+        7,
+        7,
+        0
+      ],
+      [
+        7,
+        5,
+        0
+      ],
+      [
+        6,
+        0,
+        0
+      ]
+    ],
+    "deliveries": {
+      "A": [
+        2,
+        6
+      ],
+      "B": [
+        6,
+        6
+      ],
+      "C": [
+        7,
+        1
+      ]
+    }
+  },
+  "python": {
+    "robot": true,
+    "template_id": "repeat_slots_v2",
+    "initial_rows": 0,
+    "min_rows": 1,
+    "max_rows": 40,
+    "can_add_delete_rows": true,
+    "count_range": [
+      1,
+      20
+    ],
+    "allowed_functions": [
+      "forward",
+      "backward",
+      "turn_left",
+      "turn_right",
+      "grab",
+      "release"
+    ]
+  },
+  "objective": "试试夹取货物，然后运送到指定位置松开",
+  "rule_hint": "",
+  "knowledge": "",
+  "initial_facing": "up"
+}
