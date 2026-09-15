@@ -1,4 +1,33 @@
 :root { --t-ink:#22312b; --t-muted:#718078; --t-green:#244b3c; --t-line:#e3e7e1; --t-bg:#eef1ed; --t-gold:#dba935; }
+.analysis-tabs { display:flex; gap:8px; margin:18px 0 12px; }
+.analysis-tabs button,.analysis-pagination button,.student-management button,.dialog-actions button,.dashboard > .dash-card > button { padding:9px 14px; border:1px solid #cbd8cf; border-radius:8px; background:white; color:#315345; font:inherit; cursor:pointer; }
+.analysis-tabs button[aria-pressed=true] { background:#315947; color:white; border-color:#315947; }
+.analysis-note { padding:13px 16px; border-left:3px solid #d7ad42; background:#fbf7e9; color:#705d2b; margin-bottom:15px; font-size:12px; line-height:1.7; }
+.analysis-caption { color:var(--t-muted); font-size:12px; line-height:1.7; }
+.comparison-metrics { display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:12px; }
+.comparison-metrics > div { display:flex; flex-direction:column; gap:9px; }
+.comparison-metrics span { color:var(--t-muted); font-size:12px; }
+.comparison-metrics b { font-size:22px; color:#315947; font-variant-numeric:tabular-nums; }
+.teacher-page .diagnosis-cell { white-space:normal; min-width:210px; max-width:260px; line-height:1.6; color:#806321; }
+.analysis-pagination { display:flex; justify-content:flex-end; align-items:center; gap:12px; margin-top:14px; font-size:12px; }
+.teacher-page button:disabled { opacity:.45; cursor:not-allowed; }
+.student-management { max-height:380px; }
+.definitions { display:grid; grid-template-columns:150px 1fr; gap:14px 24px; font-size:13px; line-height:1.8; }
+.definitions dt { font-weight:700; color:#315947; }
+.definitions dd { margin:0; color:#637269; }
+.data-delete-overlay { position:fixed; inset:0; z-index:100; background:#10291f88; display:grid; place-items:center; padding:20px; }
+.data-delete-dialog { width:min(600px,100%); max-height:90vh; overflow:auto; padding:28px; border-radius:16px; background:#fff; box-shadow:0 25px 80px #0004; font-size:14px; line-height:1.7; }
+.data-delete-dialog h2 { margin:0 0 14px; color:#923f32; }
+.data-delete-dialog code { display:block; overflow-wrap:anywhere; margin-top:8px; padding:8px; background:#f5f6f2; }
+.data-delete-dialog label { display:flex; flex-direction:column; gap:8px; margin:18px 0; }
+.data-delete-dialog input { padding:11px; border:1px solid #adbfb4; border-radius:8px; width:100%; }
+.dialog-actions { display:flex; gap:12px; justify-content:flex-end; }
+.teacher-page .danger { color:#a13e32; background:#fff2ee; border:1px solid #e0b4aa; }
+.teacher-page .dashboard table { font-size:12px; }
+.teacher-page .dashboard td small { font-size:10px; }
+.teacher-page .table-scroll { max-height:440px; }
+.teacher-page .table-scroll th { position:sticky; top:0; z-index:1; }
+.teacher-page .metric small { line-height:1.6; }
 .dashboard-filters { display:flex; flex-wrap:wrap; align-items:end; gap:10px; padding:14px; margin-bottom:15px; background:#fff; border:1px solid var(--t-line); border-radius:10px; }
 .dashboard-filters label { display:flex; flex-direction:column; gap:5px; color:var(--t-muted); font-size:11px; }
 .dashboard-filters input { width:320px; max-width:100%; }

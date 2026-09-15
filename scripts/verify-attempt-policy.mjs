@@ -67,6 +67,33 @@ try {
   assert.ok(records.every(row => row.final_score === 90));
   assert.equal(records.find(row => row.attempt_id === 'legacy-fourth').counts_toward_final, 0);
   assert.equal(db.prepare('SELECT COUNT(*) AS n FROM attempts').get().n, 121);
+  const filtered = await (await request('/teacher/dashboard?mode=keyboard&level=L01')).json();
+  assert.equal(filtered.insights.overview.attempts, 3);
+  assert.equal(filtered.insights.overview.first_score, 25);
+  assert.equal(filtered.insights.overview.best_score, 90);
+  assert.equal(filtered.insights.overview.gain, 65);
+  assert.equal(filtered.insights.levels.length, 1);
+  assert.equal(filtered.students.length, 1);
+  // All deletion checks run only against this temporary database.
+  db.prepare('INSERT INTO players VALUES (?, ?, ?, ?, ?)').run('policy-player-neighbor', '保留的学生', null, stamp, stamp);
+  db.prepare('INSERT INTO event_streams VALUES (?, ?, ?, ?)').run('test-stream', 'policy-player', 'test', stamp);
+  const eventResponse = await request('/event-streams/test-stream/batches', { events: [{ event_id: 'test-event', seq: 1, event_type: 'attempt_started', assignment_key: 'K01', level_id: 'L01', mode: 'keyboard', attempt_id: null, element_id: null, interaction_id: null, client_time: stamp, page_instance_id: 'test-page', mono_ms: 0, elapsed_ms: 0, payload: {} }] });
+  assert.equal(eventResponse.status, 200);
+  const preview = await (await request('/teacher/players/policy-player/data')).json();
+  assert.equal(preview.attempts, 121);
+  assert.equal(preview.streams, 1);
+  assert.equal(preview.events, 1);
+  const remove = (id, confirmation, auth = 'policy-test') => fetch(base + '/teacher/players/' + id + '/data?level=L01&mode=keyboard', {
+    method: 'DELETE', headers: { 'x-teacher-key': auth, 'content-type': 'application/json' }, body: JSON.stringify({ confirm_uuid: confirmation }),
+  });
+  assert.equal((await remove('policy-player', 'policy-player', 'wrong')).status, 401);
+  assert.equal((await remove('policy-player', 'wrong')).status, 400);
+  assert.equal((await remove('policy', 'policy')).status, 404, 'prefix must never delete matching players');
+  assert.equal((await remove('policy-player', 'policy-player')).status, 200);
+  for (const table of ['attempts', 'assignments', 'events', 'event_streams']) assert.equal(db.prepare(`SELECT COUNT(*) AS n FROM ${table} WHERE player_uuid = ?`).get('policy-player').n, 0);
+  assert.ok(db.prepare('SELECT 1 FROM players WHERE player_uuid = ?').get('policy-player-neighbor'));
+  assert.equal((await remove('policy-player', 'policy-player')).status, 404);
+  console.log('通过：分析筛选、删除鉴权、精确 UUID、确认值、跨关卡删除与邻居数据保护。');
   console.log('PASS: all 40 assignments enforce 3 attempts; per-attempt records, best scores, filters, exports and legacy exclusion verified.');
 } finally {
   await new Promise(resolve => server.close(resolve));

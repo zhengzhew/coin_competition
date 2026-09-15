@@ -1,10 +1,16 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { GameState, LevelDef } from '@coin-path/shared';
 import './GameBoard.css';
+import { isFuture, skin } from '../theme';
+import CityBoard from './CityBoard3D';
 
 interface Props { level: LevelDef; state: GameState; }
 
 export default function GameBoard({ level, state }: Props) {
+  return isFuture ? <CityBoard level={level} state={state} /> : <FlatBoard level={level} state={state} />;
+}
+
+function FlatBoard({ level, state }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [available, setAvailable] = useState({ width: 0, height: 0 });
   useLayoutEffect(() => {
@@ -42,12 +48,12 @@ export default function GameBoard({ level, state }: Props) {
       const classes = ['cell', wall ? 'wall' : '', car ? 'car' : '', start ? 'start' : '', visited ? 'trace' : ''].filter(Boolean).join(' ');
       cells.push(
         <div key={key} className={classes} style={{ width: cellSize, height: cellSize }} role="gridcell"
-          aria-label={`坐标 ${x},${y}${wall ? ' 障碍' : coinId && !collected ? ` 金币 ${coinId}` : car ? ' 小车' : ''}`}
+          aria-label={`坐标 ${x},${y}${wall ? ' 障碍' : coinId && !collected ? ` ${skin.resourceName} ${coinId}` : car ? (isFuture ? ' 飞空车' : ' 小车') : ''}`}
           data-track-id={`board.cell.${x}.${y}`}>
           {wall && <span className="wall-sprite" />}
-          {car && <img className="car-sprite" src="/assets/car.png" alt="淘金车" />}
-          {coin && !collected && !car && <><img className={`coin-sprite ${locked ? 'locked' : ''}`} src={coin.type === 'chest' ? '/assets/chest_reference.png' : '/assets/coin.png'} alt="" />{orderIndex >= 0 && <b className="coin-label">{circledNumber(orderIndex + 1)}</b>}{coin.type === 'chest' && <b className="coin-value">×{coin.value ?? 3}</b>}</>}
-          {start && !car && !coinId && <span className="start-label">起点</span>}
+          {car && <img className="car-sprite" src={skin.vehicle} alt={isFuture ? '飞空车' : '淘金车'} />}
+          {coin && !collected && !car && <><img className={`coin-sprite ${locked ? 'locked' : ''}`} src={coin.type === 'chest' ? skin.chest : skin.resource} alt="" />{orderIndex >= 0 && <b className="coin-label">{circledNumber(orderIndex + 1)}</b>}{coin.type === 'chest' && <b className="coin-value">×{coin.value ?? 3}</b>}</>}
+          {start && !car && !coinId && <span className="start-label">{isFuture ? '空港' : '起点'}</span>}
         </div>,
       );
     }

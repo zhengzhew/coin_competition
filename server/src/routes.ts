@@ -11,7 +11,8 @@ import {
   type TelemetryEvent,
 } from '@coin-path/shared';
 import { getDb } from './db.js';
-import { getLevelForAssignment, loadLevels } from './levels.js';
+import { allLevels, competitionLevels, getLevel, getLevelForAssignment, loadLevels } from './levels.js';
+import { buildInsights, type InsightAttempt, type InsightEvent } from './insights.js';
 
 export const apiRouter = Router();
 const VALID_DIRECTIONS = new Set<Direction>(['up', 'down', 'left', 'right']);
@@ -47,9 +48,9 @@ function studentLevel(level: LevelDef) {
   return { ...safe, max_attempts: ATTEMPT_LIMIT };
 }
 
-function randomPlayer() {
+function randomPlayer(future = false) {
   const adjectives = ['勇敢', '机智', '灵活', '闪亮', '沉着', '幸运'];
-  const nouns = ['淘金者', '探险家', '寻宝人', '领航员'];
+  const nouns = future ? ['领航员', '飞行员', '探索员', '巡航员'] : ['淘金者', '探险家', '寻宝人', '领航员'];
   const suffix = Math.random().toString(36).slice(2, 5).toUpperCase();
   return `${adjectives[Math.floor(Math.random() * adjectives.length)]}${nouns[Math.floor(Math.random() * nouns.length)]} ${suffix}`;
 }
@@ -89,12 +90,13 @@ apiRouter.get('/health', (_req, res) => {
   res.json({ status: 'ok', levels: loadLevels().length, time: now() });
 });
 
-apiRouter.get('/levels', (_req, res) => {
-  res.json(loadLevels().map(studentLevel));
+apiRouter.get('/levels', (req, res) => {
+  if (req.query.competition && !['coin', 'future'].includes(String(req.query.competition))) return res.status(400).json({ error: '测试赛不存在' });
+  res.json(competitionLevels(req.query.competition === 'future' ? 'future' : 'coin').map(studentLevel));
 });
 
 apiRouter.get('/levels/:id', (req, res) => {
-  const level = loadLevels().find((item) => item.level_id === String(req.params.id).toUpperCase());
+  const level = getLevel(String(req.params.id).toUpperCase());
   if (!level) return res.status(404).json({ error: '关卡不存在' });
   res.json(studentLevel(level));
 });
@@ -112,7 +114,7 @@ apiRouter.post('/players/bootstrap', (req, res) => {
   database.prepare(`
     INSERT INTO players (player_uuid, display_name, created_at, updated_at)
     VALUES (?, ?, ?, ?)
-  `).run(id, randomPlayer(), timestamp, timestamp);
+  `).run(id, randomPlayer(req.query.competition === 'future'), timestamp, timestamp);
   const player = database.prepare('SELECT * FROM players WHERE player_uuid = ?').get(id) as Record<string, unknown>;
   res.cookie('player_uuid', id, playerCookieOptions());
   res.status(201).json({ ...player, resumed: false });
@@ -153,7 +155,7 @@ apiRouter.get('/assignments/:id', requirePlayer, (req, res) => {
   const limit = ATTEMPT_LIMIT;
   res.json({
     assignment_key: key,
-    mode: key.startsWith('K') ? 'keyboard' : 'python_blank',
+    mode: key === level.keyboard_id ? 'keyboard' : 'python_blank',
     level: studentLevel(level),
     attempts,
     final_score: (getDb().prepare(`SELECT final_score FROM (${BEST_SCORES}) WHERE player_uuid = ? AND assignment_key = ?`).get(id, key) as { final_score: number } | undefined)?.final_score ?? null,
@@ -167,7 +169,7 @@ apiRouter.post('/attempts', requirePlayer, (req, res) => {
   const level = getLevelForAssignment(key);
   if (!level) return res.status(404).json({ error: '任务不存在' });
   const id = playerId(req)!;
-  const mode = key.startsWith('K') ? 'keyboard' : 'python_blank';
+  const mode = key === level.keyboard_id ? 'keyboard' : 'python_blank';
   const count = database.prepare(`
     SELECT COUNT(*) AS count FROM attempts WHERE assignment_key = ? AND player_uuid = ?
   `).get(key, id) as { count: number };
@@ -324,20 +326,24 @@ apiRouter.get('/teacher/summary', teacherGuard, (_req, res) => {
 function filteredTeacherDb(req: Request) {
   const uuid = typeof req.query.uuid === 'string' ? req.query.uuid.trim().toLowerCase() : '';
   const level = typeof req.query.level === 'string' ? req.query.level.trim().toUpperCase() : '';
+  const mode = ['keyboard', 'python_blank'].includes(String(req.query.mode)) ? String(req.query.mode) : '';
+  const competition = ['coin', 'future'].includes(String(req.query.competition)) ? String(req.query.competition) : '';
   const prefix = `WITH
     attempts AS (SELECT * FROM main.attempts WHERE
       ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
-      ($level = '' OR 'L' || substr(assignment_key, 2) = $level)),
+      ($competition = '' OR CASE WHEN assignment_key LIKE 'F%' THEN 'future' ELSE 'coin' END = $competition) AND
+      ($level = '' OR CASE WHEN assignment_key LIKE 'F%' THEN 'FL' ELSE 'L' END || substr(assignment_key, -2) = $level) AND ($mode = '' OR mode = $mode)),
     best_scores AS (${BEST_SCORES}),
     events AS (SELECT * FROM main.events WHERE
       ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
-      ($level = '' OR level_id = $level)),
+      ($competition = '' OR COALESCE(json_extract(payload, '$.competition'), CASE WHEN assignment_key LIKE 'F%' OR level_id LIKE 'F%' THEN 'future' ELSE 'coin' END) = $competition) AND
+      ($level = '' OR level_id = $level) AND ($mode = '' OR mode = $mode)),
     players AS (SELECT * FROM main.players WHERE
       ($uuid = '' OR instr(lower(player_uuid), $uuid) = 1) AND
-      ($level = '' OR player_uuid IN (SELECT player_uuid FROM attempts UNION SELECT player_uuid FROM events))) `;
+      (($level = '' AND $mode = '' AND $competition = '') OR player_uuid IN (SELECT player_uuid FROM attempts UNION SELECT player_uuid FROM events))) `;
   return { prepare(sql: string) {
     const statement = getDb().prepare(prefix + sql);
-    const params = { $uuid: uuid, $level: level };
+    const params = { $uuid: uuid, $level: level, $mode: mode, $competition: competition };
     return { get: () => statement.get(params), all: () => statement.all(params) };
   } };
 }
@@ -371,7 +377,7 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
     GROUP BY COALESCE(p.language_experience, 'unknown') ORDER BY players DESC
   `).all();
   const levels = database.prepare(`
-    SELECT assignment_key, 'L' || substr(assignment_key, 2) AS level_id, mode,
+    SELECT assignment_key, CASE WHEN assignment_key LIKE 'F%' THEN 'FL' ELSE 'L' END || substr(assignment_key, -2) AS level_id, mode,
       COUNT(DISTINCT player_uuid) AS players, COUNT(*) AS attempts,
       SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS successes,
       (SELECT ROUND(AVG(final_score), 1) FROM best_scores b WHERE b.assignment_key = attempts.assignment_key) AS average_score, ROUND(AVG(steps), 1) AS average_steps,
@@ -395,7 +401,53 @@ apiRouter.get('/teacher/dashboard', teacherGuard, (req, res) => {
     FROM attempts a JOIN players p ON p.player_uuid = a.player_uuid
     ORDER BY a.started_at DESC LIMIT 30
   `).all();
-  res.json({ generated_at: now(), overview, modes, languages, levels, event_types: eventTypes, activity, recent_attempts: recentAttempts });
+  const insightAttempts = database.prepare(`SELECT a.*, p.display_name FROM attempts a JOIN players p ON p.player_uuid = a.player_uuid`).all() as unknown as InsightAttempt[];
+  const insightEvents = database.prepare(`SELECT attempt_id, player_uuid, event_type, payload FROM events WHERE event_type IN ('attempt_started', 'program_validation_failed') ORDER BY server_received_at`).all() as unknown as InsightEvent[];
+  const selectedLevels = allLevels().filter(level =>
+    (!req.query.competition || (level.level_id.startsWith('F') ? 'future' : 'coin') === req.query.competition) &&
+    (!req.query.level || level.level_id === String(req.query.level).toUpperCase()));
+  const insights = buildInsights(insightAttempts, insightEvents, selectedLevels);
+  if (req.query.mode) insights.levels = insights.levels.filter(row => row.mode === req.query.mode);
+  const students = database.prepare(`SELECT p.player_uuid, p.display_name,
+    (SELECT COUNT(*) FROM attempts a WHERE a.player_uuid = p.player_uuid) AS attempts,
+    (SELECT COUNT(*) FROM events e WHERE e.player_uuid = p.player_uuid) AS events
+    FROM players p ORDER BY p.created_at DESC`).all();
+  res.json({ generated_at: now(), overview, modes, languages, levels, event_types: eventTypes, activity, recent_attempts: recentAttempts, insights, students });
+});
+
+function playerDataScope(id: string) {
+  const db = getDb();
+  const player = db.prepare('SELECT player_uuid, display_name FROM players WHERE player_uuid = ?').get(id);
+  if (!player) return null;
+  const counts = db.prepare(`SELECT
+    (SELECT COUNT(*) FROM attempts WHERE player_uuid = ?) AS attempts,
+    (SELECT COUNT(*) FROM events WHERE player_uuid = ?) AS events,
+    (SELECT COUNT(*) FROM event_streams WHERE player_uuid = ?) AS streams,
+    (SELECT COUNT(*) FROM assignments WHERE player_uuid = ?) AS assignments`).get(id, id, id, id);
+  return { ...player, ...counts };
+}
+
+apiRouter.get('/teacher/players/:uuid/data', teacherGuard, (req, res) => {
+  const scope = playerDataScope(String(req.params.uuid));
+  if (!scope) return res.status(404).json({ error: '未找到完整 UUID，请从学生列表选择' });
+  res.json(scope);
+});
+
+apiRouter.delete('/teacher/players/:uuid/data', teacherGuard, (req, res) => {
+  const id = String(req.params.uuid);
+  if (req.body?.confirm_uuid !== id) return res.status(400).json({ error: '请输入完全一致的 UUID 确认删除' });
+  const database = getDb();
+  database.exec('BEGIN IMMEDIATE;');
+  try {
+    const scope = playerDataScope(id);
+    if (!scope) { database.exec('ROLLBACK;'); return res.status(404).json({ error: '该 UUID 不存在或已删除' }); }
+    // Exact UUID only; query filters never broaden or narrow this destructive scope.
+    for (const table of ['events', 'event_streams', 'attempts', 'assignments', 'players']) {
+      database.prepare(`DELETE FROM ${table} WHERE player_uuid = ?`).run(id);
+    }
+    database.exec('COMMIT;');
+    res.json({ deleted: scope, deleted_at: now() });
+  } catch (error) { database.exec('ROLLBACK;'); throw error; }
 });
 
 apiRouter.delete('/teacher/data', teacherGuard, (_req, res) => {
@@ -436,6 +488,7 @@ apiRouter.get('/teacher/export', teacherGuard, (req, res) => {
         .map((row: any) => JSON.parse(row.event_json))
     : database.prepare(`
         SELECT a.*, p.display_name, p.language_experience,
+          CASE WHEN a.assignment_key LIKE 'F%' THEN 'future' ELSE 'coin' END AS competition,
           (SELECT final_score FROM best_scores b WHERE b.player_uuid = a.player_uuid AND b.assignment_key = a.assignment_key) AS final_score,
           CASE WHEN a.trial_index <= 3 THEN 1 ELSE 0 END AS counts_toward_final
         FROM attempts a

@@ -1,0 +1,121 @@
+/* Future City is a separate entry; every override stays inside its theme. */
+html[data-competition="future"], html[data-competition="future"] body { background: #f6f8ed; }
+.future-city {
+  --ink: #294c54; --muted: #59747b; --forest: #e8f7fa; --forest-2: #2395aa;
+  --paper: #fbfcf4; --panel: #ffffff; --line: #cfdfdb; --gold: #efb52c;
+  --gold-2: #fff0bd; --green: #75b96f; --red: #b7587b;
+  color: var(--ink);
+  background: #c8eafa url('/assets/future/city.svg') center / cover;
+  box-shadow: 0 10px 36px #456e781c;
+}
+.app.future-city .app-header {
+  color: var(--ink);
+  background: linear-gradient(100deg, #fffffff5, #eff9f4f5);
+  border-bottom: 1px solid #d3e7e4; box-shadow: 0 3px 24px #436e7810;
+}
+.future-city .brand-mark { color: #249aac; transform: none; border: 1px solid #219cb0; border-radius: 11px; font-size: 24px; background: #daf4ed; box-shadow: 0 0 20px #ffffff00; }
+.future-city .brand span { color: #59848a; letter-spacing: .14em; }
+.future-city .brand b { color: #254c53; }
+.future-city .current-mode { background: #f4e7f1; border-color: #e4c6db; color: #8d527e; }
+.future-city .player-info { background: #eaf4ee; }
+.future-city .player-info small { color: #5a7573; }
+.app.future-city .level-nav { color: #416445; background: #e7f3dcf5; border-color: #cbdcbe; }
+.future-city .nav-heading { border-color: #c5d8b9; }
+.future-city .nav-heading span { color: #3e6e48; }
+.future-city .nav-heading b, .future-city .stage-label span { color: #487448; }
+.app.future-city .stage-label small, .app.future-city .level-btn small { color: #607955; }
+.future-city .level-btn { border-color: #cdddbe; color: #3e6350; background: #fbfff4; transition: background .15s, border-color .15s; }
+.future-city .level-btn:hover { background: #d3eabd; border-color: #92ba70; }
+.future-city .level-btn.active { color: #ffffff; background: linear-gradient(110deg,#279fb3,#2696aa); border-color: #2393a5; box-shadow: 0 0 18px #3793a323; }
+.app.future-city .level-btn.active small { color: #efffff; }
+.app.future-city .mission-card { background: linear-gradient(100deg,#fffffff5,#f8fcf0f5); border-color: #d5e4dc; }
+.future-city .mission-number { color: #927017; border-color: #eed083; background: #fff0bb; border-radius: 12px; }
+.future-city .mission-meta span { color: #43774e; background: #e6f2df; border-color: #cbdcba; }
+.future-city .mission-meta strong { color: #856414; background: #fff0bf; border-color: #efd589; }
+.app.future-city .board-panel {
+  background: linear-gradient(180deg,#ffffff 0%,#ffffff 25%,#ffffffa6 48%,#f8ffffa6 85%,#fffffff5 100%), url('/assets/future/city.svg') center / cover;
+  border-color: #c6e1e5; box-shadow: inset 0 1px #ffffff, 0 12px 35px #47798016;
+}
+.future-city .panel-heading { border-color: #dce9e8; }
+.future-city .panel-heading span, .future-city .mini-heading span { color: #278499; }
+.future-city .panel-heading b { color: #254c53; }
+.future-city .legend span { color: #607879; }
+.future-city .legend-start { background: #dcecb6; border-color: #8cb46e; }
+.future-city .legend-wall { background: #72a9a4; border: 1px solid #477f80; }
+.future-city .legend-chest { background: #f5bf35; border-color: #d49d20; }
+.app.future-city .game-board {
+  border: 1px solid #98c8d1; border-radius: 12px; background: linear-gradient(135deg,#f9fffef5,#e4f5f5f5);
+  box-shadow: 0 0 0 5px #ffffff80, 0 14px 40px #4b81942b, inset 0 1px #ffffff;
+}
+.future-city .board-grid { background: #9ecad5; border-color: #8bb8c6; border-radius: 4px; overflow: hidden; }
+.future-city .cell { background: linear-gradient(145deg,#e2f3fb,#d9eef6); box-shadow: inset 0 0 0 1px #ffffff60; }
+.future-city .cell:nth-child(even) { background: linear-gradient(145deg,#edf8fc,#e1f2f7); }
+.future-city .cell::before { content: ''; width: 24%; height: 24%; position: absolute; border: 1px solid #76a7b21c; border-radius: 50%; }
+.future-city .cell.start { background: radial-gradient(ellipse,#e8f7ce,#d4eaba); box-shadow: inset 0 0 0 2px #89b766; }
+.future-city .cell.start::before { width: 63%; height: 63%; border: 1px dashed #74a555; border-radius: 50%; }
+.future-city .cell.trace::after { width: 7px; height: 7px; background: #209eb0; box-shadow: 0 0 8px #7acdd3; opacity: .65; }
+.future-city .cell.wall { background: #b6d2d4; }
+.future-city .wall-sprite { background: url('/assets/future/tower.svg') center / 96% 96% no-repeat; filter: drop-shadow(0 4px 3px #3d656f35); }
+.future-city .car-sprite { width: 96%; height: 96%; filter: drop-shadow(0 4px 5px #307eab50); }
+.future-city .coin-sprite { width: 73%; height: 73%; filter: drop-shadow(0 0 5px #238f9550); animation: city-float 2.6s ease-in-out infinite; }
+.future-city .coin-sprite.locked { opacity: .62; filter: saturate(.45); }
+.future-city .coin-label { background: #fffef2; color: #347387; border-color: #83b5be; }
+.future-city .coin-value { background: #fff0bc; color: #7a5c20; border-color: #dda734; }
+.future-city .start-label { color: #547d31; }
+.future-city .board-coords-y span, .future-city .board-coords-x span, .future-city .axis-hint { color: #51777d; }
+.future-city .status-bar { border-color: #d3e5e2; }
+.future-city .status-bar b { color: #278c9c; }
+.future-city .status-bar small, .future-city .status-bar em { color: #567a7d; }
+.future-city .status-pill { color: #50777b; background: #e8f2f2; border: 1px solid #c6dddd; }
+.future-city .status-success { color: #3e7c42; background: #e0f0d6; }
+.future-city .keyboard-card, .future-city .python-editor, .future-city .attempt-summary, .future-city .required-order { background: #fffffff5; border-color: #d4e4dd; }
+.future-city .attempt-summary-metrics strong { color: #288b9e; }
+.future-city .required-order b { color: #926184; }
+.future-city .dpad-btn { color: #2e8294; background: linear-gradient(145deg,#effafd,#e2f2f6); border-color: #abd0d7; box-shadow: 0 3px 0 #b9d5d9, inset 0 1px #ffffff; }
+.future-city .dpad-btn:hover:not(:disabled) { color: #207e90; background: #d4edf0; border-color: #69b5c1; }
+.future-city .dpad-btn.is-lit:not(:disabled), .future-city .dpad-btn:active:not(:disabled) { color: #795b12; background: #ffdb68; border-color: #ebbf48; box-shadow: 0 0 18px #efc74f44; }
+.future-city .dpad-core { color: #83b563; text-shadow: 0 0 12px #d2e7bc; }
+.future-city .primary-action, .future-city .run-btn { color: #ffffff; background: linear-gradient(110deg,#249fb4,#2397ab); border-color: #1d93a8; box-shadow: 0 4px 16px #2299ad25; }
+.future-city .primary-action:hover, .future-city .run-btn:hover:not(:disabled) { filter: brightness(1.1); }
+.future-city .secondary-action { color: #805a75; background: #f5e8f0; border-color: #dfc6d6; }
+.future-city .score-panel { background: linear-gradient(145deg,#fffdf3,#fff4cf); border-color: #e6c978; }
+.future-city .score-total span, .future-city .score-total b { color: #826018; }
+.future-city .score-total em, .future-city .score-panel p { color: #756548; }
+.future-city .score-parts span { background: #f6e9bf; }
+.future-city .score-panel button { color: #865e17; background: #fff7da; border-color: #dec06e; }
+.future-city .message { color: #4d707b; background: #eaf5fa; border-color: #88bbd0; }
+.future-city .message.success { color: #457646; background: #e8f3df; border-color: #94bb76; }
+.future-city .editor-kicker { color: #487f8b; }
+.future-city .command-palette { background: #edf7f5; border-color: #d0e4dd; }
+.future-city .command-palette strong { color: #557b75; }
+.future-city .command-palette button { color: #317789; background: #ffffff; border-color: #bddadd; }
+.future-city .command-palette button:hover:not(:disabled) { background: #dceff0; border-color: #86b9bb; }
+.future-city .command-palette button span { color: #ffffff; background: #66aaa7; }
+.future-city .editor-rows { background: #f7faf8; border-color: #c6dcda; scrollbar-color: #a6c6c3 #f7faf8; }
+.app.future-city .editor-empty, .app.future-city .row-number, .future-city .row-limit { color: #607e7b; }
+.future-city .command-name { color: #287b80; }
+.future-city .code-fixed { color: #566c72; }
+.future-city .code-input { color: #88527e; background: #fff9fd; border-color: #ceabc5; }
+.future-city .code-input.invalid { color: #a64455; background: #fff0f0; border-color: #dd8b99; }
+.future-city .row-btn:hover:not(:disabled) { background: #edd0e1; }
+.future-city .row-btn { color: #975974; background: #f7e6ef; }
+.future-city .editor-error { background: #fff0ed; color: #a55260; }
+.future-city footer { color: #608175; background: #f5f8ebf5; border-color: #d5e3ca; }
+.future-city button:focus-visible, .future-city input:focus-visible { outline: 3px solid #e8b338; outline-offset: 3px; }
+.future-city .onboarding { background: linear-gradient(90deg,#ffffff12,#ffffff08), url('/assets/future/city.svg') center / cover; backdrop-filter: none; }
+.future-city .onboarding-card { width: min(570px,100%); border: 1px solid #ffffff; background: linear-gradient(130deg,#fffffff7,#fffef6f7); box-shadow: 0 30px 100px #43859826, inset 0 1px #ffffff; }
+.future-city .eyebrow { color: #669856; }
+.future-city .onboarding h1 { color: #294d56; font: 750 32px/1.5 system-ui,sans-serif; }
+.future-city .identity-card { background: linear-gradient(110deg,#e2f3ed,#eef9f3); border: 1px solid #d5e7d9; }
+.future-city .identity-card img { width: 104px; height: 95px; filter: drop-shadow(0 6px 9px #4993aa33); }
+.future-city .identity-card small, .future-city .identity-card code { color: #63817b; }
+.future-city .identity-card b { color: #335c5c; margin: 3px 0; }
+.future-city .experience-grid button { color: #ffffff; background: #239db2; border-color: #2093a6; padding: 20px 12px; }
+.future-city .experience-grid button:last-child { color: #ffffff; background: #b76b9d; border-color: #ae628f; }
+.future-city .experience-grid button:hover { background: #208c9f; box-shadow: 0 0 22px #3391a42b; }
+.future-city .experience-grid button:last-child:hover { background: #a55e90; }
+.future-city .experience-grid button small { color: #ffffff; font-size: 11px; }
+.future-loading { color: #288b9e; background: #e4f4f8; width: 100vw; }
+@keyframes city-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .future-city *, .future-city *::after { animation: none !important; transition: none !important; } }
+@media (max-width: 760px) { .future-city .onboarding h1 { font-size: 25px; } .future-city .identity-card img { width: 72px; height: 76px; } .future-city .identity-card code { font-size: 8px; } }

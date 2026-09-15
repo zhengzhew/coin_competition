@@ -1,4 +1,4 @@
-import { type LevelDef } from '@coin-path/shared';
+import { futureLevel, levelIdForAssignment, type Competition, type LevelDef } from '@coin-path/shared';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -29,10 +29,18 @@ export function loadLevels(): LevelDef[] {
 }
 
 export function getLevel(levelId: string): LevelDef | undefined {
-  return loadLevels().find((level) => level.level_id === levelId);
+  return allLevels().find((level) => level.level_id === levelId);
+}
+
+export function competitionLevels(competition: Competition): LevelDef[] {
+  return competition === 'future' ? loadLevels().map(futureLevel) : loadLevels();
+}
+
+export function allLevels(): LevelDef[] {
+  return [...loadLevels(), ...competitionLevels('future')];
 }
 
 export function getLevelForAssignment(assignmentKey: string): LevelDef | undefined {
-  if (!/^[KP](0[1-9]|1\d|20)$/.test(assignmentKey)) return undefined;
-  return getLevel(`L${assignmentKey.slice(1)}`);
+  if (!/^F?[KP](0[1-9]|1\d|20)$/.test(assignmentKey)) return undefined;
+  return getLevel(levelIdForAssignment(assignmentKey));
 }

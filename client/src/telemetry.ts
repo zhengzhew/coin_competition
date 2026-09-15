@@ -1,4 +1,5 @@
 import { createUuid, type Mode, type TelemetryEvent } from '@coin-path/shared';
+import { competition } from './theme';
 
 export interface TelemetryContext {
   playerUuid: string;
@@ -6,9 +7,10 @@ export interface TelemetryContext {
   levelId: () => string | null;
   mode: () => Mode | null;
   attemptId: () => string | null;
+  contentVersion: () => string | null;
 }
 
-const STORAGE_KEY = 'coin_competition_pending_events_v1';
+const STORAGE_KEY = `${competition}_competition_pending_events_v1`;
 
 export class TelemetryClient {
   private readonly pageInstanceId = createUuid();
@@ -27,7 +29,7 @@ export class TelemetryClient {
   async start() {
     const response = await fetch('/api/event-streams', {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ scope: 'student_page' }),
+      body: JSON.stringify({ scope: `${competition}_student_page` }),
     });
     if (!response.ok) throw new Error('event stream unavailable');
     this.streamId = (await response.json()).stream_id;
@@ -49,7 +51,7 @@ export class TelemetryClient {
       seq: ++this.seq, event_type: eventType, element_id: elementId, interaction_id: createUuid(),
       client_time: new Date().toISOString(), page_instance_id: this.pageInstanceId,
       mono_ms: Math.round(mono * 10) / 10, elapsed_ms: Math.round((mono - this.startedAt) * 10) / 10,
-      payload,
+      payload: { ...payload, competition, content_version: this.context.contentVersion() },
     });
     this.persist();
     if (this.queue.length >= 40) void this.flush();

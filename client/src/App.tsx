@@ -9,6 +9,8 @@ import LevelNav from './components/LevelNav';
 import PythonEditor from './components/PythonEditor';
 import { TelemetryClient } from './telemetry';
 import './App.css';
+import { competition, isFuture, skin } from './theme';
+import './FutureCity.css';
 
 interface Player {
   player_uuid: string;
@@ -86,11 +88,11 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     Promise.all([
-      fetch('/api/players/bootstrap', { method: 'POST', credentials: 'include' }).then(async (response) => {
+      fetch(`/api/players/bootstrap?competition=${competition}`, { method: 'POST', credentials: 'include' }).then(async (response) => {
         if (!response.ok) throw new Error('无法建立玩家身份');
         return response.json() as Promise<Player>;
       }),
-      fetch('/api/levels').then(async (response) => {
+      fetch(`/api/levels?competition=${competition}`).then(async (response) => {
         if (!response.ok) throw new Error('无法读取关卡');
         return response.json() as Promise<LevelDef[]>;
       }),
@@ -114,6 +116,7 @@ export default function App() {
       levelId: () => levelRef.current?.level_id ?? null,
       mode: () => modeRef.current,
       attemptId: () => attemptRef.current?.attempt_id ?? null,
+      contentVersion: () => levelRef.current?.content_version ?? null,
     });
     telemetryRef.current = telemetry;
     void telemetry.start().catch(() => setMessage('埋点服务暂时离线，操作会先保存在本机。'));
@@ -202,7 +205,7 @@ export default function App() {
     commitGame(result.state);
     telemetryRef.current?.track(result.event.type, 'game.board', { ...result.event });
     if (result.event.type === 'order_violation') {
-      setMessage('这枚金币还没轮到，已保留在地图上；请先拾取当前编号。');
+      setMessage(isFuture ? '请先收集当前编号的能源芯。' : '这枚金币还没轮到，已保留在地图上；请先拾取当前编号。');
     } else if (result.event.type === 'coin_collected') {
       setMessage(null);
     }
@@ -327,10 +330,10 @@ export default function App() {
   };
 
   if (loadingError) return <div className="fatal"><b>项目未能启动</b><span>{loadingError}</span><small>请确认服务端已运行，再刷新页面。</small></div>;
-  if (!player || !currentLevel || !gameState) return <div className="loading"><span className="loader" />正在准备淘金地图…</div>;
+  if (!player || !currentLevel || !gameState) return <div className={`loading${isFuture ? ' future-loading' : ''}`}><span className="loader" />{isFuture ? '正在连接未来城市…' : '正在准备淘金地图…'}</div>;
 
   const practiceCompleted = Boolean(attempt?.attempt_id.startsWith('local-')) && gameState.status !== 'running';
-  const displayMessage = practiceCompleted ? '练习结束，不计分。' : message || (gameState.status === 'success' && !score ? '金币已全部收集，正在等待服务端确认。' : null);
+  const displayMessage = practiceCompleted ? '练习结束，不计分。' : message || (gameState.status === 'success' && !score ? (isFuture ? '任务完成，正在确认成绩…' : '金币已全部收集，正在等待服务端确认。') : null);
   const currentLevelIndex = levels.findIndex(level => level.level_id === currentLevel.level_id);
   const nextLevel = currentLevelIndex >= 0 ? levels[currentLevelIndex + 1] : undefined;
   const active = Boolean(attempt) && gameState.status === 'running';
@@ -342,21 +345,21 @@ export default function App() {
   const displayOrder = currentLevel.required_order?.map((_, index) => circledNumber(index + 1));
 
   return (
-    <div className="app">
+    <div className={`app${isFuture ? ' future-city' : ''}`}>
       {!modeSelected && <div className="onboarding" role="dialog" aria-modal="true">
         <div className="onboarding-card">
-          <span className="eyebrow">身份已经生成</span><h1>欢迎来到旷野淘金</h1>
-          <div className="identity-card"><img src="/assets/car.png" alt="" /><div><small>你的玩家名</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
-          <p>请选择本次挑战的操作模式，进入后不再切换。</p>
+          <span className="eyebrow">{isFuture ? '飞行任务 · 测试赛' : '身份已经生成'}</span><h1>欢迎来到{skin.title}</h1>
+          <div className="identity-card"><img src={skin.vehicle} alt="" /><div><small>{isFuture ? '你的领航员身份' : '你的玩家名'}</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
+          <p>{isFuture ? '选择操控方式，本次挑战中保持不变。' : '请选择本次挑战的操作模式，进入后不再切换。'}</p>
           <div className="experience-grid">
-            <button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard">⌨ 键盘操控<small>使用方向键 / WASD，也可点击方向按钮</small></button>
-            <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank">&lt;/&gt; 代码操控<small>编排移动指令，运行代码完成挑战</small></button>
+            <button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard">⌨ 键盘操控<small>{isFuture ? '方向键 / WASD / 方向按钮' : '使用方向键 / WASD，也可点击方向按钮'}</small></button>
+            <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank">&lt;/&gt; 代码操控<small>{isFuture ? '编排航线，让飞空车自动执行' : '编排移动指令，运行代码完成挑战'}</small></button>
           </div>
         </div>
       </div>}
 
       <header className="app-header">
-        <div className="brand"><div className="brand-mark">◆</div><div><span>校园挑战</span><b>旷野淘金</b></div></div>
+        <div className="brand"><div className="brand-mark">{isFuture ? '✦' : '◆'}</div><div><span>{skin.subtitle}</span><b>{skin.title}</b></div></div>
         <div className="current-mode" aria-label="当前操作模式">{modeSelected ? (mode === 'keyboard' ? '⌨ 键盘操控' : '</> 代码操控') : '请选择操作模式'}</div>
         <div className="header-actions">
           <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
@@ -369,19 +372,19 @@ export default function App() {
         <LevelNav levels={levels} currentLevelId={currentLevel.level_id} onSelect={selectLevel} />
         <main className="game-area">
           <section className="mission-card">
-            <div className="mission-number">{currentLevel.level_id.slice(1)}</div>
+            <div className="mission-number">{currentLevel.level_id.slice(-2)}</div>
             <div className="mission-copy"><h1>{currentLevel.title}</h1></div>
-            <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{totalValue} 点金币价值</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
+            <div className="mission-meta"><span>{currentLevel.width}×{currentLevel.height}</span><span>{totalValue} 点{isFuture ? '能源' : '金币价值'}</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
           </section>
 
           <div className="workspace-grid">
             <section className="board-panel">
-              <div className="panel-heading"><div><span>本关任务</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div><div className="legend"><span><i className="legend-start" />起点</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />封闭区</span>}{hasChest && <span><i className="legend-chest" />金币箱 ×3</span>}</div></div>
+              <div className="panel-heading"><div><span>{isFuture ? '飞行目标' : '本关任务'}</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div><div className="legend"><span><i className="legend-start" />{isFuture ? '空港' : '起点'}</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />{isFuture ? '高楼' : '封闭区'}</span>}{hasChest && <span><i className="legend-chest" />{isFuture ? '超级芯' : '金币箱'} ×3</span>}</div></div>
               <GameBoard level={currentLevel} state={gameState} />
               <div className="status-bar">
                 <div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
                 <div><small>碰撞次数</small><b>{gameState.collisions}</b></div>
-                <div><small>已拾取价值</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
+                <div><small>{isFuture ? '已收集能源' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
                 <div className={`status-pill status-${gameState.status}`}>{statusLabel(gameState.status)}</div>
               </div>
             </section>
@@ -392,7 +395,7 @@ export default function App() {
                   <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前模式' : attempt ? '正式尝试' : '剩余正式机会'}</span><strong>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</strong></div>
                   <div><span>本关最高分</span><strong>{progress?.final_score ?? '—'}<small> 分</small></strong></div>
                 </div>
-                <p>每种模式各 3 次，取最高分；练习不计分。</p>
+                <p>{isFuture ? '3 次取最高分，练习不计分。' : '每种模式各 3 次，取最高分；练习不计分。'}</p>
               </section>
               {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
 
@@ -414,7 +417,7 @@ export default function App() {
                 <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ 100</em></div>
                 {currentLevel.step_limit
                   ? <><div className="score-parts"><span>价值 {score.collected_value} / {score.total_value}</span><span>预算 {score.steps} / {currentLevel.step_limit} 步</span></div><p>{score.collected_value === score.optimal_value ? `你拿到了预算内最高的 ${score.optimal_value} 点价值！` : `预算内最高可得 ${score.optimal_value} 点，再比较一下目标价值和绕行距离。`}</p></>
-                  : <><div className="score-parts"><span>金币 {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : '全部金币都已收集，操控任务完成！'}</p></>}
+                  : <><div className="score-parts"><span>{skin.resourceName} {score.collection_score}/60</span><span>路线 {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : (isFuture ? '能源收集完成！' : '全部金币都已收集，操控任务完成！')}</p></>}
                 {score.total_score >= 100
                   ? nextLevel
                     ? <button onClick={() => selectLevel(nextLevel)} data-track-id="attempt.next_level">下一关</button>
@@ -426,7 +429,7 @@ export default function App() {
           </div>
         </main>
       </div>
-      <footer><span>玩家操作与时间节点已记录</span><span>{currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
+      <footer><span>{isFuture ? '未来城市 · 飞行任务' : '玩家操作与时间节点已记录'}</span><span>{isFuture ? '测试操作将记录，用于任务分析' : currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
     </div>
   );
 }

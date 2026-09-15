@@ -22,6 +22,8 @@ export interface CoinDef {
 }
 
 export interface LevelDef {
+  content_id?: string;
+  content_version?: string;
   level_id: string;        // "L01".."L20"
   keyboard_id: string;     // "K01".."K20"
   python_id: string;       // "P01".."P20"
