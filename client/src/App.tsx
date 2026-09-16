@@ -53,6 +53,8 @@ export default function App() {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ remaining_attempts: number; final_score: number | null } | null>(null);
   const startingRef = useRef(false);
+  const switchingRef = useRef(false);
+  const [switchingMode, setSwitchingMode] = useState(false);
 
   useEffect(() => {
     if (!player || !currentLevel) return;
@@ -160,6 +162,34 @@ export default function App() {
     telemetryRef.current?.track('mode_selected', `onboarding.mode.${nextMode}`, { mode: nextMode });
   };
 
+  const switchMode = async () => {
+    if (!identityConfirmed || startingRef.current || animating || switchingRef.current) return;
+    switchingRef.current = true;
+    setSwitchingMode(true);
+    try {
+      await commandChain.current;
+      const current = attemptRef.current;
+      if (current && !current.attempt_id.startsWith('local-') && gameRef.current?.status === 'running') {
+        const response = await fetch(`/api/attempts/${current.attempt_id}/stop`, { method: 'POST', credentials: 'include' });
+        if (!response.ok) throw new Error('当前挑战未能结束，请重试切换。');
+      }
+      const nextMode = modeRef.current === 'keyboard' ? 'python_blank' : 'keyboard';
+      const savedRows = rows;
+      resetGame(false);
+      setRows(savedRows);
+      modeRef.current = nextMode;
+      setMode(nextMode);
+      setProgress(null);
+      markLevelEntry('mode_switched');
+      telemetryRef.current?.track('mode_selected', 'header.mode.switch', { mode: nextMode });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '模式切换失败，请重试。');
+    } finally {
+      switchingRef.current = false;
+      setSwitchingMode(false);
+    }
+  };
+
   const confirmIdentity = async () => {
     if (savingIdentityRef.current) return;
     const name = nameInput.trim();
@@ -189,7 +219,7 @@ export default function App() {
 
   const beginAttempt = async (preserveProgram: boolean): Promise<AttemptInfo | null> => {
     const level = levelRef.current;
-    if (!level || startingRef.current) return null;
+    if (!level || startingRef.current || switchingRef.current) return null;
     startingRef.current = true;
     // Capture the click before the request so server latency is excluded.
     const entry = levelEntryRef.current;
@@ -276,7 +306,7 @@ export default function App() {
 
   const executeKeyboard = useCallback((direction: Action) => {
     const currentAttempt = attemptRef.current;
-    if (!currentAttempt || modeRef.current !== 'keyboard' || gameRef.current?.status !== 'running') return;
+    if (!currentAttempt || switchingRef.current || modeRef.current !== 'keyboard' || gameRef.current?.status !== 'running') return;
     setLitDirection(direction);
     if (lightTimer.current !== null) window.clearTimeout(lightTimer.current);
     lightTimer.current = window.setTimeout(() => setLitDirection(null), 180);
@@ -333,8 +363,8 @@ export default function App() {
       const state = applyLocalCommand(direction, 'python_blank');
       if (state?.status !== 'running') break;
     }
-    setAnimating(false);
     if (currentAttempt.attempt_id.startsWith('local-')) {
+      setAnimating(false);
       const state = gameRef.current;
       if (state?.status === 'running') commitGame({ ...state, status: 'stopped' });
       setMessage('练习已完成，本次不计算成绩。');
@@ -348,6 +378,7 @@ export default function App() {
       }
       if (server) acceptServerResult(server);
     } catch (error) { setMessage(error instanceof Error ? error.message : '程序提交失败'); }
+    finally { setAnimating(false); }
   };
 
   const stopAttempt = async () => {
@@ -416,7 +447,7 @@ export default function App() {
         <div className="onboarding-card">
           <span className="eyebrow">{isFuture ? '循环搬运 · 测试赛' : '身份已经生成'}</span><h1>欢迎来到{skin.title}</h1>
           <div className="identity-card"><img src={skin.vehicle} alt="" /><div><small>{isFuture ? '你的领航员身份' : '你的玩家名'}</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
-          <p>{isFuture ? '选择操控方式，本次挑战中保持不变。' : '请选择本次挑战的操作模式，进入后不再切换。'}</p>
+          <p>请选择操作模式，进入后可通过顶部按钮切换。</p>
           <div className="experience-grid">
             <button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard">⌨ 键盘操控<small>{isFuture ? '方向键 / WASD / 方向按钮' : '使用方向键 / WASD，也可点击方向按钮'}</small></button>
             <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank">&lt;/&gt; 代码操控<small>{isFuture ? '编排航线，让飞空车自动执行' : '编排移动指令，运行代码完成挑战'}</small></button>
@@ -426,7 +457,13 @@ export default function App() {
 
       <header className="app-header">
         <div className="brand"><div className="brand-mark">{isFuture ? '✦' : '◆'}</div><div><span>{skin.subtitle}</span><b>{skin.title}</b></div></div>
-        <div className="current-mode" aria-label="当前操作模式">{modeSelected ? (mode === 'keyboard' ? '⌨ 键盘操控' : '</> 代码操控') : '请选择操作模式'}</div>
+        <div className="header-mode-controls">
+          <div className="current-mode" aria-label="当前操作模式">{modeSelected ? (mode === 'keyboard' ? '⌨ 键盘操控' : '</> 代码操控') : '请选择操作模式'}</div>
+          {modeSelected && <button className="mode-toggle" onClick={() => void switchMode()} disabled={animating || switchingMode}
+            title={animating ? '程序运行及成绩核验完成后可切换' : '切换后重新开始本关，已编写的代码会保留'} data-track-id="header.mode.switch">
+            {switchingMode ? '正在切换…' : mode === 'keyboard' ? '切换到代码操控' : '切换到键盘操控'}
+          </button>}
+        </div>
         <div className="header-actions">
           <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
             <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>

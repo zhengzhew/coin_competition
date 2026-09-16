@@ -201,6 +201,9 @@ button:focus-visible, input:focus-visible { outline: 3px solid rgba(233,174,53,.
 .required-order b { color: var(--forest-2); letter-spacing: .08em; }
 .dpad-btn.is-lit:not(:disabled), .dpad-btn:active:not(:disabled) { background: #ffd166; color: #244b3e; border-color: #d6a335; box-shadow: 0 0 0 3px #ffd16644, 0 2px 0 #c39738; transform: translateY(2px); }
 .current-mode { color: #ffdb83; font-size: 14px; font-weight: 700; padding: 10px 18px; border: 1px solid #ffffff25; border-radius: 10px; }
+.header-mode-controls { display: flex; align-items: center; gap: 8px; }
+.mode-toggle { border: 1px solid #dfc780; border-radius: 9px; background: #ffedb9; color: #344439; padding: 9px 12px; font-size: 12px; font-weight: 700; }
+.mode-toggle:disabled { opacity: .55; cursor: wait; }
 .experience-grid button small { display: block; font-size: 12px; font-weight: 400; line-height: 1.6; margin-top: 8px; }
 @media (min-width: 1000px) {
   .app .current-mode { font-size: .9cqw; padding: .6cqw 1cqw; border-radius: .6cqw; }
