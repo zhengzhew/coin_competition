@@ -128,11 +128,29 @@ apiRouter.post('/players/bootstrap', (req, res) => {
 });
 
 apiRouter.patch('/players/profile', requirePlayer, (req, res) => {
-  const id = playerId(req)!;
+  let id = playerId(req)!;
   const experience = req.body?.language_experience;
+  const name = req.body?.display_name;
+  const hasName = name !== undefined;
+  const hasExperience = experience !== undefined;
   const allowed = new Set(['python', 'cpp', 'both', 'none']);
-  if (!allowed.has(experience)) return res.status(422).json({ error: '请选择有效的编程学习经历' });
-  getDb().prepare(`
+  if (hasName && (typeof name !== 'string' || !name.trim() || name.trim().length > 40)) {
+    return res.status(422).json({ error: '请输入 1–40 个字符的姓名' });
+  }
+  if (hasExperience && !allowed.has(experience)) return res.status(422).json({ error: '请选择有效的编程学习经历' });
+  if (!hasName && !hasExperience) return res.status(422).json({ error: '请填写玩家资料' });
+  if (hasName) {
+    const current = getDb().prepare('SELECT display_name FROM players WHERE player_uuid = ?').get(id) as { display_name: string };
+    if (current.display_name !== name.trim()) {
+      // A different name is a different participant; never relabel historical scores.
+      id = uuidv4();
+      const timestamp = now();
+      getDb().prepare('INSERT INTO players (player_uuid, display_name, created_at, updated_at) VALUES (?, ?, ?, ?)')
+        .run(id, name.trim(), timestamp, timestamp);
+      res.cookie('player_uuid', id, playerCookieOptions());
+    }
+  }
+  if (hasExperience) getDb().prepare(`
     UPDATE players SET language_experience = ?, updated_at = ? WHERE player_uuid = ?
   `).run(experience, now(), id);
   res.json(getDb().prepare('SELECT * FROM players WHERE player_uuid = ?').get(id));

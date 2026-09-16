@@ -30,6 +30,11 @@ const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve
 
 export default function App() {
   const [player, setPlayer] = useState<Player | null>(null);
+  const [nameInput, setNameInput] = useState('');
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const [savingIdentity, setSavingIdentity] = useState(false);
+  const [identityError, setIdentityError] = useState<string | null>(null);
+  const savingIdentityRef = useRef(false);
   const [levels, setLevels] = useState<LevelDef[]>([]);
   const [currentLevel, setCurrentLevel] = useState<LevelDef | null>(null);
   const [mode, setMode] = useState<Mode>('keyboard');
@@ -111,7 +116,7 @@ export default function App() {
   }, [selectLevel]);
 
   useEffect(() => {
-    if (!player) return;
+    if (!player || !identityConfirmed) return;
     const telemetry = new TelemetryClient({
       playerUuid: player.player_uuid,
       assignmentKey: () => {
@@ -126,7 +131,7 @@ export default function App() {
     telemetryRef.current = telemetry;
     void telemetry.start().catch(() => setMessage('埋点服务暂时离线，操作会先保存在本机。'));
     return () => telemetry.stop();
-  }, [player?.player_uuid]);
+  }, [player?.player_uuid, identityConfirmed]);
 
   const stopRemoteAttempt = (current = attemptRef.current) => {
     if (!current || current.attempt_id.startsWith('local-')) return;
@@ -148,10 +153,38 @@ export default function App() {
   }, []);
 
   const chooseMode = (nextMode: Mode) => {
+    if (!identityConfirmed) return;
     modeRef.current = nextMode; setMode(nextMode);
     setModeSelected(true);
     markLevelEntry('onboarding_completed');
     telemetryRef.current?.track('mode_selected', `onboarding.mode.${nextMode}`, { mode: nextMode });
+  };
+
+  const confirmIdentity = async () => {
+    if (savingIdentityRef.current) return;
+    const name = nameInput.trim();
+    if (!name || name.length > 40) {
+      setIdentityError('请输入 1–40 个字符的姓名');
+      return;
+    }
+    savingIdentityRef.current = true;
+    setSavingIdentity(true);
+    setIdentityError(null);
+    try {
+      const response = await fetch('/api/players/profile', {
+        method: 'PATCH', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ display_name: name }),
+      });
+      if (!response.ok) throw new Error('姓名保存失败，请重试。');
+      const nextPlayer = await response.json() as Player;
+      setPlayer(nextPlayer);
+      setIdentityConfirmed(true);
+    } catch (error) {
+      setIdentityError(error instanceof Error ? error.message : '姓名保存失败，请重试。');
+    } finally {
+      savingIdentityRef.current = false;
+      setSavingIdentity(false);
+    }
   };
 
   const beginAttempt = async (preserveProgram: boolean): Promise<AttemptInfo | null> => {
@@ -341,6 +374,29 @@ export default function App() {
 
   if (loadingError) return <div className="fatal"><b>项目未能启动</b><span>{loadingError}</span><small>请确认服务端已运行，再刷新页面。</small></div>;
   if (!player || !currentLevel || !gameState) return <div className={`loading${isFuture ? ' future-loading' : ''}`}><span className="loader" />{isFuture ? '正在连接未来城市…' : '正在准备淘金地图…'}</div>;
+
+  if (!identityConfirmed) return (
+    <div className={`app${isFuture ? ' future-city' : ''}`}>
+      <div className="onboarding">
+        <form className="onboarding-card" aria-labelledby="identity-heading" onSubmit={event => { event.preventDefault(); void confirmIdentity(); }}>
+          <span className="eyebrow">开始挑战前</span>
+          <h1 id="identity-heading">欢迎来到{skin.title}</h1>
+          <p>请输入你的名字，确认后选择操作模式。</p>
+          <div className="identity-fields">
+            <label htmlFor="player-name">你的名字
+              <input id="player-name" autoFocus autoComplete="off" maxLength={40} required value={nameInput}
+                placeholder="请输入姓名" disabled={savingIdentity} aria-invalid={!!identityError} aria-describedby={identityError ? 'identity-error' : undefined}
+                onChange={event => { setNameInput(event.target.value); setIdentityError(null); }} />
+            </label>
+            <div className="identity-random-id"><span>随机 ID</span><code data-testid="player-random-id">{player.player_uuid}</code></div>
+          </div>
+          <p>更换姓名后，确认时会绑定新的随机 ID，原玩家的成绩会保留。</p>
+          {identityError && <p id="identity-error" className="identity-error" role="alert">{identityError}</p>}
+          <button className="identity-confirm" type="submit" disabled={savingIdentity || !nameInput.trim()}>{savingIdentity ? '正在确认…' : '确认'}</button>
+        </form>
+      </div>
+    </div>
+  );
 
   const practiceCompleted = Boolean(attempt?.attempt_id.startsWith('local-')) && gameState.status !== 'running';
   const displayMessage = practiceCompleted ? '练习结束，不计分。' : message || (gameState.status === 'success' && !score ? (isFuture ? '任务完成，正在确认成绩…' : '金币已全部收集，正在等待服务端确认。') : null);

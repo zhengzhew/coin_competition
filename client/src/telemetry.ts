@@ -93,10 +93,15 @@ export class TelemetryClient {
   }
 
   private restore(): TelemetryEvent[] {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+    try {
+      const saved = JSON.parse(localStorage.getItem(this.storageKey) || localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(saved) ? saved.filter(event => event?.player_uuid === this.context.playerUuid) : [];
+    } catch { return []; }
   }
 
+  private get storageKey() { return `${STORAGE_KEY}:${this.context.playerUuid}`; }
+
   private persist() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.queue.slice(-2000))); } catch { /* unavailable */ }
+    try { localStorage.setItem(this.storageKey, JSON.stringify(this.queue.slice(-2000))); } catch { /* unavailable */ }
   }
 }

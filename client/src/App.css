@@ -248,6 +248,14 @@ footer { height: 28px; flex: 0 0 28px; padding: 5px 22px 5px 202px; display: fle
 .identity-card small { color: #8a7b57; }
 .identity-card b { font-size: 19px; }
 .identity-card code { color: #796b4c; font-size: 10px; }
+.identity-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin: 22px 0; }
+.identity-fields label, .identity-random-id { display: flex; flex-direction: column; gap: 9px; min-width: 0; font-size: 13px; font-weight: 600; }
+.identity-fields input { width: 100%; min-width: 0; box-sizing: border-box; padding: 12px; border: 1px solid #b7b6aa; border-radius: 9px; background: #fff; color: #243c32; font: inherit; }
+.identity-fields input:focus { outline: 2px solid #49725b; outline-offset: 2px; }
+.identity-random-id code { overflow-wrap: anywhere; padding: 12px; border-radius: 9px; background: #f1ead5; color: #635739; font-size: 12px; line-height: 1.6; }
+.identity-confirm { width: 100%; padding: 13px; border: 0; border-radius: 10px; background: #294d3d; color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+.identity-confirm:disabled { opacity: .5; cursor: not-allowed; }
+.onboarding .identity-error { color: #b33232; }
 .experience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 18px; }
 .experience-grid button { padding: 13px; border: 1px solid #d7c996; border-radius: 9px; color: #5c4b20; background: #fff; font-weight: 700; }
 .experience-grid button:hover { background: #fff1c1; border-color: #d5aa3e; }
