@@ -36,7 +36,7 @@ if (existsSync(clientDist)) {
   app.use(express.static(clientDist, { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
   app.use((req, res, next) => {
     if (req.method !== 'GET' || req.path.startsWith('/api/')) return next();
-    res.sendFile(resolve(clientDist, 'index.html'));
+    res.sendFile(resolve(clientDist, /^\/third(?:\/|$)/.test(req.path) ? 'third/index.html' : 'index.html'));
   });
 }
 

@@ -7,3 +7,8 @@ export * from './competitions.js';
 export * from './robot.js';
 export * from './robot-scoring.js';
 export * from './robot-levels.js';
+export * from './third/types.js';
+export * from './third/samples.js';
+export * from './third/engine.js';
+export * from './third/program.js';
+export * from './third/geometry.js';

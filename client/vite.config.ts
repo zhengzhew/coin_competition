@@ -7,6 +7,7 @@ export default defineConfig({
   build: { rollupOptions: { input: {
     coin: fileURLToPath(new URL('./index.html', import.meta.url)),
     future: fileURLToPath(new URL('./future/index.html', import.meta.url)),
+    third: fileURLToPath(new URL('./third/index.html', import.meta.url)),
   } } },
   server: {
     port: 5173,

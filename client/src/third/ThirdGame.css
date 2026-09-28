@@ -1,0 +1,80 @@
+/* The gameplay shell uses App.css + FutureCity.css, just like /future/. */
+html[data-competition="third"] body { display: block; overflow: auto; background: #f6f8ed; }
+html[data-competition="third"] #root { display: block; height: auto; min-height: 100%; }
+.third-game-shell { min-height: 100vh; display: grid; place-items: center; }
+/* Share the Future City controls and layout without its decorative city backdrop. */
+.app.future-city.third-game { background: #edf5f5; }
+.app.future-city.third-game .app-header { background: linear-gradient(100deg, #ffffff, #eff9f4); }
+.app.future-city.third-game .level-nav { background: #e7f3dc; }
+.app.future-city.third-game .mission-card { background: linear-gradient(100deg, #ffffff, #f8fcf0); }
+.app.future-city.third-game .board-panel,
+.app.future-city.third-game .keyboard-card,
+.app.future-city.third-game .python-editor,
+.app.future-city.third-game .attempt-summary,
+.app.future-city.third-game .required-order { background: #ffffff; }
+.app.future-city.third-game footer { background: #f6f8ed; }
+.third-game .third-return { color: #46717a; background: #f5fbf7; border: 1px solid #c8dedc; border-radius: 7px; padding: 7px 10px; font-size: 11px; white-space: nowrap; }
+.third-game .third-sample-status { color: #608456; font-size: 10px; background: #edf5e6; border-radius: 6px; padding: 5px 8px; }
+.app.third-game .third-stage { position: relative; display: flex; width: 100%; flex: 1 1 0; min-height: 0; height: auto; background: transparent; }
+.third-game .third-stage > .board-viewport { width: 100%; }
+.third-game .third-sim-host { position: relative; }
+.third-game .third-physical-scale { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 6px 0; color: #59747b; font-size: 11px; }
+.third-game .third-map-coordinates { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 12px; }
+.third-game .third-sim-host canvas { display: block; width: 100%; height: 100%; }
+.third-game .city3d-loading { margin: 0; gap: 12px; text-align: center; padding: 20px; }
+.third-game .city3d-error { z-index: 3; background: #eef7f5ed; }
+.third-game .status-bar { grid-template-columns: 1fr 1fr auto; }
+.third-game .third-command-palette { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; margin: 0 0 8px; }
+.third-game .third-command-palette button { padding: 5px 6px; }
+.app.third-game .third-program-editor { flex: 1 0 380px; min-height: 380px; }
+.third-game .third-editor-fields { flex: 1 1 0; min-height: 0; overflow: auto; padding-right: 3px; }
+.third-game .third-program-actions { flex-shrink: 0; display: flex; align-items: stretch; gap: 8px; padding-top: 10px; }
+.app.third-game .third-program-actions button { margin: 0; width: auto; }
+.third-game .third-program-actions .run-btn { flex: 1; }
+.third-game .third-program-source { width: 100%; min-height: 130px; resize: vertical; padding: 12px; margin: 8px 0; border: 1px solid #c6dcda; background: #f7faf8; color: #287b80; border-radius: 7px; font: 12px/1.8 Consolas, monospace; tab-size: 4; }
+.third-game .third-source-tools { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 10px; }
+.third-game .third-source-tools small { font-size: 9px; color: #688789; }
+.third-game .third-stop { margin-top: 7px; }
+.third-game .third-manual-actions { display: flex; gap: 8px; margin-top: 8px; }
+.third-game .third-manual-actions button { flex: 1; }
+.third-game .third-key-help { color: #59747b; font-size: 11px; line-height: 1.5; }
+.third-game .robot-controls button { touch-action: none; user-select: none; }
+.third-game .third-instructions { font-size: 10px; color: #59747b; line-height: 1.5; padding: 8px; }
+.third-game .third-instructions summary { cursor: pointer; }
+.third-game .third-instructions p { overflow-wrap: anywhere; }
+.third-game .level-btn:disabled { opacity: .45; cursor: default; }
+@media (min-width: 1000px) {
+  .app.third-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 26cqw; }
+  .third-game .third-program-source { font-size: .85cqw; }
+}
+@media (max-width: 999px) {
+  .app.third-game { width: 100%; aspect-ratio: auto; max-height: none; min-height: 100vh; overflow: visible; }
+  .third-game .app-body { overflow: visible; }
+  .third-game .game-area { overflow: visible; }
+  .app.third-game .workspace-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto; }
+  .app.third-game .robot-workspace > .mission-card { grid-column: 1; grid-row: 1; }
+  .app.third-game .robot-workspace > .board-panel { grid-column: 1; grid-row: 2; min-height: 430px; }
+  .app.third-game .robot-workspace > .control-column { grid-column: 1; grid-row: 3; overflow: visible; }
+  .app.third-game .third-stage { min-height: 290px; }
+  .third-game .app-header { grid-template-columns: 1fr auto; height: auto; min-height: 65px; padding: 12px; }
+  .third-game .header-actions { grid-column: 1 / -1; justify-self: stretch; }
+  .third-game .header-actions button { flex: 1; }
+  .third-game .level-nav { width: 110px; flex-basis: 110px; }
+  .third-game .third-program-source { min-height: 170px; }
+  .app.third-game .third-program-editor { flex: 0 0 auto; }
+  .third-game .third-editor-fields { flex: 0 0 auto; overflow: visible; }
+}
+@media (max-width: 560px) {
+  .third-game .app-body { flex-direction: column; }
+  .app.third-game .level-nav { width: 100%; flex-basis: auto; padding: 10px; display: flex; gap: 18px; align-items: center; border-bottom: 1px solid #cbdcbe; }
+  .third-game .nav-heading { border: 0; gap: 8px; padding: 0; }
+  .third-game .stage-group { margin: 0; }
+  .third-game .stage-levels { display: flex; }
+  .third-game .level-btn { min-width: 48px; }
+  .third-game .game-area { padding: 10px; }
+  .third-game .third-sample-status { font-size: 9px; }
+  .third-game .third-return { font-size: 11px; }
+  .third-game .brand b { font-size: 16px; }
+  .third-game .current-mode { font-size: 11px; }
+  .third-game footer { padding: 6px 12px; font-size: 9px; }
+}
