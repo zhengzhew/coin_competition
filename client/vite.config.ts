@@ -8,7 +8,6 @@ export default defineConfig({
     coin: fileURLToPath(new URL('./index.html', import.meta.url)),
     future: fileURLToPath(new URL('./future/index.html', import.meta.url)),
     demo: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
-    third: fileURLToPath(new URL('./third/index.html', import.meta.url)),
   } } },
   server: {
     port: 5173,

@@ -33,12 +33,10 @@ app.use(cookieParser());
 app.use('/api', apiRouter);
 
 if (existsSync(clientDist)) {
-  // Redirect before static files so old HTML entries and deep links both migrate.
+  // Retired URLs must not fall through to the unrelated competition SPA.
   app.use((req, res, next) => {
     if (!['GET', 'HEAD'].includes(req.method) || !/^\/third(?:\/|$)/.test(req.path)) return next();
-    const path = req.path.replace(/^\/third/, '/demo').replace(/\/index\.html$/, '/');
-    const search = req.originalUrl.slice(req.path.length);
-    res.redirect(308, `${path === '/demo' ? '/demo/' : path}${search}`);
+    res.status(404).type('text/plain').send('页面不存在');
   });
   app.use(express.static(clientDist, { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
   app.use((req, res, next) => {

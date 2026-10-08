@@ -33,7 +33,7 @@ try {
     return route.continue();
   });
   page = await context.newPage(); page.on('pageerror', e => errors.push(e.message));
-  page.on('request', request => { if (page.url().match(/^https?:\/\/[^/]+\/(?:demo|third)(?:\/|$)/) && request.url().includes('/api/')) thirdApiRequests.push(request.url()); });
+  page.on('request', request => { if (page.url().match(/^https?:\/\/[^/]+\/demo(?:\/|$)/) && request.url().includes('/api/')) thirdApiRequests.push(request.url()); });
   const stage = () => page.getByTestId('third-stage');
   const start = () => page.getByTestId('third-start').click();
   const completed = () => page.waitForFunction(() => document.querySelector('[data-testid="third-stage"]')?.getAttribute('data-phase') === 'completed', { }, { timeout: 20000 });
@@ -54,17 +54,19 @@ try {
     assert.ok(runBox.y + runBox.height <= panelBox.y + panelBox.height + 1, 'start/run stays visible within control panel');
   };
   const path = (category, mode, simulation) => `/demo/${category}/${mode}/${simulation}/${category}-${simulation}-sample/`;
-  for (const method of ['GET', 'HEAD']) for (const [oldPath, newPath] of [
-    ['/third', '/demo/'], ['/third/', '/demo/'], ['/third/index.html', '/demo/'],
-    ['/third/place/manual/simulation3d/place-simulation3d-sample/', path('place', 'manual', 'simulation3d')],
+  for (const method of ['GET', 'HEAD']) for (const oldPath of [
+    '/third', '/third/', '/third/index.html', '/third/place/manual/simulation3d/place-simulation3d-sample/',
   ]) {
     const response = await fetch(origin + oldPath + '?from=bookmark', { method, redirect: 'manual' });
-    assert.equal(response.status, 308);
-    assert.equal(response.headers.get('location'), newPath + '?from=bookmark');
+    assert.equal(response.status, 404);
+    assert.equal(response.headers.get('location'), null);
   }
-  await page.goto(origin + '/third/?from=bookmark#catalog');
+  for (const method of ['GET', 'HEAD']) for (const newPath of ['/demo/', path('collect', 'auto', 'grid')]) {
+    const response = await fetch(origin + newPath, { method, redirect: 'manual' });
+    assert.equal(response.status, 200);
+  }
+  await page.goto(origin + '/demo/');
   await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
-  assert.equal(page.url(), origin + '/demo/?from=bookmark#catalog');
   assert.equal(await page.title(), 'DEMO 展示中心');
   assert.equal(await page.getByText('第三子赛项').count(), 0);
   // Seed an existing-origin draft using the same stable key as the old release.
@@ -72,7 +74,7 @@ try {
   const existingDemo = thirdSample('collect', 'grid');
   const existingDraftKey = `third.program.${existingDemo.demo_id}.${existingDemo.content_version}.grid`;
   await page.evaluate(key => localStorage.setItem(key, 'forward(1)\n# existing draft'), existingDraftKey);
-  await page.goto(origin + path('collect', 'auto', 'grid').replace('/demo/', '/third/') + '?from=bookmark#program');
+  await page.goto(origin + path('collect', 'auto', 'grid') + '?from=bookmark#program');
   await ready('grid');
   assert.equal(page.url(), origin + path('collect', 'auto', 'grid') + '?from=bookmark#program');
   assert.equal(await page.getByRole('textbox', { name: '指令程序', exact: true }).inputValue(), 'forward(1)\n# existing draft');
@@ -80,7 +82,7 @@ try {
   await page.locator('a.brand[href="/demo/"]').click();
   await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
   assert.equal(page.url(), origin + '/demo/');
-  checks.push('legacy root/deep GET and HEAD redirects/query/hash/draft preservation/return to demo centre');
+  checks.push('retired URLs return 404 without redirects/demo GET and HEAD/draft preservation/return to demo centre');
   await page.goto(origin + '/demo/');
   await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
   await page.screenshot({ path: join(output, '01-home.png'), fullPage: true });
