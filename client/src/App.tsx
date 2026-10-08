@@ -465,7 +465,7 @@ export default function App() {
           </button>}
         </div>
         <div className="header-actions">
-          <a href="/third/" style={{ color: 'inherit', fontSize: 12, whiteSpace: 'nowrap' }}>第三子赛项 ↗</a>
+          <a href="/demo/" style={{ color: 'inherit', fontSize: 12, whiteSpace: 'nowrap' }}>DEMO 展示中心 ↗</a>
           <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
             <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
           </div>

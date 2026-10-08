@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { THIRD_FIXED_STEP, thirdMapPosition, type ThirdAction, type ThirdDemo, type ThirdMode } from '@coin-path/shared';
 import { ThirdSession } from './controls/session';
 import CityBoard3D from '../components/CityBoard3D';
-import { categoryLabels, modeLabels, simulationLabels, thirdPath, demos } from './demo-catalog';
+import { categoryLabels, modeLabels, simulationLabels, demoPath, demos } from './demo-catalog';
 import '../App.css';
 import '../components/GameBoard.css';
 import '../components/LevelNav.css';
@@ -80,15 +80,15 @@ export default function DemoWorkspace({ demo, mode, go }: { demo: ThirdDemo; mod
   };
   return <div className="third-game-shell"><section className="app future-city third-game third-workspace" data-category={demo.category} data-mode={mode} data-simulation={demo.simulation}>
     <header className="app-header">
-      <div className="brand"><div className="brand-mark">✦</div><div><span>第三子赛项 · {categoryLabels[demo.category]}</span><b>{simulationLabels[demo.simulation]}</b></div></div>
+      <a className="brand" href="/demo/" style={{ color: 'inherit', textDecoration: 'none' }} onClick={e => { e.preventDefault(); go('/demo/'); }}><div className="brand-mark">✦</div><div><span>DEMO 展示中心 · {categoryLabels[demo.category]}</span><b>{simulationLabels[demo.simulation]}</b></div></a>
       <div className="header-mode-controls"><div className="current-mode" aria-label="当前操作方式">{mode === 'auto' ? '</> 自动 · 程序操控' : '⌨ 手动 · 键盘操控'}</div></div>
-      <div className="header-actions"><button className="third-return" onClick={() => go(thirdPath(demo.category, mode, demo.simulation))}>← DEMO 列表</button><button className="third-return" onClick={() => go(thirdPath(demo.category))}>返回分类</button></div>
+      <div className="header-actions"><button className="third-return" onClick={() => go(demoPath(demo.category, mode, demo.simulation))}>← DEMO 列表</button><button className="third-return" onClick={() => go(demoPath(demo.category))}>返回分类</button></div>
     </header>
     <div className="app-body">
       <nav className="level-nav" aria-label="关卡导航">
         <div className="nav-heading"><span>任务地图</span><b>{levels.length} 关</b></div>
         <section className="stage-group"><div className="stage-label"><span>{categoryLabels[demo.category]} · {modeLabels[mode]}</span><small>{simulationLabels[demo.simulation]}</small></div>
-          <div className="stage-levels">{levels.map((item, index) => <button key={item.demo_id} className={`level-btn${item.demo_id === demo.demo_id ? ' active' : ''}`} aria-current={item.demo_id === demo.demo_id ? 'page' : undefined} aria-label={`${index + 1} ${item.title}`} disabled={item.status === 'planned'} onClick={() => go(thirdPath(item.category, mode, item.simulation, item.demo_id))}><span>{String(index + 1).padStart(2, '0')}</span><small>{item.scene_config.objects.length}点</small></button>)}</div>
+          <div className="stage-levels">{levels.map((item, index) => <button key={item.demo_id} className={`level-btn${item.demo_id === demo.demo_id ? ' active' : ''}`} aria-current={item.demo_id === demo.demo_id ? 'page' : undefined} aria-label={`${index + 1} ${item.title}`} disabled={item.status === 'planned'} onClick={() => go(demoPath(item.category, mode, item.simulation, item.demo_id))}><span>{String(index + 1).padStart(2, '0')}</span><small>{item.scene_config.objects.length}点</small></button>)}</div>
         </section>
         <section className="stage-group"><div className="stage-label"><span>更多玩法</span></div><div className="stage-levels"><button className="level-btn" disabled aria-label="DEMO 准备中"><span>待更新</span></button></div></section>
       </nav>
@@ -131,6 +131,6 @@ export default function DemoWorkspace({ demo, mode, go }: { demo: ThirdDemo; mod
         </aside>
       </div></main>
     </div>
-    <footer><span>第三子赛项 · {categoryLabels[demo.category]} · {modeLabels[mode]}</span><span>{demo.simulation === 'grid' ? '棋盘模拟：按格移动' : '3D 模拟：连续运动'} · 本地试用</span></footer>
+    <footer><span>DEMO 展示中心 · {categoryLabels[demo.category]} · {modeLabels[mode]}</span><span>{demo.simulation === 'grid' ? '棋盘模拟：按格移动' : '3D 模拟：连续运动'} · 本地试用</span></footer>
   </section></div>;
 }

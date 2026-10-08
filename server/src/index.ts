@@ -33,10 +33,17 @@ app.use(cookieParser());
 app.use('/api', apiRouter);
 
 if (existsSync(clientDist)) {
+  // Redirect before static files so old HTML entries and deep links both migrate.
+  app.use((req, res, next) => {
+    if (!['GET', 'HEAD'].includes(req.method) || !/^\/third(?:\/|$)/.test(req.path)) return next();
+    const path = req.path.replace(/^\/third/, '/demo').replace(/\/index\.html$/, '/');
+    const search = req.originalUrl.slice(req.path.length);
+    res.redirect(308, `${path === '/demo' ? '/demo/' : path}${search}`);
+  });
   app.use(express.static(clientDist, { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
   app.use((req, res, next) => {
-    if (req.method !== 'GET' || req.path.startsWith('/api/')) return next();
-    res.sendFile(resolve(clientDist, /^\/third(?:\/|$)/.test(req.path) ? 'third/index.html' : 'index.html'));
+    if (!['GET', 'HEAD'].includes(req.method) || req.path.startsWith('/api/')) return next();
+    res.sendFile(resolve(clientDist, /^\/demo(?:\/|$)/.test(req.path) ? 'demo/index.html' : 'index.html'));
   });
 }
 

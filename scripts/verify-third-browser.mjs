@@ -33,7 +33,7 @@ try {
     return route.continue();
   });
   page = await context.newPage(); page.on('pageerror', e => errors.push(e.message));
-  page.on('request', request => { if (page.url().includes('/third') && request.url().includes('/api/')) thirdApiRequests.push(request.url()); });
+  page.on('request', request => { if (page.url().match(/^https?:\/\/[^/]+\/(?:demo|third)(?:\/|$)/) && request.url().includes('/api/')) thirdApiRequests.push(request.url()); });
   const stage = () => page.getByTestId('third-stage');
   const start = () => page.getByTestId('third-start').click();
   const completed = () => page.waitForFunction(() => document.querySelector('[data-testid="third-stage"]')?.getAttribute('data-phase') === 'completed', { }, { timeout: 20000 });
@@ -53,10 +53,41 @@ try {
     const panelBox = await page.locator('.third-program-editor, .keyboard-card').boundingBox();
     assert.ok(runBox.y + runBox.height <= panelBox.y + panelBox.height + 1, 'start/run stays visible within control panel');
   };
-  const path = (category, mode, simulation) => `/third/${category}/${mode}/${simulation}/${category}-${simulation}-sample/`;
-  await page.goto(origin + '/third/');
-  await page.getByRole('heading', { name: /开始你的机器人挑战/ }).waitFor();
+  const path = (category, mode, simulation) => `/demo/${category}/${mode}/${simulation}/${category}-${simulation}-sample/`;
+  for (const method of ['GET', 'HEAD']) for (const [oldPath, newPath] of [
+    ['/third', '/demo/'], ['/third/', '/demo/'], ['/third/index.html', '/demo/'],
+    ['/third/place/manual/simulation3d/place-simulation3d-sample/', path('place', 'manual', 'simulation3d')],
+  ]) {
+    const response = await fetch(origin + oldPath + '?from=bookmark', { method, redirect: 'manual' });
+    assert.equal(response.status, 308);
+    assert.equal(response.headers.get('location'), newPath + '?from=bookmark');
+  }
+  await page.goto(origin + '/third/?from=bookmark#catalog');
+  await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
+  assert.equal(page.url(), origin + '/demo/?from=bookmark#catalog');
+  assert.equal(await page.title(), 'DEMO 展示中心');
+  assert.equal(await page.getByText('第三子赛项').count(), 0);
+  // Seed an existing-origin draft using the same stable key as the old release.
+  const { thirdSample } = await import('../shared/dist/index.js');
+  const existingDemo = thirdSample('collect', 'grid');
+  const existingDraftKey = `third.program.${existingDemo.demo_id}.${existingDemo.content_version}.grid`;
+  await page.evaluate(key => localStorage.setItem(key, 'forward(1)\n# existing draft'), existingDraftKey);
+  await page.goto(origin + path('collect', 'auto', 'grid').replace('/demo/', '/third/') + '?from=bookmark#program');
+  await ready('grid');
+  assert.equal(page.url(), origin + path('collect', 'auto', 'grid') + '?from=bookmark#program');
+  assert.equal(await page.getByRole('textbox', { name: '指令程序', exact: true }).inputValue(), 'forward(1)\n# existing draft');
+  await page.getByRole('button', { name: '恢复示例程序' }).click();
+  await page.locator('a.brand[href="/demo/"]').click();
+  await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
+  assert.equal(page.url(), origin + '/demo/');
+  checks.push('legacy root/deep GET and HEAD redirects/query/hash/draft preservation/return to demo centre');
+  await page.goto(origin + '/demo/');
+  await page.getByRole('heading', { name: /从这里开始体验/ }).waitFor();
   await page.screenshot({ path: join(output, '01-home.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+  await page.screenshot({ path: join(output, '01-home-mobile.png'), fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1040 });
   await page.locator('.third-category-card').first().click();
   assert.equal(await page.locator('.third-sim-options a').count(), 4);
   await page.locator('.third-sim-options a').first().click();
@@ -80,7 +111,7 @@ try {
     await page.getByRole('button', { name: '恢复示例程序' }).click();
     checks.push(`${category}/${simulation}/auto completion/reset/validation`);
     await page.getByRole('button', { name: '返回分类', exact: true }).click();
-    await page.locator(`a[href="/third/${category}/manual/${simulation}/"]`).click();
+    await page.locator(`a[href="/demo/${category}/manual/${simulation}/"]`).click();
     await page.getByRole('button', { name: /进入体验/ }).click(); await ready(simulation);
     if (simulation === 'simulation3d') await page.screenshot({ path: join(output, `02-${category}-3d-manual.png`), fullPage: true });
     await start();
@@ -118,7 +149,7 @@ try {
   await page.getByRole('button', { name: '重置', exact: true }).click();
   for (const name of ['俯视', '跟随', '自由视角']) { await page.getByRole('button', { name, exact: true }).click(); assert.equal(await page.getByRole('button', { name, exact: true }).getAttribute('aria-pressed'), 'true'); }
   await page.getByRole('button', { name: '返回分类', exact: true }).click();
-  await page.locator('a[href="/third/place/auto/simulation3d/"]').click();
+  await page.locator('a[href="/demo/place/auto/simulation3d/"]').click();
   await page.getByRole('button', { name: /进入体验/ }).click(); await ready('simulation3d');
   const editor = page.getByRole('textbox', { name: '指令程序', exact: true });
   await editor.fill('wait(10)'); await editor.press('w'); assert.equal(await stage().getAttribute('data-z'), '96.0000');
@@ -128,7 +159,7 @@ try {
   assert.equal(await editor.inputValue(), 'forward(1)\n# saved draft');
   await page.getByRole('button', { name: '恢复示例程序' }).click();
   await start(); await page.getByRole('button', { name: '返回分类', exact: true }).click();
-  await page.locator('a[href="/third/place/manual/simulation3d/"]').click();
+  await page.locator('a[href="/demo/place/manual/simulation3d/"]').click();
   await page.getByRole('button', { name: /进入体验/ }).click(); await ready('simulation3d');
   await wait(200); assert.equal(await stage().getAttribute('data-phase'), 'ready'); assert.equal(await stage().getAttribute('data-z'), '96.0000');
   checks.push('keyup/blur/stop/editor focus/draft isolation/exit-and-reenter cleanup/camera');
@@ -162,7 +193,7 @@ try {
   await page.screenshot({ path: join(output, '03-mobile.png'), fullPage: true });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
   checks.push('context loss/retry/mobile layout');
-  for (const invalid of ['/third/bad/', '/third/collect/manual/nope/', '/third/collect/auto/grid/missing/', '/third//']) {
+  for (const invalid of ['/demo/bad/', '/demo/collect/manual/nope/', '/demo/collect/auto/grid/missing/', '/demo//']) {
     await page.goto(origin + invalid); await page.getByRole('heading', { name: '这个玩法暂时无法打开' }).waitFor();
   }
   assert.deepEqual(thirdApiRequests, []); assert.deepEqual(remoteRequests, []);
@@ -171,7 +202,7 @@ try {
   await page.setViewportSize({ width: 1440, height: 1040 });
   for (const route of ['/', '/future/']) {
     await page.goto(origin + route);
-    await page.locator('#player-name').fill('第三赛项回归测试'); await page.getByRole('button', { name: '确认', exact: true }).click();
+    await page.locator('#player-name').fill('DEMO 回归测试'); await page.getByRole('button', { name: '确认', exact: true }).click();
     await page.locator('[data-track-id="onboarding.mode.keyboard"]').click();
     await page.locator('[data-track-id="attempt.start"]').click();
     await page.getByRole('button', { name: '停止本轮', exact: true }).waitFor();
