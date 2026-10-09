@@ -67,7 +67,7 @@ export default function BeachApp() {
           <button className="identity-confirm" disabled={!name.trim()}>确认，前往海边 →</button><small className="beach-local-note">完成全部交付后计分，用时越短，得分越高。</small></form>
         : <section className="onboarding-card"><span className="eyebrow">准备就绪 · {player?.name}</span><h2>选择拾贝任务</h2><p>从两枚贝壳开始，挑战更快、更稳的海边旅程。</p><div className="experience-grid">{beachLevels.map((item, i) => {
           const best = bests[`${item.demo_id}.${item.content_version}`];
-          return <button key={item.demo_id} onClick={() => go(beachPath(item))}><b>0{i + 1} · {item.title}</b><small>手动驾驶 · {item.scene_config.objects.length} 个贝壳 · {best ? `最佳 ${best.toFixed(2)} 秒` : '待挑战'}</small><span className="beach-task-enter">出发 →</span></button>;
+          return <button key={item.demo_id} onClick={() => go(beachPath(item))}><b>0{i + 1} · {item.title}</b><small>{item.supported_modes[0] === 'auto' ? '代码操控' : '手动驾驶'} · {item.scene_config.objects.length} 个贝壳 · {best ? `最佳 ${best.toFixed(2)} 秒` : '待挑战'}</small><span className="beach-task-enter">出发 →</span></button>;
         })}</div><button className="module-change-player" onClick={() => setConfirmed(false)}>更换玩家</button>{notice && <p role="status">{notice}</p>}</section>}
     </CompetitionWelcome>
   </div></div>;

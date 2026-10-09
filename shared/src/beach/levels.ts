@@ -15,3 +15,8 @@ export const beachLevels: ThirdDemo[] = BEACH_OID_POSITIONS.map((positions, inde
     objects: positions.map(([x, y], i) => ({ id: String.fromCharCode(65 + i), x, z: 120 - y })),
   },
 }));
+beachLevels.push(...beachLevels.map((level, index): ThirdDemo => ({
+  ...structuredClone(level), demo_id: `shells-${index + 3}`, content_version: 'beach-code-1.0.0',
+  supported_modes: ['auto'], title: `${level.title} · 编程`,
+  description: '编写指令控制小车，推动或夹取贝壳，完整送入浅蓝色边缘带并停稳即可交付。全部交付后停止计时。',
+})));

@@ -20,7 +20,7 @@ export class RobotSession {
   private oidPhase?: 'turning' | 'moving' | 'holding';
   private oidNoProgress = 0;
   private oidBestError = Infinity;
-  constructor(readonly demo: ThirdDemo, readonly mode: ThirdMode) { this.engine = new ThirdEngine(demo); }
+  constructor(readonly demo: ThirdDemo, readonly mode: ThirdMode, readonly maxSeconds = THIRD_MAX_SECONDS) { this.engine = new ThirdEngine(demo); }
   reset() {
     if (this.disposed) throw new Error('运行实例已释放');
     this.engine.reset(); this.held.clear(); this.program = []; this.index = 0;
@@ -30,9 +30,9 @@ export class RobotSession {
   start(source: string) {
     if (this.disposed) throw new Error('运行实例已释放');
     if (this.mode === 'auto') {
-      const commands = compileThirdProgram(source, this.demo);
+      const commands = compileThirdProgram(source, this.demo, this.maxSeconds);
       this.reset(); this.program = commands;
-    } else if (this.phase === 'completed' || this.elapsed >= THIRD_MAX_SECONDS) this.reset();
+    } else if (this.phase === 'completed' || this.elapsed >= this.maxSeconds) this.reset();
     this.phase = 'running'; this.message = '';
   }
   stop(message = '已停止。') {
@@ -54,7 +54,7 @@ export class RobotSession {
     if (!Number.isFinite(dt) || dt < 0) throw new Error('时间步长无效');
     if (this.phase !== 'running' || dt === 0) return;
     this.elapsed += dt;
-    if (this.elapsed >= THIRD_MAX_SECONDS) { this.stop('本轮已达 120 秒，请重置后继续。'); return; }
+    if (this.elapsed >= this.maxSeconds) { this.stop(`本轮已达 ${this.maxSeconds} 秒，请重置后继续。`); return; }
     const config = this.demo.scene_config;
     if (this.mode === 'manual') {
       if (config.kind === 'simulation3d') {

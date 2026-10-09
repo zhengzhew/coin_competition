@@ -81,6 +81,33 @@ html[data-competition="beach"] #root { display: block; height: auto; }
 .beach-message { font-size: 12px; line-height: 1.8; padding: 13px 16px; border-left: 3px solid #72a8a7; background: #ecf4e8eb; border-radius: 6px; color: #557d7f; }
 .beach-result { padding: 19px; border: 1px solid #ddc999; border-radius: 12px; background: #fff5dbeF; color: #9b783b; }
 .beach-result > span { font-size: 12px; }.beach-result > strong { display: block; font: 750 36px/1.4 system-ui; margin-top: 6px; }.beach-result small { font-size: 12px; }.beach-result p { font-size: 12px; margin: 4px 0 13px; }
+.beach-program-editor { display: flex; flex-direction: column; flex-shrink: 0; gap: 10px; }
+.beach-program-editor .beach-card-heading { margin-bottom: 0; }
+.beach-program-fields { display: flex; flex-direction: column; gap: 10px; }
+.beach-program-actions { display: flex; flex-direction: column; gap: 9px; flex-shrink: 0; }
+.beach-command-palette { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.beach-command-palette button { padding: 7px 5px; min-height: 45px; background: #edf5ee; color: #327e86; border: 1px solid #c6dcd4; border-radius: 7px; }
+.beach-command-palette b { display: block; font-size: 12px; line-height: 1.5; }.beach-command-palette code { display: block; font: 10px/1.5 Consolas, monospace; color: #6a8b8e; }
+.beach-command-palette button:disabled { opacity: .5; cursor: default; }
+.beach-code-hint { font-size: 11px; line-height: 1.7; color: #64878a; margin: 0; }
+.beach-program-editor .farm-code-editor { position: relative; height: 220px; min-height: 180px; flex: 1 0 220px; overflow: hidden; border: 1px solid #c6dcd4; border-radius: 7px; background: #f8faf3; }
+.beach-program-editor .farm-code-overlay { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.beach-program-editor .farm-code-overlay pre { min-width: 100%; width: max-content; margin: 0; padding: 12px 10px 12px 38px; box-sizing: border-box; font: 14px/1.8 Consolas, 'Cascadia Code', monospace; white-space: pre; tab-size: 4; color: transparent; }
+.beach-program-editor .farm-code-line { position: relative; display: block; min-height: 1.8em; }
+.beach-program-editor .farm-code-line i { position: absolute; left: -32px; width: 23px; text-align: right; color: #89a09a; font: inherit; font-size: 11px; line-height: 25.2px; }
+.beach-program-editor .farm-code-line.active { background: #d9ede4; box-shadow: -4px 0 #327e86, 12px 0 #d9ede4; }
+.beach-program-editor .farm-code-line.active i { color: #327e86; font-weight: 700; }
+.app.future-city.beach-game .beach-program-editor .third-program-source { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; margin: 0; padding: 12px 10px 12px 38px; border: 0; background: transparent; color: #315e66; border-radius: 0; font: 14px/1.8 Consolas, 'Cascadia Code', monospace; tab-size: 4; overflow: auto; resize: none; }
+.app.future-city.beach-game .beach-program-editor .third-program-source:disabled { opacity: 1; -webkit-text-fill-color: #315e66; }
+.beach-code-guide { color: #64878a; font-size: 11px; line-height: 1.7; }.beach-code-guide summary { cursor: pointer; }.beach-code-guide p { margin: 8px 0 0; }
+.beach-code-error { color: #a54f3d; background: #fff0e5; padding: 8px; border-radius: 6px; font-size: 12px; margin: 0; }
+.beach-program-editor .beach-actions { margin-top: 0; }
+@media (min-width: 1000px) {
+  .app.future-city.beach-game[data-mode="auto"] { width: 100%; height: 100dvh; aspect-ratio: auto; }
+  .beach-program-editor { height: 100%; min-height: 450px; }
+  .beach-program-fields { flex: 1; min-height: 0; overflow: auto; padding-right: 2px; }
+}
+@media (min-width: 1201px) { .app.future-city.beach-game[data-mode="auto"] .workspace-grid { grid-template-columns: minmax(0, 1fr) 340px; } }
 .app.beach-game button:focus-visible, .app.beach-game input:focus-visible, .app.beach-game a:focus-visible { outline: 3px solid #d4a56e; outline-offset: 3px; }
 @media (min-width: 1000px) { .app.beach-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; grid-template-rows: minmax(0, 1fr); }.app.beach-game .robot-workspace > .board-panel, .app.beach-game .robot-workspace > .control-column { grid-row: 1; }.app.beach-game .control-column { overflow: auto; }.app.beach-game .level-nav { width: 190px; flex-basis: 190px; overflow: auto; } }
 @media (max-width: 1200px) { .beach-control-card, .beach-shell-list { padding: 13px; }.app.beach-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 260px; }.app.beach-game .module-mission-heading p { flex-basis: 100%; margin-top: 5px; } }

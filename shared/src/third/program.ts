@@ -7,7 +7,7 @@ export function migrateThirdProgramCommands(source: string) {
 }
 
 /** A small Python-shaped command language. Student text is never evaluated as JavaScript or Python. */
-export function compileThirdProgram(source: string, demo: ThirdDemo): ThirdInstruction[] {
+export function compileThirdProgram(source: string, demo: ThirdDemo, maxSeconds = THIRD_MAX_SECONDS): ThirdInstruction[] {
   if (demo.grid_task === 'strawberry-edge') return compileStrawberryProgram(source);
   if (source.length > 8000) throw new Error('程序太长，请保持在 8000 个字符以内。');
   const lines = source.split(/\r?\n/).map((text, i) => ({ text: text.replace(/#.*$/, '').trimEnd(), line: i + 1 })).filter(l => l.text.trim());
@@ -99,6 +99,6 @@ export function compileThirdProgram(source: string, demo: ThirdDemo): ThirdInstr
       heading += c.value * Math.PI / 180 * (c.action === 'turn_left' ? -1 : 1);
     } else seconds += .24;
   }
-  if (seconds > THIRD_MAX_SECONDS) throw new Error('程序预计运行超过 120 秒，请缩短后再试。');
+  if (seconds > maxSeconds) throw new Error(`程序预计运行超过 ${maxSeconds} 秒，请缩短后再试。`);
   return instructions;
 }

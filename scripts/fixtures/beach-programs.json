@@ -1,0 +1,4 @@
+{
+  "shells-3": "move_to(60, 44)\nmove_to(36, 44)\nmove_to(36, 57)\nturn_to(0)\ngrab()\nmove_to(36, 100)\nrelease()\nbackward(56)\nmove_to(60, 44)\nmove_to(60, 52)\nmove_to(24, 52)\nmove_to(18, 67)\nturn_to(0)\ngrab()\nmove_to(18, 100)\nrelease()",
+  "shells-4": "move_to(60, 56)\nmove_to(30, 56)\nmove_to(30, 45)\nturn_to(180)\ngrab()\nmove_to(30, 20)\nrelease()\nbackward(36)\nmove_to(60, 56)\nmove_to(60, 66)\nmove_to(84, 66)\nmove_to(84, 51)\nturn_to(180)\ngrab()\nmove_to(84, 20)\nrelease()\nbackward(46)\nmove_to(60, 66)\nmove_to(60, 56)\nmove_to(36, 56)\nmove_to(36, 65)\nturn_to(0)\ngrab()\nmove_to(36, 100)\nrelease()\nbackward(44)\nmove_to(60, 56)\nmove_to(60, 62)\nmove_to(88, 62)\nmove_to(88, 77)\nturn_to(0)\ngrab()\nmove_to(88, 100)\nrelease()"
+}

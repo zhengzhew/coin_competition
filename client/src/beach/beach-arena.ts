@@ -42,7 +42,7 @@ export function buildBeachArena(scene: THREE.Scene, config: ThirdSceneConfig, ke
     const p = Math.max(25, Math.min(1510, i * scale));
     ctx.fillText(String(i), p, 1510); if (i > 0) ctx.fillText(String(i), 27, 1536 - p);
   }
-  ctx.font = '600 28px system-ui'; ctx.fillText('岸 边 交 付 区', 768, edge / 2); ctx.fillText('OID · X →', 1230, 1460);
+  ctx.font = '600 28px system-ui'; ctx.fillText('岸 边 交 付 区', 768, edge / 2); ctx.fillText('X →', 1230, 1460);
   const texture = keep(new THREE.CanvasTexture(canvas)); texture.colorSpace = THREE.SRGBColorSpace;
   const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(config.width, config.depth)), keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 1 })));
   ground.rotation.x = -Math.PI / 2; ground.position.set(config.width / 2, .4, config.depth / 2); ground.receiveShadow = true; scene.add(ground);

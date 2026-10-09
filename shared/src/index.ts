@@ -21,3 +21,4 @@ export * from './farm/levels.js';
 export * from './beach/levels.js';
 export * from './beach/rules.js';
 export * from './beach/session.js';
+export * from './beach/program.js';

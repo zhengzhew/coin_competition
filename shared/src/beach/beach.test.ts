@@ -6,12 +6,14 @@ import { beachScore, isShellAtEdge } from './rules.js';
 import { thirdMapPosition } from '../third/geometry.js';
 import type { ThirdAction } from '../third/types.js';
 
-test('shells use exact OID coordinates and two manual-only 3D levels', () => {
+test('four 3D levels keep exact OID layouts, with programming copies after the manual pair', () => {
+  assert.equal(beachLevels.length, 4);
   for (const [index, level] of beachLevels.entries()) {
-    assert.deepEqual(level.supported_modes, ['manual']);
+    assert.deepEqual(level.supported_modes, [index < 2 ? 'manual' : 'auto']);
     assert.equal(level.simulation, 'simulation3d');
-    assert.deepEqual(level.scene_config.objects.map(o => { const p = thirdMapPosition(o.x, o.z, 120); return [p.x, p.y]; }), BEACH_OID_POSITIONS[index]);
-    assert.equal(level.scene_config.objects.length, index ? 4 : 2);
+    assert.deepEqual(level.scene_config.objects.map(o => { const p = thirdMapPosition(o.x, o.z, 120); return [p.x, p.y]; }), BEACH_OID_POSITIONS[index % 2]);
+    assert.equal(level.scene_config.objects.length, index % 2 ? 4 : 2);
+    if (index >= 2) { assert.deepEqual(level.scene_config, beachLevels[index - 2].scene_config); assert.notEqual(level.scene_config, beachLevels[index - 2].scene_config); }
   }
 });
 
@@ -78,7 +80,7 @@ test('a held shell is accepted after settling at the edge without release input'
   assert.equal(session.phase, 'completed');
 });
 
-for (const demo of beachLevels) test(`${demo.demo_id}: complete every shell through manual driving and physical grasp/release`, () => {
+for (const demo of beachLevels.filter(level => level.supported_modes[0] === 'manual')) test(`${demo.demo_id}: complete every shell through manual driving and physical grasp/release`, () => {
   let clock = 0; const session = new BeachSession(demo, () => clock); session.start();
   const tick = () => { clock += 1000 / 60; session.tick(1 / 60); };
   const act = (action: ThirdAction) => { session.press('control', action); session.release('control'); };
