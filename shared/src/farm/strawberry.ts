@@ -77,7 +77,7 @@ export function compileStrawberryProgram(source: string): ThirdInstruction[] {
 /** Exact 0–1 BFS: driving costs 1, picking/dropping costs 0. Turning is free. */
 export function solveStrawberryRoute(demo: ThirdDemo): { steps: number; program: string } {
   const c = demo.scene_config, count = c.objects.length, positions = c.width * c.depth;
-  if (count > 8 || positions > 64) throw new Error('最短路线计算支持最多 64 格、8 株草莓。');
+  if (count > 9 || positions > 64) throw new Error('最短路线计算支持最多 64 格、9 株草莓。');
   const encode = (pos: number, mask: number, holding: number) => (mask * (count + 1) + holding + 1) * positions + pos;
   const decode = (key: number) => ({ pos: key % positions, holding: Math.floor(key / positions) % (count + 1) - 1, mask: Math.floor(key / positions / (count + 1)) });
   const start = encode(c.start.z * c.width + c.start.x, (1 << count) - 1, -1);

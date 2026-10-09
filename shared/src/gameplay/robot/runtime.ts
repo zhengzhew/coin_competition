@@ -16,7 +16,7 @@ export function validateRobotScenario(scenario: RobotScenario, mode: ThirdMode) 
     || scene.objects.some(o => !o.id || !position(o) || o.heading !== undefined && !finite(o.heading)
       || o.goal && !position(o.goal) || scenario.category === 'place' && !scenario.grid_task && !o.goal)) throw new Error('物体或目标配置无效');
   if (scenario.grid_task && (scenario.grid_task !== 'strawberry-edge' || scene.kind !== 'grid' || scenario.category !== 'place'
-    || scene.objects.length > 8 || scene.width * scene.depth > 64 || scene.start.heading % (Math.PI / 2) !== 0
+    || scene.objects.length > 9 || scene.width * scene.depth > 64 || scene.start.heading % (Math.PI / 2) !== 0
     || new Set(scene.objects.map(o => `${o.x},${o.z}`)).size !== scene.objects.length
     || scene.objects.some(o => o.x === scene.start.x && o.z === scene.start.z || scene.walls.some(w => w.x === o.x && w.z === o.z)))) throw new Error('草莓棋盘配置无效');
   if (scene.walls.some(w => !position(w) || [w.width, w.depth].some(v => v !== undefined && (!finite(v) || v <= 0)))) throw new Error('障碍配置无效');

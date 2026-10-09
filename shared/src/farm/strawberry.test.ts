@@ -16,8 +16,12 @@ function fixture(start: [number, number], berry: [number, number], heading = 0):
   demo.scene_config.objects = [{ id: 'a', x: berry[0], z: 7 - berry[1] }]; return demo;
 }
 
-test('three 8x8 levels use the specified zero-based coordinates and programming only', () => {
-  assert.deepEqual(STRAWBERRY_POSITIONS, [[[4, 4]], [[3, 3], [6, 5]], [[6, 2], [6, 4], [5, 3], [5, 5]]]);
+test('five 8x8 levels use the specified zero-based coordinates and programming only', () => {
+  assert.deepEqual(STRAWBERRY_POSITIONS, [
+    [[4, 4]], [[3, 3], [6, 5]], [[6, 2], [6, 4], [5, 3], [5, 5]],
+    [[0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4]],
+    [[3, 3], [4, 3], [5, 3], [3, 4], [4, 4], [5, 4], [3, 5], [4, 5], [5, 5]],
+  ]);
   for (const demo of strawberryLevels) {
     validateRobotScenario(demo, 'auto');
     assert.deepEqual(demo.scene_config.start, { x: 0, z: 7, heading: 0 });
@@ -72,7 +76,7 @@ test('solver matches the analytical one-plant optimum throughout the interior', 
 test('all optimal route witnesses complete, require one delivery per plant, and score 100', () => {
   strawberryLevels.forEach((demo, i) => {
     const solution = solveStrawberryRoute(demo), session = execute(demo, solution.program), s = session.snapshot();
-    assert.equal(solution.steps, [10, 12, 16][i]); assert.equal(s.completed, true); assert.equal(s.holding, null);
+    assert.equal(solution.steps, [10, 12, 16, 21, 38][i]); assert.equal(s.completed, true); assert.equal(s.holding, null);
     assert.equal(s.collected.length, demo.scene_config.objects.length); assert.equal(s.steps, solution.steps);
     assert.equal(strawberryScore(s.steps!, solution.steps, s.completed), 100);
     const longer = execute(demo, `move(1)\nmove(-1)\n${solution.program}`).snapshot();
@@ -80,6 +84,17 @@ test('all optimal route witnesses complete, require one delivery per plant, and 
     assert.ok(strawberryScore(longer.steps!, solution.steps, true) < 100);
     session.reset(); assert.equal(session.snapshot().steps, 0); assert.equal(session.snapshot().collected.length, 0);
   });
+});
+test('the 3x3 cluster requires delivery of the ninth plant before completion', () => {
+  const demo = strawberryLevels[4], solution = solveStrawberryRoute(demo);
+  const session = execute(demo, solution.program.slice(0, solution.program.lastIndexOf('release()')));
+  assert.equal(session.snapshot().collected.length, 8);
+  assert.notEqual(session.snapshot().holding, null);
+  assert.equal(session.snapshot().completed, false);
+  assert.equal(strawberryScore(session.snapshot().steps!, solution.steps, false), 0);
+  const tooMany = structuredClone(demo); tooMany.scene_config.objects.push({ id: 'tenth', x: 1, z: 1 });
+  assert.throws(() => createRobotRuntime(tooMany, 'auto'), /草莓棋盘/);
+  assert.throws(() => solveStrawberryRoute(tooMany), /9 株/);
 });
 test('partial delivery is not completion; re-running starts fresh; snapshots do not leak mutations', () => {
   const demo = strawberryLevels[1], solution = solveStrawberryRoute(demo);

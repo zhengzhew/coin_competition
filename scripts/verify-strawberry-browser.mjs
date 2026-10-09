@@ -37,7 +37,7 @@ try {
   const stage = () => page.getByTestId('third-stage');
   const source = () => page.getByRole('textbox', { name: '指令程序', exact: true });
   const start = () => page.getByTestId('third-start').click();
-  const phase = expected => page.waitForFunction(value => document.querySelector('[data-testid="third-stage"]')?.dataset.phase === value, expected, { timeout: 20000 });
+  const phase = expected => page.waitForFunction(value => document.querySelector('[data-testid="third-stage"]')?.dataset.phase === value, expected, { timeout: 45000 });
   const confirm = () => page.getByRole('button', { name: '确认，进入农场 →', exact: true }).click();
   const scene = () => page.locator('canvas[data-farm-scene="strawberry"]');
   const ready = () => page.locator('canvas[data-farm-scene="strawberry"][data-ready=true]').waitFor();
@@ -47,9 +47,10 @@ try {
   await page.getByLabel('你的名字', { exact: true }).fill('草莓测试员');
   assert.match(await page.getByTestId('player-random-id').innerText(), /^[0-9a-f-]{36}$/);
   await page.screenshot({ path: join(output, 'welcome.png'), fullPage: true }); await confirm();
-  assert.equal(await page.locator('.experience-grid button').count(), 3);
+  assert.equal(await page.locator('.experience-grid button').count(), 5);
   await page.getByRole('button', { name: /单株草莓.*编程控制/ }).click(); await ready();
-  checks.push('identity preview, three programming-only levels, deep-link responses');
+  assert.equal(await page.locator('.nav-heading b').innerText(), '5 关');
+  checks.push('identity preview, five programming-only levels, deep-link responses');
   assert.equal(await scene().getAttribute('data-renderer'), 'three');
   assert.equal(await scene().getAttribute('data-vehicle-model'), '000_saikao');
   await page.screenshot({ path: join(output, '3d-initial.png'), fullPage: true });
@@ -113,7 +114,11 @@ try {
   assert.equal(await page.getByTestId('competition-stop-reset').innerText(), '停止'); assert.equal(await page.getByTestId('competition-stop-reset').isDisabled(), true);
   checks.push('six commands, errors/carry state, running-line highlight and scrolling, stop/reset toggling, reset preserves code and restores scene');
   for (const [i, demo] of strawberryLevels.entries()) {
-    await page.getByRole('button', { name: `${i + 1} ${demo.title}`, exact: true }).click(); await ready();
+    if (i >= 3) await page.getByRole('button', { name: '下一关 →', exact: true }).click();
+    else await page.getByRole('button', { name: `${i + 1} ${demo.title}`, exact: true }).click();
+    await ready();
+    if (i >= 3) { await page.reload(); await confirm(); await ready(); }
+    assert.ok(page.url().endsWith(`/farm/${demo.demo_id}/`));
     assert.equal(await page.locator('.farm-grid-cell').count(), 64);
     assert.deepEqual(await page.getByTestId('farm-strawberry').evaluateAll(nodes => nodes.map(n => [Number(n.dataset.x), Number(n.dataset.y)])), STRAWBERRY_POSITIONS[i]);
     assert.deepEqual(JSON.parse(await scene().getAttribute('data-berries')).map(o => [o.x, o.y]), STRAWBERRY_POSITIONS[i]);
@@ -135,11 +140,12 @@ try {
       await source().fill(`move(1)\nmove(-1)\n${solution.program}`); await start(); await phase('completed'); assert.match(await page.getByTestId('farm-best').innerText(), /^10/);
     }
   }
-  checks.push('three levels complete with real programs; optimal steps 10/12/16; scoring and best improvement/retention');
-  await page.getByRole('button', { name: '再挑战一次' }).click(); await source().fill('move(2)\n# 第三关草稿');
-  await page.getByRole('button', { name: '1 单株草莓', exact: true }).click(); await ready(); assert.doesNotMatch(await source().inputValue(), /第三关/);
-  await page.goBack(); await ready(); assert.equal(await source().inputValue(), 'move(2)\n# 第三关草稿');
-  await page.reload(); await confirm(); await ready(); assert.equal(await source().inputValue(), 'move(2)\n# 第三关草稿'); assert.match(await page.getByTestId('farm-best').innerText(), /^16/);
+  assert.equal(await page.getByRole('button', { name: '下一关 →', exact: true }).count(), 0);
+  checks.push('five levels complete with real programs; optimal steps 10/12/16/21/38; scoring, next-level links and best improvement/retention');
+  await page.getByRole('button', { name: '再挑战一次' }).click(); await source().fill('move(2)\n# 第五关草稿');
+  await page.getByRole('button', { name: '1 单株草莓', exact: true }).click(); await ready(); assert.doesNotMatch(await source().inputValue(), /第五关/);
+  await page.goBack(); await ready(); assert.equal(await source().inputValue(), 'move(2)\n# 第五关草稿');
+  await page.reload(); await confirm(); await ready(); assert.equal(await source().inputValue(), 'move(2)\n# 第五关草稿'); assert.match(await page.getByTestId('farm-best').innerText(), /^38/);
   for (const [route, expected] of [['/farm/manual/collect/', 1], ['/farm/auto/place/', 2], ['/farm/place/', 2]]) {
     await page.goto(origin + route); await confirm(); await ready(); assert.match(page.url(), new RegExp(`/farm/strawberry-${expected}/$`));
   }
