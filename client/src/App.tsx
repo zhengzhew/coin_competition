@@ -8,11 +8,15 @@ import GameBoard from './components/GameBoard';
 import LevelNav from './components/LevelNav';
 import PythonEditor from './components/PythonEditor';
 import RobotEditor from './components/RobotEditor';
-import {robotSceneTheme} from './components/robot-scene-theme';
+import AttemptTimer from './components/AttemptTimer';
+import { CompetitionHeader, CompetitionMission, CompetitionActions, CompetitionWelcome } from './components/CompetitionTemplate';
+import { competitionModules } from './competition-modules';
+import { executionRows } from './program-execution';
 import { TelemetryClient } from './telemetry';
 import './App.css';
 import { competition, isFuture, skin } from './theme';
 import './FutureCity.css';
+import './CompetitionLayout.css';
 
 interface Player {
   player_uuid: string;
@@ -48,6 +52,8 @@ export default function App() {
   const [rows, setRows] = useState<TemplateRow[]>([]);
   const [submittedLines,setSubmittedLines]=useState<number|null>(null);
   const [animating, setAnimating] = useState(false);
+  const [activeRowId, setActiveRowId] = useState<string | null>(null);
+  const programRunRef = useRef<{ stopped: boolean } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
@@ -85,7 +91,10 @@ export default function App() {
   };
 
   const selectLevel = useCallback((level: LevelDef) => {
-    const preserveProgram=!!level.robot&&levelRef.current?.level_id===level.level_id;
+    if (programRunRef.current || startingRef.current) return;
+    if (attemptRef.current && gameRef.current?.status === 'running') stopRemoteAttempt();
+    const preserveProgram=levelRef.current?.level_id===level.level_id;
+    setActiveRowId(null);
     setSubmittedLines(null);
     markLevelEntry('level_selected');
     levelRef.current = level;
@@ -141,6 +150,8 @@ export default function App() {
   };
 
   const resetGame = useCallback((stopRemote = true) => {
+    if (programRunRef.current || startingRef.current) return;
+    setActiveRowId(null);
     setSubmittedLines(null);
     const level = levelRef.current;
     if (!level) return;
@@ -149,7 +160,6 @@ export default function App() {
     attemptRef.current = null; setAttempt(null);
     commitGame(createGameState(level));
     setScore(null); setMessage(null); setEditorError(null);
-    if(!level.robot)setRows(generateInitialRows(level.python));
     commandChain.current = Promise.resolve();
     telemetryRef.current?.track('attempt_reset', 'attempt.reset', {});
   }, []);
@@ -160,6 +170,11 @@ export default function App() {
     setModeSelected(true);
     markLevelEntry('onboarding_completed');
     telemetryRef.current?.track('mode_selected', `onboarding.mode.${nextMode}`, { mode: nextMode });
+  };
+
+  const returnHome = () => {
+    if (animating || startingRef.current || switchingRef.current) return;
+    resetGame(); setModeSelected(false);
   };
 
   const switchMode = async () => {
@@ -314,8 +329,8 @@ export default function App() {
     commandChain.current = commandChain.current.then(async () => {
       try {
         const server = await sendCommands(currentAttempt, [direction]);
-        if (server?.is_terminal) acceptServerResult(server);
-      } catch (error) { setMessage(error instanceof Error ? error.message : '指令提交失败'); }
+        if (server?.is_terminal && attemptRef.current?.attempt_id === currentAttempt.attempt_id) acceptServerResult(server);
+      } catch (error) { if (attemptRef.current?.attempt_id === currentAttempt.attempt_id) setMessage(error instanceof Error ? error.message : '指令提交失败'); }
     });
     if (nextState?.status !== 'running') {
       setMessage(currentAttempt.attempt_id.startsWith('local-')
@@ -344,44 +359,69 @@ export default function App() {
 
   const runPython = async () => {
     const level = levelRef.current;
-    if (!level || animating) return;
+    if (!level || animating || startingRef.current || programRunRef.current) return;
     const validation = validateAndExpand(rows, level.python);
     if (!validation.valid || !validation.expanded) {
       setEditorError(validation.errors.join('；'));
       telemetryRef.current?.track('program_validation_failed', 'python.run', { errors: validation.errors });
       return;
     }
-    setEditorError(null);
+    setEditorError(null); setActiveRowId(null); setAnimating(true);
     const currentAttempt = await beginAttempt(true);
-    if (!currentAttempt) return;
+    if (!currentAttempt) { setAnimating(false); return; }
+    const run = { stopped: false }; programRunRef.current = run;
+    const rowIds = executionRows(rows, !!level.robot), executed: Action[] = [];
     setSubmittedLines(countCodeLines(rows));
     const programSnapshot = generatePythonSource(rows, level.python);
-    telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length, code_line_count:countCodeLines(rows), optimal_code_lines:level.optimal_code_lines });
-    setAnimating(true);
-    for (const direction of validation.expanded) {
-      await sleep(level.robot?320:95);
-      const state = applyLocalCommand(direction, 'python_blank');
-      if (state?.status !== 'running') break;
-    }
-    if (currentAttempt.attempt_id.startsWith('local-')) {
-      setAnimating(false);
+    telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length, code_line_count: countCodeLines(rows), optimal_code_lines: level.optimal_code_lines });
+    try {
+      for (const [index, direction] of validation.expanded.entries()) {
+        if (run.stopped) break;
+        setActiveRowId(rowIds[index]);
+        await sleep(level.robot ? 320 : 240);
+        if (run.stopped) break;
+        const state = applyLocalCommand(direction, 'python_blank');
+        executed.push(direction);
+        if (state?.status !== 'running') break;
+      }
+      setActiveRowId(null);
+      if (currentAttempt.attempt_id.startsWith('local-')) {
+        const state = gameRef.current;
+        if (state?.status === 'running') commitGame({ ...state, status: 'stopped' });
+        setMessage(run.stopped ? '已停止，点击重置回到起点；代码会保留。' : '练习已完成，本次不计算成绩。');
+        return;
+      }
+      // Normal runs retain the full source/command contract required by code scoring.
+      // An interrupted run submits only commands that actually executed.
+      let server = await sendCommands(currentAttempt, run.stopped ? executed : validation.expanded, programSnapshot);
+      if (run.stopped && !server?.is_terminal && !level.step_limit) {
+        const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/stop`, { method: 'POST', credentials: 'include' });
+        if (!response.ok) throw new Error('本轮停止未能保存，请检查连接。');
+        setMessage('已停止，点击重置回到起点；代码会保留。');
+      } else {
+        if (server && !server.is_terminal) {
+          const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
+          if (!response.ok) throw new Error('本轮成绩未能保存，请检查连接。');
+          server = await response.json();
+        }
+        if (server && attemptRef.current?.attempt_id === currentAttempt.attempt_id) acceptServerResult(server);
+      }
+    } catch (error) {
       const state = gameRef.current;
       if (state?.status === 'running') commitGame({ ...state, status: 'stopped' });
-      setMessage('练习已完成，本次不计算成绩。');
-      return;
-    }
-    try {
-      let server = await sendCommands(currentAttempt, validation.expanded, programSnapshot);
-      if (server && !server.is_terminal) {
-        const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
-        server = await response.json();
-      }
-      if (server) acceptServerResult(server);
-    } catch (error) { setMessage(error instanceof Error ? error.message : '程序提交失败'); }
-    finally { setAnimating(false); }
+      setMessage(error instanceof Error ? error.message : '程序提交失败');
+    } finally { programRunRef.current = null; setActiveRowId(null); setAnimating(false); }
   };
 
   const stopAttempt = async () => {
+    if (programRunRef.current) {
+      programRunRef.current.stopped = true;
+      setActiveRowId(null);
+      const state = gameRef.current;
+      if (state) commitGame({ ...state, status: 'stopped' });
+      telemetryRef.current?.track('attempt_stopped', 'attempt.stop', {});
+      return;
+    }
     const current = attemptRef.current;
     if (!current) return;
     await commandChain.current;
@@ -406,26 +446,26 @@ export default function App() {
   if (loadingError) return <div className="fatal"><b>项目未能启动</b><span>{loadingError}</span><small>请确认服务端已运行，再刷新页面。</small></div>;
   if (!player || !currentLevel || !gameState) return <div className={`loading${isFuture ? ' future-loading' : ''}`}><span className="loader" />{isFuture ? '正在连接未来城市…' : '正在准备淘金地图…'}</div>;
 
-  if (!identityConfirmed) return (
-    <div className={`app${isFuture ? ' future-city' : ''}`}>
-      <div className="onboarding">
-        <form className="onboarding-card" aria-labelledby="identity-heading" onSubmit={event => { event.preventDefault(); void confirmIdentity(); }}>
-          <span className="eyebrow">开始挑战前</span>
-          <h1 id="identity-heading">欢迎来到{skin.title}</h1>
-          <p>请输入你的名字，确认后选择操作模式。</p>
-          <div className="identity-fields">
-            <label htmlFor="player-name">你的名字
-              <input id="player-name" autoFocus autoComplete="off" maxLength={40} required value={nameInput}
-                placeholder="请输入姓名" disabled={savingIdentity} aria-invalid={!!identityError} aria-describedby={identityError ? 'identity-error' : undefined}
-                onChange={event => { setNameInput(event.target.value); setIdentityError(null); }} />
-            </label>
-            <div className="identity-random-id"><span>随机 ID</span><code data-testid="player-random-id">{player.player_uuid}</code></div>
-          </div>
-          <p>更换姓名后，确认时会绑定新的随机 ID，原玩家的成绩会保留。</p>
+  const module = competitionModules[competition];
+  if (!identityConfirmed || !modeSelected) return (
+    <div className={`app compact-competition competition-template competition-welcome${isFuture ? ' future-city' : ''}`} data-module={competition}>
+      <CompetitionWelcome module={module} onHome={() => setModeSelected(false)} footer="每种模式各 3 次正式机会 · 取最高成绩">
+        {!identityConfirmed ? <form className="onboarding-card" aria-labelledby="identity-heading" onSubmit={event => { event.preventDefault(); void confirmIdentity(); }}>
+          <span className="eyebrow">开始挑战前</span><h1 id="identity-heading">欢迎来到{skin.title}</h1>
+          <p>告诉我们你的名字，准备出发吧。</p>
+          <div className="identity-fields"><label htmlFor="player-name">你的名字<input id="player-name" autoFocus autoComplete="off" maxLength={40} required value={nameInput}
+            placeholder="请输入姓名" disabled={savingIdentity} aria-invalid={!!identityError} aria-describedby={identityError ? 'identity-error' : undefined}
+            onChange={event => { setNameInput(event.target.value); setIdentityError(null); }} /></label>
+            <div className="identity-random-id"><span>随机 ID</span><code data-testid="player-random-id">{player.player_uuid}</code></div></div>
           {identityError && <p id="identity-error" className="identity-error" role="alert">{identityError}</p>}
           <button className="identity-confirm" type="submit" disabled={savingIdentity || !nameInput.trim()}>{savingIdentity ? '正在确认…' : '确认'}</button>
-        </form>
-      </div>
+          <p className="module-identity-note">更换姓名会绑定新的随机 ID，原玩家成绩保留。</p>
+        </form> : <section className="onboarding-card" aria-labelledby="mode-heading"><span className="eyebrow">准备就绪 · {player.display_name}</span><h2 id="mode-heading">选择操作方式</h2><p>进入后可通过顶部按钮切换操作方式。</p>
+          <div className="experience-grid"><button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard"><b>手动操作</b><small>方向键 / WASD / 操作按钮</small><span className="competition-mode-enter">进入 →</span></button>
+            <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank"><b>编程控制</b><small>编排指令，运行程序完成挑战</small><span className="competition-mode-enter">进入 →</span></button></div>
+          <button className="module-change-player" onClick={() => { setNameInput(player.display_name); setIdentityConfirmed(false); }}>更换玩家</button>
+        </section>}
+      </CompetitionWelcome>
     </div>
   );
 
@@ -442,73 +482,47 @@ export default function App() {
   const displayOrder = currentLevel.required_order?.map((_, index) => circledNumber(index + 1));
 
   return (
-    <div className={`app${isFuture ? ' future-city' : ''}`}>
-      {!modeSelected && <div className="onboarding" role="dialog" aria-modal="true">
-        <div className="onboarding-card">
-          <span className="eyebrow">{isFuture ? '循环搬运 · 测试赛' : '身份已经生成'}</span><h1>欢迎来到{skin.title}</h1>
-          <div className="identity-card"><img src={skin.vehicle} alt="" /><div><small>{isFuture ? '你的领航员身份' : '你的玩家名'}</small><b>{player.display_name}</b><code>{player.player_uuid}</code></div></div>
-          <p>请选择操作模式，进入后可通过顶部按钮切换。</p>
-          <div className="experience-grid">
-            <button onClick={() => chooseMode('keyboard')} data-track-id="onboarding.mode.keyboard">⌨ 键盘操控<small>{isFuture ? '方向键 / WASD / 方向按钮' : '使用方向键 / WASD，也可点击方向按钮'}</small></button>
-            <button onClick={() => chooseMode('python_blank')} data-track-id="onboarding.mode.python_blank">&lt;/&gt; 代码操控<small>{isFuture ? '编排航线，让飞空车自动执行' : '编排移动指令，运行代码完成挑战'}</small></button>
-          </div>
-        </div>
-      </div>}
-
-      <header className="app-header">
-        <div className="brand"><div className="brand-mark">{isFuture ? '✦' : '◆'}</div><div><span>{skin.subtitle}</span><b>{skin.title}</b></div></div>
-        <div className="header-mode-controls">
-          <div className="current-mode" aria-label="当前操作模式">{modeSelected ? (mode === 'keyboard' ? '⌨ 键盘操控' : '</> 代码操控') : '请选择操作模式'}</div>
-          {modeSelected && <button className="mode-toggle" onClick={() => void switchMode()} disabled={animating || switchingMode}
-            title={animating ? '程序运行及成绩核验完成后可切换' : '切换后重新开始本关，已编写的代码会保留'} data-track-id="header.mode.switch">
-            {switchingMode ? '正在切换…' : mode === 'keyboard' ? '切换到代码操控' : '切换到键盘操控'}
-          </button>}
-        </div>
-        <div className="header-actions">
-          <a href="/demo/" style={{ color: 'inherit', fontSize: 12, whiteSpace: 'nowrap' }}>DEMO 展示中心 ↗</a>
-          <div className="player-info" title={player.player_uuid} data-track-id="player.identity">
-            <span className="online-dot" /><div><b>{player.display_name}</b><small>{player.player_uuid.slice(0, 8)}</small></div>
-          </div>
-        </div>
-      </header>
+    <div className={`app compact-competition competition-template${isFuture ? ' future-city' : ''}`} data-module={competition}>
+      <CompetitionHeader module={module} onHome={returnHome} mode={mode === 'keyboard' ? '手动操作' : '编程控制'}
+        disabled={animating || switchingMode} player={{ name: player.display_name, id: player.player_uuid }}
+        timer={<AttemptTimer attemptId={attempt?.attempt_id} running={active} />}
+        switchControl={<button className="mode-toggle" onClick={() => void switchMode()} disabled={animating || switchingMode}
+          title="切换后重新开始本关，已编写的代码会保留" data-track-id="header.mode.switch">{switchingMode ? '正在切换…' : mode === 'keyboard' ? '切换到编程控制' : '切换到手动操作'}</button>} />
 
       <div className="app-body">
-        <LevelNav levels={levels} currentLevelId={currentLevel.level_id} onSelect={selectLevel} />
+        <LevelNav levels={levels} currentLevelId={currentLevel.level_id} onSelect={selectLevel} disabled={animating || switchingMode}>
+          <details className="competition-instructions" open><summary>操作提示</summary><ul>
+            <li>{currentLevel.rule_hint}</li>
+            <li>{mode === 'keyboard' ? 'WASD / 方向键或按钮操控。' : currentLevel.robot ? '点击指令加入循环，填写循环次数和移动格数。' : '点击指令添加代码，括号内填写移动格数。'}</li>
+            {isFuture && <li>拖动旋转视角，滚轮缩放。</li>}
+          </ul><div className="legend">
+            {currentLevel.robot ? <>
+              {currentLevel.coins.some(c => c.type === 'checkpoint') && <span><i className="legend-patrol" />巡逻点</span>}
+              {Object.keys(currentLevel.robot.deliveries).length > 0 && <><span><i className="legend-cargo" />货物</span><span><i className="legend-dock" />交货点</span></>}
+            </> : <><span><i className="legend-start" />起点</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />封闭区</span>}{hasChest && <span><i className="legend-chest" />金币箱 ×3</span>}</>}
+          </div></details>
+          <details className="competition-instructions"><summary>成绩与机会</summary><div className="competition-attempt-info" aria-label="本关成绩与尝试次数">
+            <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前挑战' : attempt ? '正式尝试' : '剩余机会'}</span><b>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</b></div>
+            <div><span>本关最高</span><b>{progress?.final_score ?? '—'}<small> 分</small></b></div></div>
+            <ul><li>每种模式各 3 次机会，取最高分；练习不计分。</li>{currentLevel.optimal_actions !== undefined && <li data-track-id="score.rules">完成 60 分，行动最优 80 分{mode === 'python_blank' && '，代码最优 100 分'}。</li>}</ul>
+          </details>
+        </LevelNav>
         <main className="game-area">
-          {!currentLevel.robot && <section className="mission-card">
-            <div className="mission-number">{currentLevel.robot?String(currentLevelIndex+1).padStart(2,'0'):currentLevel.level_id.slice(-2)}</div>
-            <div className="mission-copy"><h1>{currentLevel.title}</h1></div>
-            <div className="mission-meta"><span>{currentLevel.robot?'立体城市':`${currentLevel.width}×${currentLevel.height}`}</span><span>{totalValue} {isFuture ? '箱货物' : '点金币价值'}</span>{currentLevel.step_limit && <strong>{currentLevel.step_limit} 步预算</strong>}</div>
-          </section>}
-
           <div className={`workspace-grid${currentLevel.robot?' robot-workspace':''}`}>
-            {currentLevel.robot && <section className="mission-card"><div className="mission-number">{String(currentLevelIndex+1).padStart(2,'0')}</div><div className="mission-copy"><h1>{currentLevel.title}</h1></div></section>}
             <section className="board-panel">
-              <div className="panel-heading"><div><span>{currentLevel.robot?robotSceneTheme(currentLevel).name:'本关任务'}</span><b>{currentLevel.objective}</b><small className="board-rule-hint">{currentLevel.rule_hint}</small></div>
-                {currentLevel.robot?<div className="legend robot-legend">
-                  {currentLevel.coins.some(c=>c.type==='checkpoint')&&<span><i className="legend-patrol"/>巡逻点</span>}
-                  {Object.keys(currentLevel.robot.deliveries).length>0&&<><span><i className="legend-cargo"/>货物</span><span><i className="legend-dock"/>交货点</span></>}
-                </div>:<div className="legend"><span><i className="legend-start" />{isFuture ? '任务站' : '起点'}</span>{currentLevel.walls.length > 0 && <span><i className="legend-wall" />{isFuture ? '高楼' : '封闭区'}</span>}{hasChest && <span><i className="legend-chest" />{isFuture ? '超级芯' : '金币箱'} ×3</span>}</div>}
-              </div>
+              <CompetitionMission number={currentLevelIndex + 1} title={currentLevel.title} objective={currentLevel.objective}>
+                {currentLevel.required_order && <div className="competition-order"><small>指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
+              </CompetitionMission>
               <GameBoard level={currentLevel} state={gameState} />
               <div className="status-bar">
                 {currentLevel.robot ? <div data-track-id="status.actions"><small>行动次数{currentLevel.optimal_actions!==undefined&&` · 最优 ≤ ${currentLevel.optimal_actions}`}</small><b>{gameState.consumed_commands}</b></div> : <><div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
                 <div><small>碰撞次数</small><b>{gameState.collisions}</b></div></>}
                 <div><small>{isFuture ? '已完成目标' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
-                <div className={`status-pill status-${gameState.status}`}>{statusLabel(gameState.status)}</div>
+                <div className={`status-pill status-${attempt ? gameState.status : 'draft'}`}>{attempt ? statusLabel(gameState.status) : '准备就绪'}</div>
               </div>
             </section>
 
             <aside className="control-column">
-              <section className="attempt-summary" aria-label="本关成绩与尝试次数">
-                <div className="attempt-summary-metrics">
-                  <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前模式' : attempt ? '正式尝试' : '剩余正式机会'}</span><strong>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</strong></div>
-                  <div><span>本关最高分</span><strong>{progress?.final_score ?? '—'}<small> 分</small></strong></div>
-                </div>
-                <p>{isFuture ? '3 次取最高分，练习不计分。' : '每种模式各 3 次，取最高分；练习不计分。'}</p>{currentLevel.optimal_actions!==undefined&&<p data-track-id="score.rules">完成 60 分 · 行动最优 80 分{mode==='python_blank'?' · 代码最优 100 分':''}</p>}
-              </section>
-              {currentLevel.required_order && <div className="required-order"><small>本关指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
-
               {mode === 'keyboard' ? <section className="keyboard-card">
                 <div className="mini-heading"><span>{currentLevel.robot?'驾驶与夹爪':'方向控制'}</span><small>{currentLevel.robot?'相对车头方向':'方向键 / WASD'}</small></div>
                 {currentLevel.robot ? <><div className="robot-controls">
@@ -521,10 +535,8 @@ export default function App() {
                   <button className={`dpad-btn right${litDirection === 'right' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('right')} disabled={!active} data-track-id="move.right" aria-label="向右">→</button>
                   <button className={`dpad-btn down${litDirection === 'down' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
                 </div>}
-                {!attempt ? <button className="primary-action" onClick={() => void beginAttempt(false)} data-track-id="attempt.start">{progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '开始本关'}</button>
-                  : active ? <button className="secondary-action" onClick={() => void stopAttempt()} data-track-id="attempt.stop">{currentLevel.step_limit ? '结束并结算' : '停止本轮'}</button>
-                  : !score && <button className="primary-action" onClick={() => resetGame(false)} data-track-id="attempt.reset">再试一次</button>}
-              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={()=>resetGame()} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} isRunning={animating} error={editorError} />}
+                <CompetitionActions running={active} canReset={!!attempt && !active} onRun={() => void beginAttempt(true)} onStop={() => void stopAttempt()} onReset={() => resetGame(false)} runLabel={progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '▶ 开始控制'} runTrack="attempt.start" stopTrack="attempt.stop" />
+              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!!attempt && !active} executing={active && animating} activeRowId={activeRowId} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!!attempt && !active} executing={active && animating} activeRowId={activeRowId} isRunning={animating} error={editorError} />}
 
               {score && <section className="score-panel">
                 <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ {score.max_score??100}</em></div>

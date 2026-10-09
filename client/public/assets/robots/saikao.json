@@ -1,0 +1,28 @@
+{
+  "source": "000_saikao.obj",
+  "sha256": "e88809420f8cb46fea0c50d2b45f998ca46c6649c3c2d0f182328e74b6e93571",
+  "sourceBytes": 107830351,
+  "sourceMeshes": 27190,
+  "sourceTriangles": 525062,
+  "meshes": 26,
+  "triangles": 119953,
+  "bytes": 4175600,
+  "sizeCm": [
+    17.89145278930664,
+    7.7156805992126465,
+    19
+  ],
+  "minCm": [
+    -8.94572639465332,
+    0,
+    -9.5
+  ],
+  "maxCm": [
+    8.94572639465332,
+    7.7156805992126465,
+    9.5
+  ],
+  "transform": "source mm Z-up → cm Y-up, forward +sourceY → -Z; origin (0,45.5,-21.5) mm",
+  "materials": "neutral substitutes; source MTL was not supplied",
+  "geometry": "proportions preserved, 19 cm chassis length; gripper is separate"
+}

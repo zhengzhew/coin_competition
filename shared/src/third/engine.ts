@@ -1,31 +1,37 @@
 import { ThirdPhysicsArena } from './physics.js';
+import { StrawberryGridEngine } from '../farm/strawberry.js';
 import { createGameState } from '../rule-engine.js';
 import { stepRobot } from '../robot.js';
 import type { GameState, LevelDef, RobotAction } from '../types.js';
-import type { ThirdAction, ThirdDemo, ThirdSnapshot } from './types.js';
+import type { ThirdAction, ThirdDemo, ThirdSnapshot, ThirdPose } from './types.js';
 import { THIRD_DIMENSIONS as D, THIRD_GRIP_CENTER, footprintCorners, footprintsOverlap, type Footprint } from './geometry.js';
 
 const headings = ['up', 'right', 'down', 'left'] as const;
 const normalize = (angle: number) => (angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-const distance = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
+const distanceBetween = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
 
 /** Grid reuses the existing robot rules. Continuous simulation has separate state and collision rules. */
 export class ThirdEngine {
+  private strawberry?: StrawberryGridEngine;
   private grid?: GameState;
   private physics?: ThirdPhysicsArena;
+  private precisionPending = false;
   get physical() { return Boolean(this.physics); }
   stepPhysics(dt: number, driveCm = 0, turn = 0) { this.physics?.step(dt, driveCm, turn); }
   private gridLevel?: LevelDef;
   private value!: ThirdSnapshot;
   constructor(readonly demo: ThirdDemo) { this.reset(); }
   snapshot(): ThirdSnapshot {
-    if (this.physics) return this.physics.snapshot();
+    if (this.strawberry) return this.strawberry.snapshot();
+    if (this.physics) { const state = this.physics.snapshot(); return { ...state, completed: state.completed && !this.precisionPending }; }
     return { ...this.value, objects: this.value.objects.map(o => ({ ...o, goal: o.goal && { ...o.goal } })), collected: [...this.value.collected] };
   }
   /** Presentation adapter for the existing future-city board; no score/session API is involved. */
   gridPresentation() { return this.grid && this.gridLevel ? { level: this.gridLevel, state: this.grid } : null; }
   reset() {
     const config = this.demo.scene_config;
+    if (this.demo.grid_task === 'strawberry-edge') { this.strawberry = new StrawberryGridEngine(this.demo); return; }
+    this.precisionPending = false;
     this.physics = config.kind === 'simulation3d' && this.demo.category === 'place' ? new ThirdPhysicsArena(this.demo) : undefined;
     this.value = {
       ...config.start, objects: config.objects.map(o => ({ ...o })), holding: null,
@@ -51,6 +57,7 @@ export class ThirdEngine {
     }
   }
   act(action: ThirdAction) {
+    if (this.strawberry) { this.strawberry.act(action); return; }
     if (this.physics) { this.physics.act(action); return; }
     if (this.value.completed || action === 'wait') return;
     if (this.demo.category === 'collect' && (action === 'grab' || action === 'release')) return;
@@ -80,8 +87,36 @@ export class ThirdEngine {
     }
     if (this.value.completed) this.value.message = '任务完成！可以重置后再试一次。';
   }
+  clearPrecision() { this.precisionPending = false; }
+  /** Continuous 精准定位 feedback with exact endpoints; movement still respects the field and obstacles. */
+  stepPrecision(dt: number, pose: ThirdPose, speed: number, turnSpeed: number, final = true) {
+    if (this.demo.scene_config.kind !== 'simulation3d') throw new Error('精准定位 仅用于 3D 模拟。');
+    this.precisionPending = true;
+    if (this.physics) this.physics.step(dt, 0, 0, { pose, speed, turnSpeed });
+    else {
+      this.value.blocked = false;
+      const start = { x: this.value.x, z: this.value.z, heading: this.value.heading };
+      const distance = Math.hypot(pose.x - start.x, pose.z - start.z), amount = Math.min(distance, speed * dt);
+      const difference = Math.atan2(Math.sin(pose.heading - start.heading), Math.cos(pose.heading - start.heading));
+      const turn = Math.sign(difference) * Math.min(Math.abs(difference), turnSpeed * dt);
+      const parts = Math.max(1, Math.ceil(amount / .25), Math.ceil(Math.abs(turn) / .01));
+      for (let i = 1; i <= parts; i++) {
+        const ratio = distance ? amount / distance * i / parts : 0;
+        const next = { x: start.x + (pose.x - start.x) * ratio, z: start.z + (pose.z - start.z) * ratio, heading: normalize(start.heading + turn * i / parts) };
+        if (!this.robotFree(next.x, next.z, next.heading)) { this.value.blocked = true; this.value.message = '精准定位 路线被障碍或边界挡住，请调整点位。'; break; }
+        Object.assign(this.value, next);
+        for (const obj of this.value.objects) if (!this.value.collected.includes(obj.id) && distanceBetween(this.value, obj) < 4) this.value.collected.push(obj.id);
+      }
+    }
+    const state = this.physics?.snapshot() ?? this.value;
+    const arrived = Math.hypot(pose.x - state.x, pose.z - state.z) < 1e-7 && Math.abs(Math.atan2(Math.sin(pose.heading - state.heading), Math.cos(pose.heading - state.heading))) < 1e-7;
+    this.precisionPending = !arrived || !final;
+    if (!this.physics) { this.finish(); this.value.completed = this.value.completed && !this.precisionPending; }
+    return arrived;
+  }
   /** Distance and angle come from a fixed-step controller, not the render frame rate. */
   move(amount: number) {
+    if (this.strawberry) return;
     if (this.physics && this.demo.scene_config.kind === 'simulation3d') {
       this.physics.step(Math.abs(amount) / this.demo.scene_config.speed, Math.sign(amount) * this.demo.scene_config.speed); return;
     }
@@ -97,7 +132,7 @@ export class ThirdEngine {
       this.value.x = x; this.value.z = z;
       if (this.demo.category === 'collect') {
         for (const obj of this.value.objects) {
-          if (!this.value.collected.includes(obj.id) && distance(this.value, obj) < 4) this.value.collected.push(obj.id);
+          if (!this.value.collected.includes(obj.id) && distanceBetween(this.value, obj) < 4) this.value.collected.push(obj.id);
         }
         this.finish();
         if (this.value.completed) break;
@@ -105,6 +140,7 @@ export class ThirdEngine {
     }
   }
   turn(radians: number) {
+    if (this.strawberry) return;
     if (this.physics && this.demo.scene_config.kind === 'simulation3d') {
       this.physics.step(Math.abs(radians) / this.demo.scene_config.turnSpeed, 0, Math.sign(radians) * this.demo.scene_config.turnSpeed); return;
     }

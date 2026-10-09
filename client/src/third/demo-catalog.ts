@@ -1,10 +1,9 @@
-import { thirdSample, type ThirdCategory, type ThirdMode, type ThirdSimulation } from '@coin-path/shared';
+import { robotDemoManifests, type ThirdCategory, type ThirdMode, type ThirdSimulation } from '@coin-path/shared';
 
 export const categoryLabels = { collect: '收集', place: '摆放' };
 export const modeLabels = { auto: '自动', manual: '手动' };
 export const simulationLabels = { grid: '棋盘模拟', simulation3d: '3D 模拟' };
-export const demos = (['collect', 'place'] as const).flatMap(category =>
-  (['grid', 'simulation3d'] as const).map(simulation => thirdSample(category, simulation)));
+export const demos = robotDemoManifests.map(entry => entry.configuration);
 
 export interface DemoRoute { category?: ThirdCategory; mode?: ThirdMode; simulation?: ThirdSimulation; demoId?: string; invalid?: boolean; }
 export function parseDemoRoute(path: string): DemoRoute {

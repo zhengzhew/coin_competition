@@ -1,6 +1,7 @@
 import type {Action,LevelDef,Mode,PythonConfig,ScoreResult} from './types.js';
 import type {ReplayResult} from './solver.js';
 import {countCodeLines,validateAndExpand,type TemplateRow} from './python-template.js';
+import { FUTURE_SCORING_BINDING, scoreWithRelease } from './gameplay/scoring/releases.js';
 
 /** Parse the editor's restricted Python display format; never execute submitted code. */
 export function verifiedRobotCodeLines(source:unknown,config:PythonConfig,commands:Action[]):number|undefined {
@@ -34,14 +35,14 @@ export function verifiedRobotCodeLines(source:unknown,config:PythonConfig,comman
 /** Completed tasks earn 60; efficient actions unlock 80; efficient code unlocks 100. */
 export function scoreRobotChallenge(level:LevelDef,result:ReplayResult,mode:Mode,commands:Action[],source?:unknown):ScoreResult {
   const complete=result.status==='success'&&level.coins.every(coin=>result.collected_order.includes(coin.id));
-  const actionsOptimal=complete&&result.consumed_commands<=level.optimal_actions!;
   const codeLines=mode==='python_blank'?verifiedRobotCodeLines(source,level.python,commands):undefined;
-  const collection=complete?60:0,actions=actionsOptimal?20:0;
-  const code=actionsOptimal&&codeLines!==undefined&&level.optimal_code_lines!==undefined&&codeLines<=level.optimal_code_lines?20:0;
+  const scored=scoreWithRelease(FUTURE_SCORING_BINDING.version,{complete,actionCount:result.consumed_commands,
+    actionTarget:level.optimal_actions,programMode:mode==='python_blank',verifiedCodeLines:codeLines,codeTarget:level.optimal_code_lines});
+  const collection=scored.completion,actions=scored.efficiency,code=scored.programming;
   return {
     collection_score:collection,route_score:actions+code,total_score:collection+actions+code,
     action_score:actions,code_score:code,action_count:result.consumed_commands,optimal_actions:level.optimal_actions,
-    code_lines:codeLines,optimal_code_lines:level.optimal_code_lines,code_verified:codeLines!==undefined,max_score:mode==='keyboard'?80:100,
+    code_lines:codeLines,optimal_code_lines:level.optimal_code_lines,code_verified:codeLines!==undefined,max_score:scored.maximum,
     collected_count:result.collected_order.length,total_coins:level.coins.length,steps:result.steps,
     collected_value:result.collected_order.length,total_value:level.coins.length,
   };

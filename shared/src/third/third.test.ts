@@ -10,6 +10,7 @@ import { ThirdPhysicsArena } from './physics.js';
 function execute(demo: ThirdDemo, source = demo.starter, dt = 1 / 60) {
   const engine = new ThirdEngine(demo);
   for (const command of compileThirdProgram(source, demo)) {
+    if (command.action === 'move_to' || command.action === 'turn_to' || command.action === 'forward_time' || command.action === 'backward_time') throw new Error('This fixture exercises legacy movement; 精准定位 and timed commands are covered by oid.test.ts.');
     engine.act(command.action);
     if (engine.physical && demo.scene_config.kind === 'simulation3d') {
       const c = demo.scene_config;
@@ -109,7 +110,7 @@ test('physical map uses centimetres and lower-left display coordinates', () => {
   const demo = thirdSample('collect', 'simulation3d'); demo.scene_config.walls = [];
   const engine = new ThirdEngine(demo); engine.move(12);
   assert.deepEqual(thirdMapPosition(engine.snapshot().x, engine.snapshot().z, 120), { x: 54, y: 36 });
-  assert.equal(compileThirdProgram('forward(120)', demo)[0].value, 120);
+  assert.deepEqual(compileThirdProgram('forward(120)', demo)[0], { action: 'forward', value: 120, line: 1 });
   assert.throws(() => compileThirdProgram('forward(120.1)', demo), /120 cm/);
 });
 

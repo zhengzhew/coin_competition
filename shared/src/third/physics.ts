@@ -1,6 +1,9 @@
 import { World, Vec2, Box, PrismaticJoint, GearJoint, type Body } from 'planck';
-import { THIRD_DIMENSIONS as D, THIRD_GRIP_CENTER } from './geometry.js';
-import type { ThirdAction, ThirdDemo, ThirdSnapshot, ThirdGripper } from './types.js';
+import { THIRD_DIMENSIONS as D, THIRD_GRIP_CENTER, footprintCorners, footprintsOverlap, type Footprint } from './geometry.js';
+import type { ThirdAction, ThirdDemo, ThirdSnapshot, ThirdGripper, ThirdPose } from './types.js';
+import { isShellAtEdge } from '../beach/rules.js';
+
+interface PrecisionDrive { pose: ThirdPose; speed: number; turnSpeed: number }
 
 /** Demonstration values, pending measurement on the actual mat, cubes and robot. */
 export const THIRD_PHYSICS = {
@@ -23,6 +26,8 @@ export class ThirdPhysicsArena {
   readonly fingers: { body: Body; joint: PrismaticJoint; side: number }[] = [];
   private target: 'open' | 'closed' = 'open';
   private settled = new Map<string, number>();
+  private releasedShells = new Set<string>();
+  private deliveredShells = new Set<string>();
   private gripAge = 0;
   private stalled = 0;
   private actions = 0;
@@ -69,20 +74,35 @@ export class ThirdPhysicsArena {
     if (this.completed || action === 'wait') return;
     this.actions++;
     if (action === 'grab' || action === 'release') {
+      if (this.demo.scene_task === 'seashell-edge' && action === 'release') {
+        const holding = this.gripper().holding;
+        if (holding) {
+          const body = this.cubes.get(holding)!, p = body.getPosition(), c = this.demo.scene_config;
+          if (isShellAtEdge(cm(p.x), cm(p.y), body.getAngle(), c.width, c.depth)) this.releasedShells.add(holding);
+        }
+      }
       this.target = action === 'grab' ? 'closed' : 'open'; this.gripAge = 0;
       this.message = action === 'grab' ? '夹爪正在合拢；只有两侧接触货块才能夹稳。' : '夹爪正在张开，货块保留实际位置。';
     }
   }
   /** Advance exactly one controller interval, internally substepped for stable contacts. */
-  step(dt: number, driveCm = 0, turn = 0) {
-    if (this.completed || dt <= 0) return;
+  step(dt: number, driveCm = 0, turn = 0, precision?: PrecisionDrive) {
+    if (this.completed && !precision || dt <= 0) return;
     const n = Math.max(1, Math.ceil(dt / THIRD_PHYSICS.step));
-    for (let i = 0; i < n; i++) this.substep(dt / n, driveCm, turn);
+    for (let i = 0; i < n; i++) this.substep(dt / n, driveCm, turn, precision);
   }
-  private substep(dt: number, driveCm: number, turn: number) {
+  private substep(dt: number, driveCm: number, turn: number, precision?: PrecisionDrive) {
     const p = THIRD_PHYSICS, before = this.robot.getPosition().clone(), angle = this.robot.getAngle();
     const velocity = this.robot.getLinearVelocity();
     const desired = Vec2(Math.sin(angle) * unit(driveCm), -Math.cos(angle) * unit(driveCm));
+    if (precision) {
+      // Ideal OID feedback corrects both position axes and heading; contact forces remain physical.
+      const dx = precision.pose.x - cm(before.x), dz = precision.pose.z - cm(before.y);
+      const distance = Math.hypot(dx, dz);
+      driveCm = Math.min(precision.speed, distance / dt);
+      desired.set(distance ? unit(dx / distance * driveCm) : 0, distance ? unit(dz / distance * driveCm) : 0);
+      turn = clamp(angleDifference(precision.pose.heading, angle) / dt, -precision.turnSpeed, precision.turnSpeed);
+    }
     const force = Vec2((desired.x - velocity.x) * this.robot.getMass() / dt,
       (desired.y - velocity.y) * this.robot.getMass() / dt);
     const length = force.length(), maximum = p.driveForceN * 10;
@@ -106,6 +126,7 @@ export class ThirdPhysicsArena {
         -friction * unit(D.cargo) / 3, friction * unit(D.cargo) / 3), true);
     }
     this.world.step(dt, 12, 8); this.gripAge += dt;
+    if (precision) this.finishPrecisionPose(precision.pose);
     const moved = Vec2.distance(before, this.robot.getPosition());
     const turned = Math.abs(angleDifference(this.robot.getAngle(), angle));
     const stuck = (Math.abs(driveCm) > .2 && moved < unit(Math.abs(driveCm)) * dt * .05)
@@ -114,23 +135,63 @@ export class ThirdPhysicsArena {
     this.blocked = this.stalled > .45;
     if (this.blocked) this.message = '车体或货块被挡住了，请后退或调整方向。';
     const grip = this.gripper();
+    if (grip.holding) this.releasedShells.delete(grip.holding);
     if (grip.phase === 'holding') this.message = `夹爪接触并夹住 ${grip.holding}；碰撞或转弯仍可能使货块滑脱。`;
     else if (grip.phase === 'open' && this.target === 'open' && this.actions > 0) this.message = '夹爪已张开；可以继续推块或重新对准夹取。';
     else if (grip.phase === 'closed') this.message = '夹爪已闭合，当前没有夹住货块。';
     else if (grip.phase === 'blocked') this.message = '夹爪闭合受阻，尚未形成稳定的双侧夹持。';
     const delivered: string[] = [];
     for (const o of this.demo.scene_config.objects) {
+      if (this.deliveredShells.has(o.id)) { delivered.push(o.id); continue; }
       const b = this.cubes.get(o.id)!;
-      const inside = !!o.goal && [-1, 1].every(x => [-1, 1].every(z => {
+      const shellTask = this.demo.scene_task === 'seashell-edge';
+      const pos = b.getPosition();
+      const inside = shellTask ? this.releasedShells.has(o.id) && this.target === 'open'
+        && isShellAtEdge(cm(pos.x), cm(pos.y), b.getAngle(), this.demo.scene_config.width, this.demo.scene_config.depth)
+        : !!o.goal && [-1, 1].every(x => [-1, 1].every(z => {
         const v = b.getWorldPoint(Vec2(unit(x * D.cargo / 2), unit(z * D.cargo / 2)));
         return Math.abs(cm(v.x) - o.goal!.x) <= D.cell / 2 && Math.abs(cm(v.y) - o.goal!.z) <= D.cell / 2;
       }));
       const stable = inside && grip.holding !== o.id && b.getLinearVelocity().length() < unit(.5) && Math.abs(b.getAngularVelocity()) < .05;
       this.settled.set(o.id, stable ? (this.settled.get(o.id) || 0) + dt : 0);
-      if ((this.settled.get(o.id) || 0) >= p.settleSeconds) delivered.push(o.id);
+      if ((this.settled.get(o.id) || 0) >= p.settleSeconds) {
+        delivered.push(o.id);
+        if (shellTask) { this.deliveredShells.add(o.id); b.setType('static'); }
+      }
     }
     this.completed = delivered.length > 0 && delivered.length === this.cubes.size;
     if (this.completed) this.message = '货块均已完整进入目标区并停稳，任务完成！';
+    if (this.demo.scene_task === 'seashell-edge') {
+      this.message = this.completed ? '贝壳全部送达岸边，拾贝任务完成！' : this.blocked ? '前方空间不足，请后退或调整方向。'
+        : grip.holding ? `已夹稳贝壳 ${grip.holding}，送到浅蓝色边缘带后按 R 放下。`
+          : grip.phase === 'closed' ? '夹爪内没有贝壳，按 R 张开后重新对准。'
+            : grip.phase === 'blocked' ? '尚未夹稳贝壳，张开夹爪并调整位置。'
+              : '车头对准贝壳，G 夹取；在浅蓝色边缘带内按 R 放下并等待停稳。';
+    }
+  }
+  /** Remove only sub-millimetre solver residue after arrival, never jump a route or move cargo. */
+  private finishPrecisionPose(pose: ThirdPose) {
+    const position = this.robot.getPosition(), angle = this.robot.getAngle();
+    const correction = angleDifference(pose.heading, angle);
+    if (Math.hypot(pose.x - cm(position.x), pose.z - cm(position.y)) > .02 || Math.abs(correction) > .001) return;
+    const fingers = this.fingers.map(f => ({ body: f.body, local: this.robot.getLocalPoint(f.body.getPosition()),
+      angle: angleDifference(f.body.getAngle(), angle), velocity: f.body.getLinearVelocity().clone() }));
+    const sin = Math.sin(pose.heading), cos = Math.cos(pose.heading);
+    const rectangles: Footprint[] = [{ ...pose, width: D.body, depth: D.body }, ...fingers.map(f => ({
+      x: pose.x + cm(f.local.x * cos - f.local.y * sin), z: pose.z + cm(f.local.x * sin + f.local.y * cos),
+      heading: pose.heading + f.angle, width: D.fingerWidth, depth: D.gripperLength,
+    }))];
+    const config = this.demo.scene_config;
+    if (rectangles.some(rect => footprintCorners(rect).some(p => p.x < 0 || p.z < 0 || p.x > config.width || p.z > config.depth)
+      || config.walls.some(w => footprintsOverlap(rect, { ...w, width: w.width ?? D.cell, depth: w.depth ?? D.cell })))) return;
+    const velocity = this.robot.getLinearVelocity().clone();
+    this.robot.setTransform(Vec2(unit(pose.x), unit(pose.z)), pose.heading);
+    this.robot.setLinearVelocity(Vec2(0, 0)); this.robot.setAngularVelocity(0);
+    for (const f of fingers) {
+      f.body.setTransform(this.robot.getWorldPoint(f.local), pose.heading + f.angle);
+      // Preserve finger opening/closing motion while stopping chassis translation.
+      f.body.setLinearVelocity(Vec2(f.velocity.x - velocity.x, f.velocity.y - velocity.y)); f.body.setAngularVelocity(0);
+    }
   }
   private touching(body: Body, other: Body) {
     for (let edge = body.getContactList(); edge; edge = edge.next) {
@@ -143,6 +204,7 @@ export class ThirdPhysicsArena {
     const gap = Math.max(0, offsets[1] - offsets[0] - D.fingerWidth);
     let holding: string | null = null;
     if (this.target === 'closed') for (const [id, body] of this.cubes) {
+      if (this.deliveredShells.has(id)) continue;
       const local = this.robot.getLocalPoint(body.getPosition());
       if (Math.abs(cm(local.y) + THIRD_GRIP_CENTER) < D.gripperLength / 2
         && this.fingers.every(f => this.touching(f.body, body))) { holding = id; break; }

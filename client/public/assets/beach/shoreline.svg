@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs><linearGradient id="sea" x2=".8" y2="1"><stop stop-color="#edf8f3"/><stop offset="1" stop-color="#89cbd0"/></linearGradient><linearGradient id="sand" x2="1" y2="1"><stop stop-color="#fbf1d9"/><stop offset="1" stop-color="#e9cfa1"/></linearGradient><pattern id="grain" width="43" height="39" patternUnits="userSpaceOnUse"><circle cx="8" cy="12" r="1" fill="#b69864" opacity=".18"/><circle cx="32" cy="29" r="1.2" fill="#fffaf0" opacity=".5"/></pattern><symbol id="shell" viewBox="-40 -45 80 70"><path d="M-9 22C-70-3-27-58 0-35C27-58 70-3 9 22Z" fill="#edae96" stroke="#fff0db" stroke-width="3"/><path d="M0 20L-28-23M0 20L-13-35M0 20V-35M0 20L13-35M0 20L28-23" stroke="#f9d5bb" stroke-width="3" fill="none"/></symbol></defs>
+<path fill="url(#sea)" d="M0 0h1600v1000H0z"/>
+<path d="M-150 690C230 540 430 950 780 794S1300 360 1750 540V1100H-150Z" fill="#d0ece5"/>
+<path d="M-150 732C230 582 430 992 780 836S1300 402 1750 582V1100H-150Z" fill="#f6faf0"/>
+<path d="M-150 750C230 600 430 1010 780 854S1300 420 1750 600V1100H-150Z" fill="url(#sand)"/>
+<path d="M-150 750C230 600 430 1010 780 854S1300 420 1750 600V1100H-150Z" fill="url(#grain)"/>
+<g fill="none" stroke="#fff" opacity=".45" stroke-linecap="round"><path d="M40 638q130-25 280 63m360 64q100-3 178-65m295-168q124-42 274-25" stroke-width="3"/><path d="M5 599q150-18 280 55m1040-195q110-20 232-2" stroke-width="2"/></g>
+<use href="#shell" x="1225" y="780" width="105" height="95" transform="rotate(-18 1280 830)"/><use href="#shell" x="1390" y="669" width="65" height="58" transform="rotate(24 1420 700)"/>
+<g fill="#8dac9d" opacity=".7"><path d="M95 985q-40-67-20-95q30 45 20 95m0 0q8-98 36-111q2 72-36 111m7-23q38-30 66-13q-21 27-66 13"/></g>
+<g fill="none" stroke="#4f8f96" stroke-width="3" opacity=".35"><path d="M340 162q10-10 20 0q10-10 20 0m-76 27q7-7 14 0q7-7 14 0"/></g>
+</svg>

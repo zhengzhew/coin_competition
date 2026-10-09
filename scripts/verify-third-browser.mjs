@@ -5,6 +5,7 @@ import { createServer } from 'node:net';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join, sep, basename } from 'node:path';
+import { verifySimulationCamera } from './verify-simulation-camera.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
@@ -42,6 +43,7 @@ try {
     if (simulation === 'simulation3d') await page.locator('canvas[data-third-scene][data-ready=true]').waitFor();
     else await page.locator('.third-stage canvas[data-ready=true], .third-stage .robot-fallback').first().waitFor();
     await page.getByTestId('third-start').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.third-stage canvas').getAttribute('data-vehicle-model'), '000_saikao', 'both renderers use the supplied model');
     if (simulation === 'simulation3d') {
       assert.match(await page.locator('.third-physical-scale').innerText(), /120 × 120 cm/);
       assert.match(await page.locator('.third-map-coordinates').innerText(), /X 54.0 · Y 24.0 cm/);
@@ -90,7 +92,53 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
   await page.screenshot({ path: join(output, '01-home-mobile.png'), fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1040 });
-  await page.locator('.third-category-card').first().click();
+  assert.equal(await page.locator('.demo-card').count(), 6);
+  await page.getByLabel('主题', { exact: true }).selectOption('规则实验');
+  assert.equal(await page.locator('.demo-card').count(), 1);
+  await page.getByLabel('主题', { exact: true }).selectOption('');
+  await page.getByLabel('组件', { exact: true }).selectOption('city-board');
+  assert.equal(await page.locator('.demo-card').count(), 2);
+  await page.getByLabel('搜索', { exact: true }).fill('没有这个 DEMO');
+  await page.getByRole('heading', { name: '没有匹配的 DEMO' }).waitFor();
+  await page.getByRole('button', { name: '清空筛选' }).click();
+  await page.locator('.demo-card[data-demo-id="completion-efficiency"]').click();
+  await page.reload();
+  const total = () => page.getByTestId('demo-score-total').innerText();
+  assert.equal(await total(), '100');
+  await page.getByLabel('实际行动数', { exact: true }).fill('9'); assert.equal(await total(), '60');
+  await page.getByLabel('任务已完成', { exact: true }).uncheck(); assert.equal(await total(), '0');
+  await page.getByLabel('任务已完成', { exact: true }).check();
+  await page.getByLabel('实际行动数', { exact: true }).fill('8');
+  await page.getByLabel('代码已核验（模拟）', { exact: true }).uncheck(); assert.equal(await total(), '80');
+  await page.getByLabel('编程模式', { exact: true }).uncheck(); assert.equal(await total(), '80');
+  await page.getByLabel('编程模式', { exact: true }).check();
+  await page.getByLabel('代码已核验（模拟）', { exact: true }).check();
+  await page.getByText('调整 DEMO 分值配置', { exact: true }).click();
+  await page.getByLabel('完成分', { exact: true }).fill('30'); assert.equal(await total(), '70');
+  const downloaded = page.waitForEvent('download');
+  await page.getByRole('button', { name: '下载当前配置', exact: true }).click();
+  const stream = await (await downloaded).createReadStream(), chunks = [];
+  for await (const chunk of stream) chunks.push(chunk);
+  const preset = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  assert.equal(preset.configuration.completion, 30); assert.equal(preset.components[0].version, '1.0.0');
+  await page.getByRole('button', { name: '恢复赛事预设' }).click(); assert.equal(await total(), '100');
+  await page.screenshot({ path: join(output, '06-score-playground.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
+  await page.screenshot({ path: join(output, '06-score-mobile.png'), fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1040 });
+  for (const tab of ['规则', '技术方案', '版本与复用']) { await page.getByRole('link', { name: tab, exact: true }).click(); await page.reload(); assert.equal(await page.getByRole('link', { name: tab, exact: true }).getAttribute('aria-current'), 'page'); }
+  assert.match(await page.locator('.demo-panel').innerText(), /未来城市/);
+  await page.locator('.demo-primary-nav a[href="/demo/components/"]').click();
+  assert.equal(await page.locator('.demo-component-grid article').count(), 4);
+  await page.screenshot({ path: join(output, '07-components.png'), fullPage: true });
+  await page.goto(origin + '/demo/showcase/missing/experience/');
+  await page.getByRole('heading', { name: '这个 DEMO 暂时无法打开' }).waitFor();
+  await page.goto(origin + '/demo/showcase/collect-grid-sample/experience/');
+  await page.getByRole('link', { name: /自动 · 程序控制/ }).click(); await ready('grid');
+  await page.locator('a.brand[href="/demo/"]').click();
+  checks.push('generic catalog/filters/components/detail tabs/version binding/config download/scoring 0-60-80-100/mobile/robot adapter');
+  await page.getByRole('link', { name: '收集系列', exact: true }).click();
   assert.equal(await page.locator('.third-sim-options a').count(), 4);
   await page.locator('.third-sim-options a').first().click();
   assert.equal(await page.getByRole('button', { name: 'DEMO 准备中' }).isDisabled(), true);
@@ -149,7 +197,8 @@ try {
   assert.equal(await stage().getAttribute('data-phase'), 'stopped');
   const blurred = await stage().getAttribute('data-z'); await wait(180); assert.equal(await stage().getAttribute('data-z'), blurred);
   await page.getByRole('button', { name: '重置', exact: true }).click();
-  for (const name of ['俯视', '跟随', '自由视角']) { await page.getByRole('button', { name, exact: true }).click(); assert.equal(await page.getByRole('button', { name, exact: true }).getAttribute('aria-pressed'), 'true'); }
+  await verifySimulationCamera(page, join(output, '08-follow-camera.png'));
+  checks.push('3D camera right/Shift/tool pan/top pan/follow lock/orbit/zoom/moving robot/resize/reset');
   await page.getByRole('button', { name: '返回分类', exact: true }).click();
   await page.locator('a[href="/demo/place/auto/simulation3d/"]').click();
   await page.getByRole('button', { name: /进入体验/ }).click(); await ready('simulation3d');
@@ -192,6 +241,13 @@ try {
   assert.equal(await stage().getAttribute('data-phase'), 'stopped'); assert.equal(await page.getByTestId('third-start').isDisabled(), true);
   await page.getByRole('button', { name: '重新加载场景' }).click(); await ready('simulation3d');
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForFunction(() => {
+    const area = document.querySelector('canvas[data-third-scene]')?.getBoundingClientRect();
+    return area && area.width >= 280 && area.height >= 180;
+  });
+  const mobileScene = await page.locator('canvas[data-third-scene]').boundingBox();
+  assert.ok(mobileScene.width >= 280 && mobileScene.height >= 180, 'mobile scene has usable space, not just absence of overflow');
+  await page.reload(); await ready('simulation3d');
   await page.screenshot({ path: join(output, '03-mobile.png'), fullPage: true });
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
   checks.push('context loss/retry/mobile layout');
@@ -200,6 +256,14 @@ try {
   }
   assert.deepEqual(thirdApiRequests, []); assert.deepEqual(remoteRequests, []);
   checks.push('invalid routes/no remote dependency/no old score API requests');
+  for (const simulation of ['grid', 'simulation3d']) {
+    await page.setViewportSize({ width: 1440, height: 1040 });
+    await page.goto(origin + path('place', 'manual', simulation)); await ready(simulation);
+    await page.getByRole('button', { name: simulation === 'grid' ? '跟随' : '跟随小车', exact: true }).click();
+    for (let n = 0; n < 3; n++) await page.getByRole('button', { name: '放大地图', exact: true }).click();
+    await wait(180);
+    await page.locator('.third-stage').screenshot({ path: join(output, `10-saikao-${simulation}.png`) });
+  }
   // Exercise original pages against the isolated production server/database.
   await page.setViewportSize({ width: 1440, height: 1040 });
   for (const route of ['/', '/future/']) {
@@ -207,11 +271,11 @@ try {
     await page.locator('#player-name').fill('DEMO 回归测试'); await page.getByRole('button', { name: '确认', exact: true }).click();
     await page.locator('[data-track-id="onboarding.mode.keyboard"]').click();
     await page.locator('[data-track-id="attempt.start"]').click();
-    await page.getByRole('button', { name: '停止本轮', exact: true }).waitFor();
+    await page.locator('[data-track-id="attempt.stop"]:enabled').waitFor();
     const command = page.waitForResponse(r => r.url().endsWith('/commands') && r.request().method() === 'POST');
     await page.keyboard.press(route === '/' ? 'ArrowRight' : 'd'); assert.equal((await command).status(), 200);
     await page.locator('[data-track-id="header.mode.switch"]').click();
-    await page.waitForFunction(() => document.querySelector('.current-mode')?.textContent.includes('代码操控'));
+    await page.waitForFunction(() => document.querySelector('.current-mode')?.textContent.includes('编程控制'));
     checks.push(`original ${route} identity/keyboard/API/mode switch`);
   }
   assert.deepEqual(errors, []);

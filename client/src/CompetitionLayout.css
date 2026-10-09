@@ -1,0 +1,199 @@
+/* Gameplay adaptations for the coin and city modules within CompetitionTemplate. */
+body:has(.compact-competition) { display: block; overflow: auto; }
+#root:has(> .compact-competition) { display: block; height: auto; }
+.app.compact-competition {
+  --competition-accent: #866326;
+  --competition-soft: #f8f0d9;
+  --competition-border: #e2d4ac;
+  width: 100%; height: 100dvh; min-height: 640px; max-height: none; aspect-ratio: auto;
+}
+.app.compact-competition.future-city { --competition-accent: #278b9d; --competition-soft: #eaf5f1; --competition-border: #c8ded8; }
+.app.compact-competition .app-header { height: 68px; flex-basis: 68px; padding: 0 20px; gap: 16px; grid-template-columns: auto minmax(0, 1fr) auto; border-bottom-width: 1px; }
+.app.compact-competition .brand b { font: 750 21px/1.2 system-ui, sans-serif; }
+.app.compact-competition .brand span { font-size: 10px; }
+.app.compact-competition .header-mode-controls { justify-content: center; min-width: 0; }
+.app.compact-competition .current-mode { padding: 10px 14px; color: #314d39; background: #f3ce74; border-color: #f3ce74; border-radius: 9px; font-size: 13px; white-space: nowrap; }
+.app.compact-competition.future-city .current-mode { color: #fff; background: var(--competition-accent); border-color: var(--competition-accent); }
+.app.compact-competition .mode-toggle { padding: 9px 10px; border-color: var(--competition-border); background: #fffdf5; color: var(--competition-accent); white-space: nowrap; font-size: 12px; }
+.app.compact-competition .header-actions { gap: 10px; }
+.app.compact-competition .player-info b { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.competition-attempt-info { display: flex; align-items: center; gap: 14px; padding: 7px 12px; border: 1px solid var(--competition-border); border-radius: 9px; background: #fffef4; color: var(--ink); }
+.competition-attempt-info > div { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.competition-attempt-info span { color: var(--muted); font-size: 11px; }
+.competition-attempt-info b { font: 700 17px/1.4 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.competition-attempt-info small { color: var(--muted); font-size: 10px; font-weight: 400; }
+.competition-timer { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--competition-border); border-radius: 10px; background: var(--competition-soft); }
+.competition-timer > span { color: var(--muted); font-size: 11px; white-space: nowrap; }
+.competition-timer output { min-width: 68px; color: var(--competition-accent); font: 700 23px/1.2 system-ui, sans-serif; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.competition-timer small { font-size: 11px; font-weight: 400; }
+.app.compact-competition .level-nav { width: clamp(150px, 12vw, 196px); flex-basis: clamp(150px, 12vw, 196px); padding: 14px 12px; background: #f3ecd8; color: #526344; border-color: var(--competition-border); }
+.app.compact-competition.future-city .level-nav { background: #edf3e4f2; }
+.app.compact-competition .nav-heading { border-color: var(--competition-border); }
+.app.compact-competition .nav-heading span { color: var(--ink); font-size: 14px; }
+.app.compact-competition .nav-heading b { color: var(--competition-accent); font-size: 12px; }
+.app.compact-competition .stage-group { margin-top: 12px; }
+.app.compact-competition .stage-label { padding: 0 2px 5px; gap: 4px; flex-wrap: wrap; }
+.app.compact-competition .stage-label span { color: var(--competition-accent); font-size: 12px; letter-spacing: 0; }
+.app.compact-competition .stage-label small { color: var(--muted); font-size: 10px; }
+.app.compact-competition .stage-levels { gap: 5px; }
+.app.compact-competition .level-btn { min-height: 36px; padding: 7px; background: #fffdf6; color: var(--ink); border-color: var(--competition-border); border-radius: 7px; }
+.app.compact-competition .level-btn span { font: 700 13px/1.4 system-ui, sans-serif; }
+.app.compact-competition .level-btn small { color: var(--muted); font-size: 10px; }
+.app.compact-competition .level-btn.active { color: #fff; background: var(--competition-accent); border-color: var(--competition-accent); box-shadow: none; }
+.app.compact-competition .level-btn.active small { color: #fff; }
+.competition-instructions { margin-top: 20px; padding: 14px 4px 0; border-top: 1px solid var(--competition-border); color: var(--muted); font: 13px/1.7 system-ui, sans-serif; }
+.competition-instructions summary { color: var(--ink); font-weight: 700; cursor: pointer; }
+.competition-instructions ul { display: grid; gap: 10px; margin: 12px 0; padding-left: 15px; }
+.competition-instructions li::marker { color: var(--competition-accent); }
+.app.compact-competition .competition-instructions .legend { display: flex; justify-content: flex-start; gap: 8px; }
+.app.compact-competition .competition-instructions .legend span { font-size: 11px; }
+.app.compact-competition .game-area { padding: 12px; }
+.app.compact-competition.competition-template .workspace-grid { max-width: none; grid-template-columns: minmax(0, 1fr) clamp(320px, 27vw, 430px); grid-template-rows: minmax(0, 1fr); gap: 12px; }
+.app.compact-competition.competition-template .workspace-grid > .board-panel { grid-column: 1; grid-row: 1; padding: 12px; border-radius: 14px; }
+.app.compact-competition.competition-template .workspace-grid > .control-column { grid-column: 2; grid-row: 1; padding: 0; gap: 10px; }
+.competition-mission-heading { display: flex; flex-shrink: 0; flex-wrap: wrap; align-items: center; width: 100%; gap: 8px 12px; padding: 10px 12px; border: 1px solid var(--competition-border); border-left: 4px solid var(--competition-accent); border-radius: 9px; background: var(--competition-soft); }
+.competition-mission-number { flex-shrink: 0; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; color: #fff; background: var(--competition-accent); font: 700 16px/1 system-ui, sans-serif; }
+.competition-mission-heading h1 { margin: 0; font: 700 20px/1.4 system-ui, sans-serif; }
+.competition-mission-heading p { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0; color: var(--ink); font: 600 16px/1.5 system-ui, sans-serif; }
+.competition-mission-heading p > span { flex-shrink: 0; padding: 2px 6px; border-radius: 4px; color: #786124; background: #f2e7bc; font-size: 11px; font-weight: 700; }
+.competition-mission-heading strong { font-weight: 650; }
+.competition-order { flex-basis: 100%; display: flex; align-items: baseline; gap: 10px; border-top: 1px solid var(--competition-border); padding-top: 6px; font-size: 14px; color: var(--competition-accent); }
+.competition-order small { color: var(--muted); font-size: 11px; }
+.app.compact-competition .city3d-toolbar button { font-size: 12px; padding: 5px 9px; }
+.app.compact-competition .city3d-help { font-size: 11px; }
+.app.compact-competition .status-bar { flex-shrink: 0; display: flex; flex-wrap: wrap; width: 100%; gap: 8px 22px; padding: 8px 4px 0; align-items: center; }
+.app.compact-competition .status-bar > div:not(.status-pill) { display: flex; flex-direction: row; align-items: baseline; gap: 8px; }
+.app.compact-competition .status-bar small { font-size: 12px; }
+.app.compact-competition .status-bar b { font: 700 20px/1.2 system-ui, sans-serif; }
+.app.compact-competition .status-bar em { font-size: 13px; }
+.app.compact-competition .status-pill { margin-left: auto; font-size: 12px; padding: 4px 10px; }
+.app.compact-competition .python-editor, .app.compact-competition .python-editor.robot-editor { display: flex; flex-direction: column; flex: 1 1 0; min-height: 350px; padding: 16px; border-radius: 14px; }
+.app.compact-competition .editor-header { flex-shrink: 0; margin: 0 0 14px; align-items: center; gap: 10px; }
+.app.compact-competition .editor-header h3 { margin: 0; font: 700 18px/1.4 system-ui, sans-serif; }
+.app.compact-competition .editor-hint { flex: 1; text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.app.compact-competition .robot-restart { flex-shrink: 0; padding: 5px 8px; border: 1px solid var(--competition-border); border-radius: 6px; background: var(--competition-soft); color: var(--competition-accent); font-size: 12px; }
+.app.compact-competition .command-palette, .app.compact-competition .robot-palette { flex-shrink: 0; display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; padding: 0; border: 0; background: none; }
+.app.compact-competition .command-palette button, .app.compact-competition .robot-palette button { flex: 1 0 auto; justify-content: center; min-height: 36px; padding: 7px 12px; border: 1px solid var(--competition-border); border-radius: 7px; background: var(--competition-soft); color: var(--competition-accent); font: 600 13px/1.4 system-ui, sans-serif; }
+.app.compact-competition .editor-rows, .app.compact-competition .robot-code { flex: 1 1 0; min-height: 100px; max-height: none; margin: 0; padding: 12px; border: 1px solid var(--competition-border); border-radius: 9px; color: var(--ink); background: #fafbf6; overflow: auto; scrollbar-color: #b5c4ad #fafbf6; }
+.app.compact-competition .editor-row { min-height: 42px; gap: 3px; font: 16px/1.8 Consolas, 'Cascadia Code', monospace; }
+.app.compact-competition .code-fixed { color: var(--ink); }
+.app.compact-competition .command-name { color: var(--competition-accent); }
+.app.compact-competition .row-number { flex-shrink: 0; width: 18px; margin-right: 5px; font-size: 12px; color: var(--muted); }
+.app.compact-competition .code-input, .app.compact-competition .robot-code input { min-width: 0; width: 42px; padding: 4px; border: 1px solid var(--competition-border); border-radius: 5px; color: var(--ink); background: #fff; font: 16px/1.5 Consolas, 'Cascadia Code', monospace; }
+.app.compact-competition .code-input.invalid { border-color: #d37e6c; background: #fff0ea; }
+.app.compact-competition .row-btn { flex-shrink: 0; width: 25px; height: 25px; font-size: 18px; color: #996047; background: #f7ece7; }
+.app.compact-competition .robot-code-row { font: 16px/1.8 Consolas, 'Cascadia Code', monospace; }
+.app.compact-competition .robot-loop > code { font: 16px/1.8 Consolas, 'Cascadia Code', monospace; overflow-wrap: anywhere; }
+.app.compact-competition .robot-loop { margin: 0 0 10px; padding: 10px; border-color: #d6e1de; background: #f2f7f4; }
+.app.compact-competition .robot-loop.selected { border-color: var(--competition-accent); }
+.app.compact-competition .loop-title { margin-bottom: 6px; font-size: 13px; }
+.app.compact-competition .loop-title button { color: var(--competition-accent); border-color: var(--competition-border); background: #fff; }
+.app.compact-competition .loop-body { padding-left: 8px; border-color: var(--competition-border); }
+.app.compact-competition .loop-body small, .app.compact-competition .editor-empty { color: var(--muted); font-size: 13px; line-height: 1.7; }
+.app.compact-competition .code-line-metrics { padding: 6px 8px; margin-bottom: 10px; background: var(--competition-soft); color: var(--muted); font-size: 12px; }
+.app.compact-competition .code-line-metrics b { color: var(--competition-accent); font-size: 14px; }
+.app.compact-competition .code-line-result { font-size: 12px; }
+.app.compact-competition .run-btn { flex-shrink: 0; min-height: 44px; margin-top: 14px; padding: 10px 16px; font-size: 15px; }
+.app.compact-competition .editor-error { flex-shrink: 0; max-height: 90px; overflow: auto; font-size: 13px; }
+.app.compact-competition .row-limit { flex-shrink: 0; font-size: 12px; }
+.app.compact-competition .keyboard-card, .app.compact-competition .score-panel { flex-shrink: 0; padding: 16px; }
+.app.compact-competition .mini-heading span { font-size: 15px; }
+.app.compact-competition .mini-heading small { font-size: 12px; }
+.app.compact-competition .dpad { width: 208px; height: 180px; margin: 18px auto; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(3, 56px); gap: 6px; transform: none; }
+.app.compact-competition .dpad-btn { font-size: 24px; }
+.app.compact-competition .primary-action, .app.compact-competition .secondary-action { min-height: 44px; font-size: 15px; padding: 10px; }
+.app.compact-competition .score-panel p, .app.compact-competition .score-parts span, .app.compact-competition .message { font-size: 12px; line-height: 1.6; }
+.app.compact-competition .score-total span, .app.compact-competition .score-total em { font-size: 13px; }
+.app.compact-competition .score-total b { font-size: 30px; }
+.app.compact-competition .score-panel button { font-size: 13px; }
+.app.compact-competition .message { flex-shrink: 0; }
+.app.compact-competition footer { flex-basis: 26px; height: 26px; padding: 5px 18px; font-size: 11px; }
+.app.compact-competition .experience-grid { grid-template-columns: 1fr; gap: 12px; }
+.app.compact-competition .experience-grid button, .app.compact-competition .experience-grid button:last-child { position: relative; padding: 18px 76px 18px 18px; border: 1px solid var(--competition-border); background: #fffefa; color: var(--ink); text-align: left; font-size: 16px; box-shadow: none; }
+.app.compact-competition .experience-grid button:hover { background: #fffefa; border-color: var(--competition-border); box-shadow: none; }
+.app.compact-competition .experience-grid button small { color: var(--muted); font-size: 12px; }
+.competition-mode-enter { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: var(--competition-accent); font-size: 12px; }
+.app.compact-competition .experience-grid button:hover .competition-mode-enter { text-decoration: underline; text-underline-offset: 3px; }
+.app.compact-competition.competition-template .level-nav { display: flex; flex-direction: column; overflow: auto; }
+.app.compact-competition.competition-template .level-groups { flex: 1 1 auto; min-height: 140px; overflow: auto; }
+.app.compact-competition.competition-template .stage-levels { grid-template-columns: 1fr; }
+.app.compact-competition.competition-template .level-btn { min-height: 50px; gap: 8px; }
+.app.compact-competition.competition-template .level-btn strong { flex: 1; text-align: left; font: 650 12px/1.4 system-ui,sans-serif; }
+.app.compact-competition.competition-template .competition-instructions { flex-shrink: 0; margin-top: 16px; padding-top: 12px; }
+.app.compact-competition.competition-template .competition-attempt-info { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 8px; }
+.app.compact-competition.competition-template .competition-attempt-info > div { flex-direction: column; gap: 3px; }
+.app.compact-competition.competition-template .command-palette, .app.compact-competition.competition-template .robot-palette { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.app.compact-competition.competition-template .command-palette { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.app.compact-competition.competition-template .command-palette button, .app.compact-competition.competition-template .robot-palette button { display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 56px; min-width: 0; padding: 7px 6px; }
+.app.compact-competition.competition-template .command-palette code, .app.compact-competition.competition-template .robot-palette code { color: var(--muted); font: 12px/1.4 Consolas, monospace; }
+.app.compact-competition.competition-template .module-code-hint { margin: 0 0 10px; color: var(--muted); font-size: 12px; }
+.app.compact-competition.competition-template .code-line-metrics { flex-shrink: 0; margin-bottom: 10px; padding: 0; background: none; }
+.app.compact-competition.competition-template .code-line-metrics b { font-size: 12px; }
+.app.compact-competition.competition-template .robot-loop { padding: 8px; }
+.app.compact-competition.competition-template .robot-code-row { min-height: 38px; gap: 2px; font-size: 15px; }
+.app.compact-competition.competition-template .robot-code input { width: 36px; }
+.app.compact-competition.competition-template .robot-code-row .row-number { width: 15px; margin-right: 4px; font-size: 11px; }
+.app.compact-competition.competition-template .keyboard-card { display: flex; flex: 1; flex-direction: column; }
+.app.compact-competition.competition-template .keyboard-card .module-program-actions { margin-top: auto; }
+.app.compact-competition.competition-template .score-panel { background: #fffdf4; border-color: var(--module-border); }
+.app.compact-competition.competition-template .score-total b { color: var(--module-accent); }
+.app.compact-competition.competition-template .score-panel button { border-color: var(--module-border); color: var(--module-accent); }
+.app.compact-competition.competition-template .score-parts span { background: var(--module-soft); }
+@media (max-width: 1200px) {
+  .app.compact-competition .app-header { height: auto; min-height: 68px; flex-basis: auto; gap: 8px 12px; padding: 10px 16px; }
+  .app.compact-competition .brand b { font-size: 18px; }
+  .app.compact-competition .brand span { font-size: 9px; }
+  .app.compact-competition .header-actions { gap: 6px; }
+  .competition-attempt-info { gap: 8px; padding: 6px 8px; }
+  .competition-attempt-info > div { flex-direction: column; gap: 0; }
+  .competition-timer { gap: 6px; padding: 7px 9px; }
+  .competition-timer output { min-width: 54px; font-size: 21px; }
+  .app.compact-competition .status-bar { gap: 6px 12px; }
+}
+@media (max-width: 999px) {
+  .app.compact-competition { height: auto; min-height: 100dvh; }
+  .app.compact-competition .app-body { overflow: visible; }
+  .app.compact-competition .game-area { overflow: visible; }
+  .app.compact-competition.competition-template .workspace-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
+  .app.compact-competition.competition-template .workspace-grid > .board-panel { grid-column: 1; grid-row: 1; min-height: 0; }
+  .app.compact-competition.competition-template .workspace-grid > .control-column { grid-column: 1; grid-row: 2; overflow: visible; }
+  .app.compact-competition .board-viewport { flex: 0 0 auto; height: min(85vw, 480px); min-height: 300px; }
+  .app.compact-competition .python-editor, .app.compact-competition .python-editor.robot-editor { flex: 0 0 auto; min-height: 430px; }
+  .app.compact-competition .editor-rows, .app.compact-competition .robot-code { flex: 0 0 auto; min-height: 240px; max-height: 420px; }
+  .app.compact-competition .app-header { grid-template-columns: auto 1fr; }
+  .app.compact-competition .header-mode-controls { justify-content: flex-end; }
+  .app.compact-competition .header-actions { grid-column: 1 / -1; justify-content: flex-end; }
+  .competition-attempt-info > div { flex-direction: row; gap: 6px; }
+  .competition-mission-heading p { flex-basis: 100%; }
+}
+@media (max-width: 600px) {
+  .app.compact-competition.competition-template .level-nav { flex-direction: row; align-content: flex-start; }
+  .app.compact-competition.competition-template .level-groups { min-height: 0; max-height: 200px; grid-auto-columns: 160px; }
+  .app.compact-competition .app-body { flex-direction: column; }
+  .app.compact-competition .level-nav { width: 100%; flex: 0 0 auto; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid var(--competition-border); }
+  .app.compact-competition .nav-heading { flex-basis: 100%; padding-bottom: 6px; }
+  .app.compact-competition .level-groups { display: grid; grid-auto-flow: column; grid-auto-columns: 130px; align-items: start; gap: 10px; width: 100%; min-width: 0; overflow-x: auto; padding-bottom: 5px; scrollbar-width: thin; }
+  .app.compact-competition .stage-group { margin: 0; }
+  .app.compact-competition .stage-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app.compact-competition .level-btn small { display: none; }
+  .competition-instructions { flex-basis: 100%; margin: 0; padding-top: 10px; font-size: 12px; }
+  .competition-instructions ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 22px; margin: 8px 0; }
+  .app.compact-competition .app-header { padding: 10px; gap: 10px; }
+  .app.compact-competition .brand b { font-size: 16px; }
+  .app.compact-competition .brand-mark { width: 27px; height: 27px; }
+  .app.compact-competition .header-mode-controls { flex-direction: column; align-items: flex-end; gap: 5px; }
+  .app.compact-competition .current-mode, .app.compact-competition .mode-toggle { font-size: 11px; padding: 7px 9px; }
+  .app.compact-competition .header-actions { flex-wrap: wrap; }
+  .competition-attempt-info { flex: 1; justify-content: space-between; }
+  .competition-attempt-info > div { flex-direction: column; gap: 0; }
+  .app.compact-competition .player-info b { max-width: 60px; }
+  .competition-timer { gap: 5px; }
+  .competition-timer output { min-width: 42px; font-size: 19px; }
+  .app.compact-competition .game-area { padding: 10px; }
+  .competition-mission-heading h1 { font-size: 18px; }
+  .app.compact-competition .status-bar small { font-size: 10px; }
+  .app.compact-competition .status-bar b { font-size: 17px; }
+  .app.compact-competition .status-pill { font-size: 10px; }
+  .app.compact-competition .city3d-toolbar button { font-size: 11px; padding: 4px 6px; }
+  .app.compact-competition footer { font-size: 10px; }
+}

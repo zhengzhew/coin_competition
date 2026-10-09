@@ -5,6 +5,7 @@ import type { GameState, LevelDef } from '@coin-path/shared';
 import {robotSceneBounds} from './robot-scene-bounds';
 import {robotSceneTheme,cargoColor} from './robot-scene-theme';
 import {buildRobotScenery} from './RobotScenery';
+import type { SaikaoRobot } from './SaikaoRobot';
 
 export type CameraView = 'orbit' | 'top' | 'follow';
 
@@ -50,9 +51,10 @@ export class CityScene {
   private diagnosticFrame = 0;
   private fitPoints: THREE.Vector3[] = [];
   private readonly onView: (view: CameraView) => void;
+  private readonly competitionRobot?: SaikaoRobot;
 
   constructor(private readonly host: HTMLElement, private readonly level: LevelDef, state: GameState,
-    onView: (view: CameraView) => void, onUnavailable: () => void) {
+    onView: (view: CameraView) => void, onUnavailable: () => void, model?: SaikaoRobot) {
     this.state=state; this.onView=onView;
     this.renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'low-power'});
     this.renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));
@@ -90,7 +92,11 @@ export class CityScene {
     sunlight.shadow.mapSize.set(1024,1024); sunlight.shadow.normalBias=.04; sunlight.shadow.bias=-.0001;
     this.scene.add(sunlight);
     if(level.robot)this.buildRobotMap();else this.buildMap();
-    this.buildCar();
+    if (level.robot && model) {
+      this.competitionRobot = model; this.keep(model);
+      model.root.scale.setScalar(.04); model.root.position.y = -.46;
+      this.car.add(model.root); canvas.dataset.vehicleModel = '000_saikao';
+    } else this.buildCar();
     if(level.robot)this.buildClaw();
     this.scene.add(this.car,this.route);
     this.car.position.copy(this.world(state.x,state.y));
@@ -278,14 +284,17 @@ export class CityScene {
     sprite.scale.setScalar(kind==='checkpoint'?.78:kind==='dock'?.84:.63);return sprite;
   }
   private buildClaw() {
-    this.claw.position.set(0,-.02,-.48);
-    this.box(this.claw,[.12,.12,.38],[0,0,-.12],'#738ca4');
-    for(const side of [-1,1]) {
-      const finger=this.box(this.claw,[.06,.2,.28],[side*.2,-.02,-.36],'#7b6ca6');finger.name=String(side);
+    if (!this.competitionRobot) {
+      this.claw.position.set(0,-.02,-.48);
+      this.box(this.claw,[.12,.12,.38],[0,0,-.12],'#738ca4');
+      for(const side of [-1,1]) {
+        const finger=this.box(this.claw,[.06,.2,.28],[side*.2,-.02,-.36],'#7b6ca6');finger.name=String(side);
+      }
     }
     this.box(this.carried,[.34,.28,.34],[0,0,0],'#f2bd68');
     const band=this.box(this.carried,[.36,.055,.36],[0,.16,0],'#df812c');band.name='band';
     this.carried.position.set(0,-.02,-.86);this.carried.visible=false;
+    if (this.competitionRobot) { this.carried.scale.setScalar(.24 / .34); this.carried.position.set(0, -.34, -.5); }
     this.car.add(this.claw,this.carried);
   }
   private label(text:string,color='#44747b',bg='transparent',size=.3) {
@@ -377,7 +386,10 @@ export class CityScene {
         this.renderer.domElement.dataset.factory=JSON.stringify(live);
       }
       this.heading={up:0,right:-Math.PI/2,down:Math.PI,left:Math.PI/2}[state.robot.facing];
-      for(const side of [-1,1]) this.claw.getObjectByName(String(side))!.position.x=side*(state.robot.closed?.11:.23);
+      if (this.competitionRobot) {
+        const offset = state.robot.closed ? state.robot.holding ? 3.6 : .6 : 8.9;
+        this.competitionRobot.setFingers([-offset, offset]);
+      } else for(const side of [-1,1]) this.claw.getObjectByName(String(side))!.position.x=side*(state.robot.closed?.11:.23);
       this.carried.visible=!!state.robot.holding;
       if(this.carried.userData.holding!==state.robot.holding) {
         const previous=this.carried.getObjectByName('badge');if(previous)this.carried.remove(previous);
@@ -505,7 +517,7 @@ export class CityScene {
     }
     this.segmentTime=Math.min(1,this.segmentTime+delta/.085);
     this.car.position.lerpVectors(this.from,this.target,this.segmentTime);
-    this.car.position.y+=this.reducedMotion?0:Math.sin(this.elapsed*3)*.025;
+    this.car.position.y+=this.reducedMotion||this.competitionRobot?0:Math.sin(this.elapsed*3)*.025;
     const angle=Math.atan2(Math.sin(this.heading-this.car.rotation.y),Math.cos(this.heading-this.car.rotation.y));
     this.car.rotation.y+=angle*(this.reducedMotion?1:Math.min(1,delta*18));
     for(const [id,object] of this.energy) {

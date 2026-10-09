@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { THIRD_DIMENSIONS as D, THIRD_GRIP_CENTER, thirdMapPosition, type ThirdDemo, type ThirdSnapshot } from '@coin-path/shared';
+import { THIRD_DIMENSIONS as D, thirdMapPosition, type ThirdDemo, type ThirdSnapshot } from '@coin-path/shared';
+import { createSaikaoRobot } from '../../components/SaikaoRobot';
 import { buildFarmArena } from './farm-arena';
+import { buildBeachArena, buildShell } from '../../beach/beach-arena';
 
 type View = 'orbit' | 'top' | 'follow';
 export default function SimulationScene({ demo, state, onReady }: {
@@ -12,8 +14,10 @@ export default function SimulationScene({ demo, state, onReady }: {
   const latest = useRef(state); latest.current = state;
   const view = useRef<View>('orbit');
   const changeView = useRef<(view: View) => void>(() => {});
+  const changePan = useRef<(enabled: boolean) => void>(() => {});
   const zoom = useRef<(factor: number) => void>(() => {});
   const [selectedView, setSelectedView] = useState<View>('orbit');
+  const [panMode, setPanMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [generation, setGeneration] = useState(0);
@@ -39,26 +43,56 @@ export default function SimulationScene({ demo, state, onReady }: {
     const keep = <T extends { dispose(): void }>(resource: T): T => { resources.add(resource); return resource; };
     const lost = (event: Event) => { event.preventDefault(); setError('三维画面暂时不可用，请重试加载。'); onReady(false); renderer?.setAnimationLoop(null); };
     onReady(false); setError(''); setLoading(true);
-    try {
+    void (async () => { try {
+      const model = await createSaikaoRobot();
+      if (disposed) { model.dispose(); return; }
+      keep(model);
       const config = demo.scene_config;
+      const beach = demo.scene_task === 'seashell-edge';
       renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
       const canvas = renderer.domElement;
-      canvas.setAttribute('aria-label', '本地 3D 模拟场景'); canvas.setAttribute('role', 'img');
+      canvas.setAttribute('aria-label', '本地 3D 模拟场景，可拖动旋转、右键平移、滚轮缩放'); canvas.setAttribute('role', 'img');
       canvas.dataset.thirdScene = 'true';
+      if (beach) canvas.dataset.beachScene = 'true';
       canvas.addEventListener('webglcontextlost', lost);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
       renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1;
       element.append(canvas);
-      const scene = new THREE.Scene(); scene.background = new THREE.Color('#ced6d4');
+      const scene = new THREE.Scene(); scene.background = new THREE.Color(beach ? '#afd8dd' : '#ced6d4');
       const camera = new THREE.PerspectiveCamera(40, 1, 1, 800);
       controls = new OrbitControls(camera, canvas); controls.enableDamping = true;
       controls.maxPolarAngle = Math.PI * .47; controls.minDistance = 40; controls.maxDistance = 380;
-      controls.enablePan = false;
+      // Pan along the field, keeping the focus on its horizontal plane.
+      controls.screenSpacePanning = false;
       const center = new THREE.Vector3(config.width / 2, 0, config.depth / 2);
+      const clearInertia = () => {
+        const damping = controls!.enableDamping;
+        controls!.enableDamping = false; controls!.update(); controls!.enableDamping = damping;
+      };
+      changePan.current = enabled => {
+        const following = view.current === 'follow';
+        const panning = !following && (enabled || view.current === 'top');
+        setPanMode(panning);
+        controls!.enablePan = !following;
+        controls!.enableRotate = view.current !== 'top';
+        controls!.mouseButtons.LEFT = panning ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE;
+        controls!.touches.ONE = panning ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE;
+        controls!.touches.TWO = following ? THREE.TOUCH.DOLLY_ROTATE : THREE.TOUCH.DOLLY_PAN;
+        canvas.style.cursor = panning ? 'move' : 'grab';
+      };
       changeView.current = next => {
+        // Flush residual pan/rotation before locking a new focus.
+        clearInertia();
         view.current = next; setSelectedView(next);
+        changePan.current(false);
+        if (next === 'follow') {
+          controls!.target.set(latest.current.x, 1, latest.current.z);
+          camera.position.copy(controls!.target).add(new THREE.Vector3(50, 74, 70));
+          controls!.update();
+          return;
+        }
         controls!.target.copy(center);
         const direction = (next === 'top' ? new THREE.Vector3(0, 1, .001) : new THREE.Vector3(.03, .67, .74)).normalize();
         const right = new THREE.Vector3().crossVectors(camera.up, direction).normalize();
@@ -72,7 +106,7 @@ export default function SimulationScene({ demo, state, onReady }: {
             Math.abs(offset.dot(up)) / tangent, Math.abs(offset.dot(right)) / (tangent * camera.aspect)));
         }
         camera.position.copy(center).addScaledVector(direction, distance);
-        controls!.enableRotate = next === 'orbit'; controls!.update();
+        controls!.update();
       };
       changeView.current('orbit');
       zoom.current = factor => {
@@ -101,8 +135,9 @@ export default function SimulationScene({ demo, state, onReady }: {
         const sprite = new THREE.Sprite(keep(new THREE.SpriteMaterial({ map: texture, depthWrite: false })));
         sprite.position.set(...position); sprite.scale.set(5, 5, 1); parent.add(sprite);
       }
-      box(scene, [config.width + 2, 2.2, config.depth + 2], [center.x, -.8, center.z], '#becbb5');
-      buildFarmArena(scene, config, keep, material);
+      box(scene, [config.width + 2, 2.2, config.depth + 2], [center.x, -.8, center.z], beach ? '#d7ba84' : '#becbb5');
+      if (beach) buildBeachArena(scene, config, keep, material);
+      else buildFarmArena(scene, config, keep, material);
       for (const obj of config.objects) if (obj.goal) {
         for (const side of [-1, 1]) {
           box(scene, [D.cell, .3, .35], [obj.goal.x, .6, obj.goal.z + side * D.cell / 2], '#39885d');
@@ -113,65 +148,72 @@ export default function SimulationScene({ demo, state, onReady }: {
       const objects = new Map<string, THREE.Group>();
       for (const obj of config.objects) {
         const group = new THREE.Group(); objects.set(obj.id, group); scene.add(group);
-        if (demo.category === 'collect') {
+        if (beach) {
+          buildShell(group, keep, material, ['#ee9c83', '#d8b2d5', '#f2c06e', '#92cbbb'][config.objects.indexOf(obj) % 4]);
+          label(group, obj.id, [0, 7, 0]);
+        } else if (demo.category === 'collect') {
           const gem = new THREE.Mesh(keep(new THREE.OctahedronGeometry(2.8)), material('#e7b645')); gem.position.y = 4; gem.castShadow = true; group.add(gem);
           const base = new THREE.Mesh(keep(new THREE.CylinderGeometry(3.2, 3.2, .4, 32)), material('#f4e5b7')); base.position.y = .6; group.add(base);
         } else { box(group, [D.cargo, D.cargo, D.cargo], [0, D.cargo / 2 + .4, 0], '#d9a25c'); box(group, [1.2, .04, D.cargo], [0, D.cargo + .42, 0], '#f2ce88'); label(group, obj.id, [0, 9, 0]); }
       }
-      const robot = new THREE.Group(); scene.add(robot);
-      // The complete vehicle footprint (including wheels) is 19 x 19 cm.
-      box(robot, [D.body, 3, D.body], [0, 6, 0], '#eaf0ed');
-      box(robot, [17, .8, 17], [0, 7.9, 0], '#f8fcf9');
-      for (let x = -6; x <= 6; x += 3) for (let z = -6; z <= 6; z += 3) box(robot, [.6, .2, .6], [x, 8.4, z], '#9eafac');
-      for (const x of [-8.5, 8.5]) for (const z of [-5.8, 5.8]) {
-        const wheel = new THREE.Mesh(keep(new THREE.CylinderGeometry(3, 3, 2, 18)), material('#35483f'));
-        wheel.rotation.z = Math.PI / 2; wheel.position.set(x, 3.4, z); wheel.castShadow = true; robot.add(wheel);
-      }
-      box(robot, [D.gripperWidth, 1.5, 1], [0, 4.5, -9], '#70887b');
-      const jaws = [-1, 1].map(side => ({ side, mesh: box(robot, [D.fingerWidth, 2, D.gripperLength],
-        [side * (D.gripperWidth - D.fingerWidth) / 2, 2.5, -THIRD_GRIP_CENTER], '#70887b') }));
-      box(robot, [6, 1, 1], [0, 7, -9], '#d5f5c0');
+      const robot = model.root; scene.add(robot); canvas.dataset.vehicleModel = '000_saikao';
+      let framed = false;
       resize = new ResizeObserver(() => {
         const width = element.clientWidth, height = element.clientHeight;
-        if (width && height) { renderer!.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); changeView.current(view.current); }
+        if (width && height) {
+          renderer!.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix();
+          // Fit once; resizing/fullscreen must preserve the user's focus and zoom.
+          if (!framed) { changeView.current(view.current); framed = true; }
+        }
       }); resize.observe(element);
+      const followShift = new THREE.Vector3();
+      let diagnosticFrame = 0;
       renderer.setAnimationLoop(() => {
         if (disposed) return;
         const current = latest.current;
         robot.position.set(current.x, 0, current.z); robot.rotation.y = -current.heading;
-        for (const [index, jaw] of jaws.entries()) jaw.mesh.position.x = current.gripper?.fingers[index] ?? jaw.side * (D.gripperWidth - D.fingerWidth) / 2;
+        model.setFingers(current.gripper?.fingers ?? [-1, 1].map(side => side * (D.gripperWidth - D.fingerWidth) / 2));
         for (const obj of current.objects) {
           const group = objects.get(obj.id)!;
           group.visible = demo.category === 'place' || !current.collected.includes(obj.id);
           const position = obj;
           group.position.set(position.x, 0, position.z); group.rotation.y = -(obj.heading || 0);
+          if (beach) group.scale.setScalar(current.collected.includes(obj.id) ? .88 : 1);
         }
         if (view.current === 'follow') {
-          controls!.target.set(current.x, 1, current.z);
-          camera.position.set(current.x + 50, 75, current.z + 70);
+          // Move the orbit center and camera together without overwriting the user's angle or distance.
+          followShift.set(current.x, 1, current.z).sub(controls!.target);
+          controls!.target.add(followShift); camera.position.add(followShift);
         }
         controls!.update(); renderer!.render(scene, camera);
+        if (++diagnosticFrame % 5 === 0) {
+          canvas.dataset.view = view.current;
+          canvas.dataset.camera = camera.position.toArray().map(n => n.toFixed(3)).join(',');
+          canvas.dataset.target = controls!.target.toArray().map(n => n.toFixed(3)).join(',');
+          canvas.dataset.vehicle = robot.position.toArray().map(n => n.toFixed(3)).join(',');
+        }
       });
       canvas.dataset.ready = 'true'; setLoading(false); onReady(true);
     } catch {
-      setLoading(false); setError('当前设备暂时无法启动 3D 画面。可重试，或返回选择棋盘模拟。'); onReady(false);
-    }
+      if (disposed) return;
+      setLoading(false); setError('当前设备暂时无法启动 3D 画面。请重试加载，或使用支持 WebGL 的浏览器。'); onReady(false);
+    } })();
     return () => {
       disposed = true; resize?.disconnect(); renderer?.setAnimationLoop(null); controls?.dispose();
       renderer?.domElement.removeEventListener('webglcontextlost', lost);
       for (const resource of resources) resource.dispose();
-      renderer?.dispose(); renderer?.forceContextLoss(); renderer?.domElement.remove(); changeView.current = () => {}; zoom.current = () => {};
+      renderer?.dispose(); renderer?.forceContextLoss(); renderer?.domElement.remove(); changeView.current = () => {}; changePan.current = () => {}; zoom.current = () => {};
     };
   }, [demo, generation, onReady]);
   const position = thirdMapPosition(state.x, state.z, demo.scene_config.depth);
-  return <div className="board-viewport city3d-viewport">
-    <div className="city3d-toolbar" aria-label="地图视角"><div className="city3d-views">{([['orbit', '自由视角'], ['top', '俯视'], ['follow', '跟随']] as const).map(([id, label]) => <button key={id} aria-pressed={selectedView === id} disabled={loading || !!error} onClick={() => changeView.current(id)}>{label}</button>)}</div>
-      <div className="city3d-tools"><button disabled={loading || !!error} aria-label="放大地图" onClick={() => zoom.current(.8)}>＋</button><button disabled={loading || !!error} aria-label="缩小地图" onClick={() => zoom.current(1.25)}>－</button><button disabled={loading || !!error} onClick={() => changeView.current('orbit')}>复位</button><button onClick={() => void toggleFullscreen()}>{fullscreen ? '退出全屏' : '全屏'}</button></div>
+  return <div className="board-viewport city3d-viewport third-simulation-viewport">
+    <div className="city3d-toolbar" aria-label="地图视角"><div className="city3d-views">{([['orbit', '自由视角'], ['top', '俯视'], ['follow', '跟随小车']] as const).map(([id, label]) => <button key={id} aria-pressed={selectedView === id} disabled={loading || !!error} onClick={() => changeView.current(id)}>{label}</button>)}</div>
+      <div className="city3d-tools"><button aria-label="平移视角" aria-pressed={panMode} title={selectedView === 'follow' ? '跟随时焦点锁定小车；切换自由视角可平移' : selectedView === 'top' ? '俯视时直接拖动即可平移' : '切换拖动平移；也可右键或 Shift + 拖动平移'} disabled={loading || !!error || selectedView !== 'orbit'} onClick={() => changePan.current(!panMode)}>平移</button><button disabled={loading || !!error} aria-label="放大地图" onClick={() => zoom.current(.8)}>＋</button><button disabled={loading || !!error} aria-label="缩小地图" onClick={() => zoom.current(1.25)}>－</button><button disabled={loading || !!error} onClick={() => changeView.current('orbit')}>复位</button><button onClick={() => void toggleFullscreen()}>{fullscreen ? '退出全屏' : '全屏'}</button></div>
     </div>
     <div ref={host} className="city3d-stage board-grid third-sim-host">
       {loading && !error && <div className="city3d-loading" role="status">正在准备本地三维场地…</div>}
       {error && <div className="city3d-loading city3d-error" role="alert"><p>{error}</p><button onClick={() => setGeneration(n => n + 1)}>重新加载场景</button></div>}
     </div>
-    <div className="city3d-help third-map-coordinates">车体中心 X {position.x.toFixed(1)} · Y {position.y.toFixed(1)} cm（左下角为零点）<span>拖动旋转 · 滚轮缩放</span></div>
+    <div className="city3d-help third-map-coordinates"><span aria-label="精准定位读数">车体中心 X {position.x.toFixed(1)} · Y {position.y.toFixed(1)} cm · 朝向 <b data-testid="third-oid-heading">{((Math.round(state.heading * 180 / Math.PI * 10) % 3600 + 3600) % 3600 / 10).toFixed(1)}°</b>（左下角为零点，0° 向上）</span><span>{selectedView === 'follow' ? '焦点锁定小车 · 拖动旋转 · 滚轮 / 双指缩放' : panMode ? '拖动平移 · 滚轮 / 双指缩放' : '拖动旋转 · 右键 / Shift 拖动平移 · 双指平移缩放'}</span></div>
   </div>;
 }

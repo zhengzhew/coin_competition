@@ -1,0 +1,88 @@
+html[data-competition="beach"], html[data-competition="beach"] body { background: #d9eeeb; }
+html[data-competition="beach"] body { display: block; overflow: auto; }
+html[data-competition="beach"] #root { display: block; height: auto; }
+.beach-shell { background: #d9eeeb; }
+.app.future-city.beach-game.competition-template { --ink: #264e57; --muted: #68858a; --module-accent: #327e86; --module-soft: #e9f3ec; --module-border: #c6dcd4; --module-highlight: #c9e9df; --line: #d3e3db; --green: #327e86; --forest-2: #327e86; background: #dfefea url('/assets/beach/shoreline.svg') center / cover; color: var(--ink); box-shadow: none; }
+.app.beach-game .module-header .brand-mark { background: #e0f2ed url('/assets/beach/shell.svg') center / cover; font-size: 0; border: 0; }
+.app.beach-game.competition-template header.module-header { background: #fffdf3ed; }
+.app.beach-game .module-intro h1 { font-weight: 650; letter-spacing: .025em; }
+.app.beach-game .module-intro p { color: #547a80; }
+.app.beach-game .module-welcome-body { padding-bottom: 13%; }
+.app.beach-game .module-welcome-body .onboarding-card { background: #fffef5ed; box-shadow: 0 18px 60px #4f8d9615; }
+.app.beach-game .identity-fields label, .app.beach-game .identity-random-id { color: #4c7378; }
+.app.beach-game .identity-fields input { color: #264e57; border-color: #c6dcd4; background: #fffff9; }
+.app.beach-game .identity-random-id code { color: #60858a; background: #edf4ec; border-color: #d0e1d7; }
+.app.beach-game .identity-confirm { width: 100%; padding: 13px 18px; border-radius: 9px; border: 0; }
+.beach-local-note { display: block; margin-top: 14px; text-align: center; color: #829590; font-size: 11px; }
+.beach-task-enter { position: absolute; right: 18px; top: 28px; font-size: 12px; color: #327e86; }
+.app.beach-game footer { color: #608086; background: #fffaf0c9; border-color: #cadfd7; }
+.beach-timer { display: flex; align-items: center; gap: 10px; color: #547980; font-size: 11px; white-space: nowrap; }
+.beach-timer output { font: 750 22px/1.2 ui-monospace, monospace; font-variant-numeric: tabular-nums; color: #2b777f; min-width: 100px; }
+.beach-timer small { font: 11px system-ui; }
+.app.beach-game .level-nav { background: #f1f6ebd9; border-color: #c6dcd4; }
+.app.beach-game .nav-heading { color: #36757d; border-color: #c6dcd4; }
+.app.beach-game .stage-levels { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.app.beach-game .level-btn { background: #fffef6; color: #50797e; border-color: #cadfd5; padding: 15px 10px; gap: 7px; }
+.app.beach-game .level-btn strong { flex: 1; text-align: left; font-size: 12px; }
+.app.beach-game .level-btn small { color: inherit; }
+.app.beach-game .level-btn.active { background: #327e86; color: #fffdf4; border-color: #327e86; box-shadow: 0 5px 15px #377c801a; }
+.beach-instructions { padding: 17px 4px; border-top: 1px solid #d2e1d4; margin-top: 20px; color: #618086; font-size: 12px; line-height: 1.8; }
+.beach-instructions + .beach-instructions { margin-top: 0; }
+.beach-instructions summary { cursor: pointer; font-weight: 700; color: #347079; }
+.beach-instructions ol { padding-left: 18px; margin: 12px 0; }
+.beach-instructions li { padding: 0 0 10px 2px; }
+.beach-instructions p { margin: 8px 0 0; }
+.beach-nav-art { display: flex; align-items: center; gap: 10px; margin-top: 30px; color: #8b9b92; font-size: 11px; line-height: 1.9; }
+.beach-nav-art img { width: 46px; transform: rotate(-15deg); opacity: .7; }
+.app.beach-game .board-panel { background: #fffef6ed; border: 1px solid #ccdfd6; }
+.app.beach-game .module-mission-heading { display: flex; flex-shrink: 0; align-items: center; padding: 11px 13px; border: 1px solid #d2e2d7; border-left: 3px solid #327e86; border-radius: 8px; margin-bottom: 8px; }
+.app.beach-game .module-mission-heading > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; font: 700 16px system-ui; }
+.app.beach-game .module-mission-heading h1 { font-size: 19px; margin: 0; }
+.app.beach-game .module-mission-heading p { display: flex; flex-direction: column; gap: 2px; margin-top: 0; margin-bottom: 0; font-size: 12px; }
+.app.beach-game .module-mission-heading p > span { font-size: 10px; color: #719191; }
+.beach-map-caption { width: 100%; display: flex; justify-content: space-between; gap: 14px; padding: 3px 1px 9px; color: #719094; font-size: 11px; }
+.app.future-city.beach-game .module-mission-heading { width: 100%; }
+.beach-map-caption i { display: inline-block; width: 11px; height: 7px; border-radius: 2px; background: #b8e1db; margin-right: 4px; }
+.app.beach-game .city3d-toolbar { background: #eef5ed; border-color: #d1e2d7; }
+.app.beach-game .city3d-toolbar button { color: #507e82; background: #fffdf6; border-color: #cfdfd5; }
+.app.beach-game .city3d-toolbar button[aria-pressed="true"] { color: #fff; background: #327e86; border-color: #327e86; }
+.app.beach-game .board-grid { background: #afd8dd; border-color: #c4ddd7; }
+.app.beach-game .third-map-coordinates { color: #6b898c; font-size: 10px; line-height: 1.6; }
+.app.beach-game .status-bar b { color: #327e86; }
+.app.beach-game .status-bar small, .app.beach-game .status-bar em { color: #719092; }
+.app.beach-game .status-pill { color: #397982; border-color: #cadfd5; background: #eaf3ec; }
+.app.beach-game .status-success { color: #32735e; background: #dbeddf; }
+.beach-control-card, .beach-shell-list { padding: 18px; background: #fffef6f2; border: 1px solid #ccdfd6; border-radius: 12px; }
+.beach-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 13px; }
+.beach-card-heading h2 { font-size: 15px; margin: 0; }
+.beach-card-heading > span { font-size: 10px; color: #809691; }
+.beach-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.beach-keypad button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 51px; color: #44797f; background: #f0f6ee; border: 1px solid #cbded4; border-radius: 8px; box-shadow: 0 3px 0 #dbe7dd; touch-action: none; user-select: none; }
+.beach-keypad button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; background: #d4e9de; }
+.beach-keypad button:disabled { opacity: .55; cursor: default; }
+.beach-keypad kbd { font: 650 14px ui-monospace, monospace; }
+.beach-keypad button > span { font-size: 11px; }
+.beach-key-forward { grid-column: 2; }
+.beach-key-turn_left { grid-column: 1; grid-row: 2; }
+.beach-key-backward { grid-column: 2; grid-row: 2; }
+.beach-key-turn_right { grid-column: 3; grid-row: 2; }
+.beach-keypad .beach-key-grab, .beach-keypad .beach-key-release { grid-row: 3; background: #faefe2; border-color: #e4d4bb; color: #987456; box-shadow: 0 3px 0 #e9decd; }
+.beach-key-grab { grid-column: 1; }.beach-key-release { grid-column: 3; }
+.beach-grip { margin: 15px 0 12px; padding: 8px; background: #f4f4e9; border-radius: 6px; color: #7e8f82; font-size: 11px; text-align: center; }
+.beach-grip.holding { background: #e2efde; color: #428068; }
+.beach-start { width: 100%; min-height: 43px; padding: 9px; border: 0; border-radius: 8px; background: #327e86; color: #fffdf3; font-size: 15px; font-weight: 650; }
+.beach-start:disabled { background: #83aaa5; cursor: default; }
+.beach-actions { display: flex; gap: 8px; margin-top: 9px; }
+.beach-actions button { flex: 1; border: 1px solid #cbded4; background: #edf4e9; color: #4f7d7c; padding: 9px; border-radius: 7px; font-size: 12px; }
+.beach-actions button:disabled { opacity: .5; cursor: default; }
+.beach-shell-list > div:not(:first-child) { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid #edf0e4; font-size: 12px; }
+.beach-shell-list b { display: grid; place-items: center; width: 24px; height: 24px; color: #a37562; background: #fae9dc; border-radius: 50%; }
+.beach-shell-list small { margin-left: auto; color: #74958a; }
+.beach-message { font-size: 12px; line-height: 1.8; padding: 13px 16px; border-left: 3px solid #72a8a7; background: #ecf4e8eb; border-radius: 6px; color: #557d7f; }
+.beach-result { padding: 19px; border: 1px solid #ddc999; border-radius: 12px; background: #fff5dbeF; color: #9b783b; }
+.beach-result > span { font-size: 12px; }.beach-result > strong { display: block; font: 750 36px/1.4 system-ui; margin-top: 6px; }.beach-result small { font-size: 12px; }.beach-result p { font-size: 12px; margin: 4px 0 13px; }
+.app.beach-game button:focus-visible, .app.beach-game input:focus-visible, .app.beach-game a:focus-visible { outline: 3px solid #d4a56e; outline-offset: 3px; }
+@media (min-width: 1000px) { .app.beach-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; grid-template-rows: minmax(0, 1fr); }.app.beach-game .robot-workspace > .board-panel, .app.beach-game .robot-workspace > .control-column { grid-row: 1; }.app.beach-game .control-column { overflow: auto; }.app.beach-game .level-nav { width: 190px; flex-basis: 190px; overflow: auto; } }
+@media (max-width: 1200px) { .beach-control-card, .beach-shell-list { padding: 13px; }.app.beach-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 260px; }.app.beach-game .module-mission-heading p { flex-basis: 100%; margin-top: 5px; } }
+@media (max-width: 999px) { .app.future-city.beach-game .workspace-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }.app.future-city.beach-game .robot-workspace > .board-panel { grid-column: 1; grid-row: 1; min-height: 510px; }.app.future-city.beach-game .robot-workspace > .control-column { grid-column: 1; grid-row: 2; }.app.beach-game .level-nav { width: 155px; flex-basis: 155px; }.beach-nav-art { display: none; }.beach-timer output { font-size: 19px; }.app.beach-game .module-welcome-body { padding-bottom: 100px; } }
+@media (max-width: 560px) { .app.beach-game .level-nav { display: block; width: 100%; flex-basis: auto; padding: 12px; }.app.beach-game .stage-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }.beach-instructions { display: none; }.app.beach-game .level-btn { padding: 9px; }.app.beach-game .game-area { padding: 10px; }.app.beach-game .board-panel { padding: 10px; }.app.beach-game .module-mission-heading h1 { font-size: 17px; }.app.beach-game .module-mission-heading p { font-size: 11px; }.app.beach-game .module-mode-notice { padding: 7px; gap: 4px; }.app.beach-game .module-mode-notice > span { display: none; }.app.beach-game .module-mode-notice > strong { font-size: 12px; }.app.beach-game .module-header .brand b { font-size: 19px; }.app.beach-game .third-map-coordinates { font-size: 9px; }.app.beach-game .module-motto { font-size: 10px; padding: 7px; max-width: 128px; }.app.beach-game .status-bar { grid-template-columns: 1fr 1fr; gap: 8px; }.app.beach-game .status-pill { grid-column: 1 / -1; text-align: center; } }

@@ -14,9 +14,6 @@ html[data-competition="third"] body { margin: 0; }
 .third-mark { background: var(--green); color: #edf7e6; width: 43px; height: 43px; display: grid; place-items: center; border-radius: 12px; font-size: 25px; font-weight: 700; }
 .third-brand strong { display: block; font-size: 17px; letter-spacing: 1px; }
 .third-brand small { display: block; color: var(--muted); font-size: 11px; letter-spacing: 2px; }
-.third-header nav { display: flex; align-items: center; gap: 26px; font-size: 13px; }
-.third-header nav a { color: var(--muted); }
-.third-header nav a:hover { color: var(--green); }
 .third-local-badge { padding: 6px 11px; border: 1px solid #cbd8c6; border-radius: 6px; font-size: 12px; color: #527250; }
 .third-main { max-width: 1260px; margin: 0 auto; padding: 26px 32px 65px; min-height: calc(100vh - 161px); }
 .third-main.is-workspace { max-width: 1510px; }

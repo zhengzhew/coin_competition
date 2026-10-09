@@ -5,6 +5,7 @@ import type { CityScene, CameraView } from './ThreeCityScene';
 import './CityBoard3D.css';
 import RobotFallback from './RobotFallback';
 import FactoryStatus from './FactoryStatus';
+import { createSaikaoRobot, type SaikaoRobot } from './SaikaoRobot';
 
 export default function CityBoard3D({ level, state }: { level: LevelDef; state: GameState }) {
   const host = useRef<HTMLDivElement>(null);
@@ -22,12 +23,15 @@ export default function CityBoard3D({ level, state }: { level: LevelDef; state: 
     const element = host.current;
     let cancelled = false;
     setReady(false); setView('orbit');
-    void import('./ThreeCityScene').then(({ CityScene }) => {
+    let model: SaikaoRobot | undefined;
+    void import('./ThreeCityScene').then(async ({ CityScene }) => {
       if (cancelled) return;
-      const scene = new CityScene(element, level, latestState.current, setView, () => setFallback(true));
+      model = level.robot ? await createSaikaoRobot() : undefined;
+      if (cancelled) { model?.dispose(); return; }
+      const scene = new CityScene(element, level, latestState.current, setView, () => setFallback(true), model);
       runtime.current = scene;
       setReady(true);
-    }).catch(() => { if (!cancelled) setFallback(true); });
+    }).catch(() => { model?.dispose(); if (!cancelled) setFallback(true); });
     return () => { cancelled = true; runtime.current?.dispose(); runtime.current = null; };
   }, [level, fallback]);
 

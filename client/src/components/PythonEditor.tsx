@@ -1,11 +1,18 @@
 import { createUuid, validateCount, type Direction, type PythonConfig, type TemplateRow } from '@coin-path/shared';
 import './PythonEditor.css';
+import { CompetitionActions } from './CompetitionTemplate';
+import { useExecutingRow } from './useExecutingRow';
 
 interface Props {
   config: PythonConfig;
   rows: TemplateRow[];
   onChange: (rows: TemplateRow[]) => void;
   onRun: () => void;
+  onReset: () => void;
+  onStop: () => void;
+  canReset: boolean;
+  executing: boolean;
+  activeRowId: string | null;
   isRunning: boolean;
   error: string | null;
 }
@@ -24,7 +31,9 @@ const DIRECTION_NAMES: Record<Direction, string> = {
   right: '向右',
 };
 
-export default function PythonEditor({ config, rows, onChange, onRun, isRunning, error }: Props) {
+export default function PythonEditor({ config, rows, onChange, onRun, onReset, onStop, canReset, executing, activeRowId, isRunning, error }: Props) {
+  const viewport = useExecutingRow(activeRowId);
+  const activeLine = rows.findIndex(row => row.row_id === activeRowId) + 1;
   const updateCount = (index: number, count: string) => {
     const next = [...rows];
     next[index] = { ...next[index], count };
@@ -47,12 +56,10 @@ export default function PythonEditor({ config, rows, onChange, onRun, isRunning,
   return (
     <section className="python-editor" aria-label="代码操控编辑器">
       <div className="editor-header">
-        <div><span className="editor-kicker">代码操控</span><h3>编辑指令</h3></div>
-        <span className="editor-hint">括号内填写步数</span>
+        <h3>指令程序</h3><span className="editor-hint">{activeLine ? `执行第 ${activeLine} 行` : '按格移动'}</span>
       </div>
 
       <div className="command-palette" aria-label="可用指令">
-        <strong>点击加入指令</strong>
         {COMMANDS.map((command) => (
           <button
             key={command.direction}
@@ -60,20 +67,22 @@ export default function PythonEditor({ config, rows, onChange, onRun, isRunning,
             onClick={() => addCommand(command.direction)}
             disabled={isRunning || rows.length >= config.max_rows}
             aria-label={`加入${DIRECTION_NAMES[command.direction]}指令`}
+            title={command.label}
             data-track-id={`python.command.add.${command.direction}`}
           >
-            <span>{command.arrow}</span><code>{command.label}</code>
+            <b>{DIRECTION_NAMES[command.direction]}</b><code>{command.label}</code>
           </button>
         ))}
       </div>
 
-      <div className={`editor-rows ${rows.length ? '' : 'empty'}`} data-track-id="python.editor.rows">
+      <p className="module-code-hint">点击指令添加代码，括号内填写 1–20 格。</p>
+      <div ref={viewport} className={`editor-rows ${rows.length ? '' : 'empty'}`} data-track-id="python.editor.rows">
         {!rows.length && <div className="editor-empty">点击上方指令，把代码加入这里</div>}
         {rows.map((row, index) => {
           const direction = row.direction as Direction;
           const countValid = row.count === '' || row.count === null || validateCount(row.count).valid;
           return (
-            <div key={row.row_id} className="editor-row" data-row-id={row.row_id}>
+            <div key={row.row_id} className={`editor-row${activeRowId === row.row_id ? ' is-executing' : ''}`} data-row-id={row.row_id} data-testid={activeRowId === row.row_id ? 'running-code-line' : undefined}>
               <span className="row-number">{index + 1}</span>
               <span className="code-fixed command-name">move_{direction}(</span>
               <input
@@ -105,9 +114,7 @@ export default function PythonEditor({ config, rows, onChange, onRun, isRunning,
 
       {rows.length >= config.max_rows && <p className="row-limit">本关最多添加 {config.max_rows} 行指令</p>}
       {error && <p className="editor-error" role="alert">{error}</p>}
-      <button className="run-btn" onClick={onRun} disabled={isRunning} data-track-id="python.run">
-        {isRunning ? '正在运行…' : '▶ 运行程序'}
-      </button>
+      <CompetitionActions running={executing} busy={isRunning} canReset={canReset} onRun={onRun} onStop={onStop} onReset={onReset} runTrack="python.run" stopTrack="attempt.stop" />
     </section>
   );
 }

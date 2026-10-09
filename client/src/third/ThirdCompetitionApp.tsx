@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ThirdCategory } from '@coin-path/shared';
 import { categoryLabels, modeLabels, simulationLabels, demos, parseDemoRoute, demoPath } from './demo-catalog';
 import DemoWorkspace from './DemoWorkspace';
+import DemoHub from '../demo/DemoHub';
 import './ThirdCompetition.css';
 
 export default function ThirdCompetitionApp() {
@@ -16,6 +17,9 @@ export default function ThirdCompetitionApp() {
   function go(href: string) {
     window.history.pushState(null, '', href); setPath(window.location.pathname); window.scrollTo(0, 0);
   }
+  if (['/demo', '/demo/', '/demo/index.html'].includes(path) || /^\/demo\/(showcase|components)(?:\/|$)/.test(path)) {
+    return <DemoHub path={path} go={go} />;
+  }
   const selected = route.demoId ? demos.find(d => d.demo_id === route.demoId) : undefined;
   const category = route.category;
   if (!route.invalid && selected && route.mode && selected.status !== 'planned' && selected.supported_modes.includes(route.mode)) {
@@ -29,7 +33,7 @@ export default function ThirdCompetitionApp() {
   return <div className="third-app">
     <header className="third-header">
       <a className="third-brand" href="/demo/" onClick={e => { e.preventDefault(); go('/demo/'); }}><span className="third-mark">◇</span><span><strong>DEMO 展示中心</strong><small>探索 · 编程 · 体验</small></span></a>
-      <nav aria-label="页面导航"><a href="/">旷野淘金</a><a href="/future/">未来城市</a><span className="third-local-badge">持续更新</span></nav>
+      <span className="third-local-badge">持续更新</span>
     </header>
     <main className={`third-main${selected ? ' is-workspace' : ''}`}>
       <nav className="third-breadcrumb" aria-label="当前位置">

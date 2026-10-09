@@ -41,7 +41,9 @@ if (existsSync(clientDist)) {
   app.use(express.static(clientDist, { maxAge: process.env.NODE_ENV === 'production' ? '1h' : 0 }));
   app.use((req, res, next) => {
     if (!['GET', 'HEAD'].includes(req.method) || req.path.startsWith('/api/')) return next();
-    res.sendFile(resolve(clientDist, /^\/demo(?:\/|$)/.test(req.path) ? 'demo/index.html' : 'index.html'));
+    res.sendFile(resolve(clientDist, /^\/beach(?:\/|$)/.test(req.path) ? 'beach/index.html'
+      : /^\/farm(?:\/|$)/.test(req.path) ? 'farm/index.html'
+      : /^\/demo(?:\/|$)/.test(req.path) ? 'demo/index.html' : 'index.html'));
   });
 }
 
