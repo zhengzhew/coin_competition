@@ -26,7 +26,6 @@ export class ThirdPhysicsArena {
   readonly fingers: { body: Body; joint: PrismaticJoint; side: number }[] = [];
   private target: 'open' | 'closed' = 'open';
   private settled = new Map<string, number>();
-  private releasedShells = new Set<string>();
   private deliveredShells = new Set<string>();
   private gripAge = 0;
   private stalled = 0;
@@ -74,13 +73,6 @@ export class ThirdPhysicsArena {
     if (this.completed || action === 'wait') return;
     this.actions++;
     if (action === 'grab' || action === 'release') {
-      if (this.demo.scene_task === 'seashell-edge' && action === 'release') {
-        const holding = this.gripper().holding;
-        if (holding) {
-          const body = this.cubes.get(holding)!, p = body.getPosition(), c = this.demo.scene_config;
-          if (isShellAtEdge(cm(p.x), cm(p.y), body.getAngle(), c.width, c.depth)) this.releasedShells.add(holding);
-        }
-      }
       this.target = action === 'grab' ? 'closed' : 'open'; this.gripAge = 0;
       this.message = action === 'grab' ? '夹爪正在合拢；只有两侧接触货块才能夹稳。' : '夹爪正在张开，货块保留实际位置。';
     }
@@ -135,7 +127,6 @@ export class ThirdPhysicsArena {
     this.blocked = this.stalled > .45;
     if (this.blocked) this.message = '车体或货块被挡住了，请后退或调整方向。';
     const grip = this.gripper();
-    if (grip.holding) this.releasedShells.delete(grip.holding);
     if (grip.phase === 'holding') this.message = `夹爪接触并夹住 ${grip.holding}；碰撞或转弯仍可能使货块滑脱。`;
     else if (grip.phase === 'open' && this.target === 'open' && this.actions > 0) this.message = '夹爪已张开；可以继续推块或重新对准夹取。';
     else if (grip.phase === 'closed') this.message = '夹爪已闭合，当前没有夹住货块。';
@@ -146,27 +137,29 @@ export class ThirdPhysicsArena {
       const b = this.cubes.get(o.id)!;
       const shellTask = this.demo.scene_task === 'seashell-edge';
       const pos = b.getPosition();
-      const inside = shellTask ? this.releasedShells.has(o.id) && this.target === 'open'
-        && isShellAtEdge(cm(pos.x), cm(pos.y), b.getAngle(), this.demo.scene_config.width, this.demo.scene_config.depth)
+      const inside = shellTask ? isShellAtEdge(cm(pos.x), cm(pos.y), b.getAngle(), this.demo.scene_config.width, this.demo.scene_config.depth)
         : !!o.goal && [-1, 1].every(x => [-1, 1].every(z => {
         const v = b.getWorldPoint(Vec2(unit(x * D.cargo / 2), unit(z * D.cargo / 2)));
         return Math.abs(cm(v.x) - o.goal!.x) <= D.cell / 2 && Math.abs(cm(v.y) - o.goal!.z) <= D.cell / 2;
       }));
-      const stable = inside && grip.holding !== o.id && b.getLinearVelocity().length() < unit(.5) && Math.abs(b.getAngularVelocity()) < .05;
+      const stable = inside && (shellTask || grip.holding !== o.id) && b.getLinearVelocity().length() < unit(.5) && Math.abs(b.getAngularVelocity()) < .05;
       this.settled.set(o.id, stable ? (this.settled.get(o.id) || 0) + dt : 0);
       if ((this.settled.get(o.id) || 0) >= p.settleSeconds) {
         delivered.push(o.id);
-        if (shellTask) { this.deliveredShells.add(o.id); b.setType('static'); }
+        if (shellTask) {
+          this.deliveredShells.add(o.id); b.setType('static');
+          // Free the car after a held shell is accepted; no release input is required.
+          if (grip.holding === o.id) { this.target = 'open'; this.gripAge = 0; }
+        }
       }
     }
     this.completed = delivered.length > 0 && delivered.length === this.cubes.size;
     if (this.completed) this.message = '货块均已完整进入目标区并停稳，任务完成！';
     if (this.demo.scene_task === 'seashell-edge') {
       this.message = this.completed ? '贝壳全部送达岸边，拾贝任务完成！' : this.blocked ? '前方空间不足，请后退或调整方向。'
-        : grip.holding ? `已夹稳贝壳 ${grip.holding}，送到浅蓝色边缘带后按 R 放下。`
-          : grip.phase === 'closed' ? '夹爪内没有贝壳，按 R 张开后重新对准。'
-            : grip.phase === 'blocked' ? '尚未夹稳贝壳，张开夹爪并调整位置。'
-              : '车头对准贝壳，G 夹取；在浅蓝色边缘带内按 R 放下并等待停稳。';
+        : grip.holding && this.deliveredShells.has(grip.holding) ? `贝壳 ${grip.holding} 已送达岸边，可以继续寻找下一枚。`
+          : grip.holding ? `已夹稳贝壳 ${grip.holding}，送入浅蓝色边缘带并停稳即可交付。`
+            : '推动或夹取贝壳，使其完整进入浅蓝色边缘带并停稳，即可自动交付。';
     }
   }
   /** Remove only sub-millimetre solver residue after arrival, never jump a route or move cargo. */

@@ -1,7 +1,7 @@
 export const competitionModules = {
   beach: { id: 'beach', title: '潮汐拾光', subtitle: '第四赛事 · 海边拾贝', mark: '◒', home: '/beach/',
     eyebrow: 'TIDAL TREASURES · 04', headline: ['循着海风出发，', '拾起一岸好时光。'],
-    description: ['驾驶小车，在沙滩上寻找潮汐留下的贝壳。', '稳稳夹取，送回岸边，用更短时间完成挑战。'],
+    description: ['驾驶小车，在沙滩上寻找潮汐留下的贝壳。', '推动或夹取，送回岸边，用更短时间完成挑战。'],
     tags: ['3D 海滩', '键盘驾驶', '拾贝竞速'], motto: '把贝壳送回岸边，把好时光留住' },
   coin: { id: 'coin', title: '旷野淘金', subtitle: '第一赛事 · 路径规划', mark: '◆', home: '/',
     eyebrow: 'WILD GOLD · 01', headline: ['让每一次出发，', '都有更好的路线。'],

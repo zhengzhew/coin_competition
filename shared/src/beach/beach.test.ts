@@ -34,11 +34,48 @@ test('wall clock includes slow frames; stop cannot resume a scored attempt; inpu
   assert.equal(session.snapshot().z, 96); session.reset(); assert.equal(session.phase, 'ready');
 });
 
-test('pushing a shell onto an edge without a grasp and release does not deliver', () => {
-  const demo = structuredClone(beachLevels[0]); demo.scene_config.objects = [{ id: 'A', x: 60, z: 6 }];
-  const session = new BeachSession(demo); session.start();
+test('each edge accepts a settled shell without any input, but partial entry does not count', () => {
+  for (const [x, z, valid] of [[6, 60, true], [114, 60, true], [60, 6, true], [60, 114, true], [12, 60, false], [60, 60, false]] as const) {
+    const demo = structuredClone(beachLevels[0]); demo.scene_config.objects = [{ id: 'A', x, z }];
+    const session = new BeachSession(demo); session.start();
+    for (let i = 0; i < 12; i++) session.tick(1 / 60);
+    assert.deepEqual(session.snapshot().collected, [], 'must first settle for 0.4 seconds');
+    for (let i = 0; i < 24; i++) session.tick(1 / 60);
+    assert.deepEqual(session.snapshot().collected, valid ? ['A'] : []);
+    assert.equal(session.snapshot().actions, 0);
+  }
+});
+
+test('a shell pushed into the edge without grab or release input is delivered', () => {
+  const demo = structuredClone(beachLevels[0]);
+  demo.scene_config.start = { x: 60, z: 50, heading: Math.PI };
+  demo.scene_config.objects = [{ id: 'A', x: 60, z: 37.5 }];
+  const session = new BeachSession(demo); session.start(); session.press('s', 'backward');
   for (let i = 0; i < 120; i++) session.tick(1 / 60);
-  assert.deepEqual(session.snapshot().collected, []);
+  session.release('s');
+  for (let i = 0; i < 60; i++) session.tick(1 / 60);
+  assert.deepEqual(session.snapshot().collected, ['A']);
+  assert.equal(session.snapshot().actions, 1, 'the only action was driving');
+  assert.equal(session.phase, 'completed');
+});
+
+test('a held shell is accepted after settling at the edge without release input', () => {
+  const demo = structuredClone(beachLevels[0]);
+  demo.scene_config.start = { x: 60, z: 52.5, heading: 0 };
+  demo.scene_config.objects = [{ id: 'A', x: 60, z: 40 }];
+  const session = new BeachSession(demo); session.start(); session.press('g', 'grab'); session.release('g');
+  for (let i = 0; i < 120; i++) session.tick(1 / 60);
+  assert.equal(session.snapshot().holding, 'A');
+  session.press('w', 'forward');
+  for (let i = 0; i < 108; i++) session.tick(1 / 60);
+  session.release('w');
+  assert.equal(session.snapshot().holding, 'A');
+  assert.deepEqual(session.snapshot().collected, [], 'moving shells must first stop');
+  for (let i = 0; i < 60; i++) session.tick(1 / 60);
+  assert.deepEqual(session.snapshot().collected, ['A']);
+  assert.equal(session.snapshot().actions, 2, 'only grab and driving, no release');
+  assert.equal(session.snapshot().gripper?.target, 'open', 'accepted cargo automatically frees the gripper');
+  assert.equal(session.phase, 'completed');
 });
 
 for (const demo of beachLevels) test(`${demo.demo_id}: complete every shell through manual driving and physical grasp/release`, () => {

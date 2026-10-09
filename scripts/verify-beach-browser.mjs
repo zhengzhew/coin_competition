@@ -85,13 +85,13 @@ try {
     const lane = index ? 68 : 76;
     await drive(shell.x, lane); await drive(shell.x, shell.z + 12.5); await turn(0); await page.keyboard.press('g'); await advance(1800);
     assert.equal((await snapshot()).holding, shell.id, JSON.stringify(await snapshot()));
-    await drive(shell.x, 19.5); await page.keyboard.press('r'); await advance(2000); assert.equal((await snapshot()).collected, index + 1);
+    await drive(shell.x, 19.5); await advance(2000); assert.equal((await snapshot()).collected, index + 1, 'edge placement is accepted without R');
     if (!index) await drive(shell.x, lane, true);
   }
   assert.equal((await snapshot()).phase, 'completed'); assert.ok(Number((await page.getByTestId('beach-score').innerText()).replace(' 分', '')) > 0);
   const finalTime = await page.getByTestId('beach-timer').innerText(); await advance(4000); assert.equal(await page.getByTestId('beach-timer').innerText(), finalTime); await screenshot('03-complete.png');
   assert.ok(await page.evaluate(() => Object.keys(localStorage).some(key => key.startsWith('beach.best-times.'))));
-  checks.push('complete two-shell race using browser keyboard events, real physical contacts, result, frozen timer and saved best');
+  checks.push('complete two-shell race without release input, automatic gripper opening, result, frozen timer and saved best');
   await page.clock.resume(); await page.reload(); await confirm(); await ready(); assert.notEqual(await page.getByTestId('beach-best').innerText(), '—');
   await page.getByRole('button', { name: '2 四海拾珍', exact: true }).click(); await ready(); assert.equal((await snapshot()).objects.length, 4);
   await page.getByRole('button', { name: '俯视', exact: true }).click(); await advance(100); await screenshot('04-level-two.png');
