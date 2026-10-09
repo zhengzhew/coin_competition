@@ -16,6 +16,12 @@
 - 教师汇总接口和 attempts/events 的 CSV、JSONL 导出。
 - DEMO 提取的车、金币、沙地和障碍贴图已用于界面。
 
+## 统一赛事首页
+
+访问 `/home/`（或 `/home`）可打开统一入口，按卡片进入旷野淘金、未来城市、生态农场、潮汐拾光和 DEMO 展示中心。首页复用赛事名称与主题素材，不需要填写身份信息。导航只从首页通向各入口，赛事与 DEMO 页面不新增相互跳转或返回统一首页的按钮。
+
+原有地址保持不变：`/` 为旷野淘金，`/future/` 为未来城市，`/farm/` 为生态农场，`/beach/` 为潮汐拾光，`/demo/` 为 DEMO 展示中心。可收藏 `/home/` 作为日常访问入口。
+
 ## 四个主题模块的共用模板
 
 旷野淘金、未来城市、生态农场和潮汐拾光以当前生态农场的精简界面为共用模板：完整欢迎页与身份预览、顶部操作方式和独立计时、左侧关卡及操作提示、右对齐的任务目标、中央大地图和右侧操作区。主题元数据集中在 `client/src/competition-modules.ts`；欢迎页、顶栏和任务条共用 `client/src/components/CompetitionTemplate.tsx`，主题保留各自配色、场景和关卡规则。
@@ -84,7 +90,7 @@ npm run build
 npm start
 ```
 
-浏览器打开 `http://localhost:3001`。开发时可运行 `npm run dev`，前端为 `http://localhost:5173`。
+浏览器打开 `http://localhost:3001/home/` 选择赛事。开发时可运行 `npm run dev`，统一首页为 `http://localhost:5173/home/`。
 
 ## 验证
 

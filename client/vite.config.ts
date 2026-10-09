@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react()],
   build: { rollupOptions: { input: {
     coin: fileURLToPath(new URL('./index.html', import.meta.url)),
+    home: fileURLToPath(new URL('./home/index.html', import.meta.url)),
     future: fileURLToPath(new URL('./future/index.html', import.meta.url)),
     farm: fileURLToPath(new URL('./farm/index.html', import.meta.url)),
     beach: fileURLToPath(new URL('./beach/index.html', import.meta.url)),
