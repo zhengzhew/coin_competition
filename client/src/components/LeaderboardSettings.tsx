@@ -19,7 +19,7 @@ export default function LeaderboardSettings({ auth }: { auth: string }) {
     } catch (e) { setError(e instanceof SyntaxError ? 'JSON 格式有误，请检查括号、逗号和数字。' : (e as Error).message); }
     finally { setBusy(false); }
   };
-  return <section className="dash-card leaderboard-settings" aria-label="全局排行榜设置"><h2>全局排行榜设置</h2><p>时间范围对所有游戏生效，按提交时间筛选；各游戏、关卡、模式分别排名。同一玩家展示范围内最近一次提交。</p>
+  return <section className="dash-card leaderboard-settings" aria-label="全局排行榜设置"><h2>全局排行榜设置</h2><p>时间范围对所有游戏生效，按提交时间筛选；各游戏、关卡、模式分别排名。同一玩家展示范围内最近一次成功完成的记录。</p>
     <div className="leaderboard-fields"><label>开始时间<input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} /></label><label>结束时间<input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} /></label><button onClick={() => { setStart(''); setEnd(''); }}>展示全部时间</button></div>
     <p>时间按当前浏览器时区显示。总分 = base + steps × 步数 + code_lines × 代码行数 + seconds × 秒数，限定在 min 至 max 之间，保留两位小数。负数表示扣分。</p>
     <label>导入 JSON 规则<input type="file" accept=".json,application/json" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 10000) { setError('规则文件最多 10 KB'); return; } try { const text = await file.text(); setRule(JSON.stringify(JSON.parse(text), null, 2)); setError(''); setMessage('已读入规则，请点击保存使其生效。'); } catch { setError('无法读取有效的 JSON 文件'); } e.target.value = ''; }} /></label>

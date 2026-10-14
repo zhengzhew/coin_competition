@@ -46,6 +46,7 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
       || typeof b.display_name !== 'string' || !b.display_name.trim() || b.display_name.length > 40
       || typeof b.source !== 'string' || b.source.length > 8000 || typeof b.completed !== 'boolean'
       || [b.steps, b.seconds].some(n => typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > 86400)) return res.status(422).json({ error: '提交数据或关卡版本无效' });
+    if (!b.completed) return res.status(422).json({ error: '成功完成任务后才能提交排行榜' });
     let steps = b.steps;
     if (level.grid_task === 'strawberry-edge') {
       try {
@@ -57,11 +58,16 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
       } catch (e) { return res.status(422).json({ error: (e as Error).message }); }
     }
     const db = getDb(), owner = String(req.cookies.player_uuid);
-    const existing = db.prepare('SELECT player_uuid FROM leaderboard_submissions WHERE submission_id = ?').get(b.submission_id);
-    if (existing) return existing.player_uuid === owner ? res.json({ saved: true }) : res.status(409).json({ error: '提交编号冲突' });
+    const existing = db.prepare('SELECT player_uuid, steps, code_lines, seconds, completed FROM leaderboard_submissions WHERE submission_id = ?').get(b.submission_id);
+    if (existing) {
+      if (existing.player_uuid !== owner) return res.status(409).json({ error: '提交编号冲突' });
+      if (!existing.completed) return res.status(422).json({ error: '此记录未完成任务，不能加入排行榜' });
+      return res.json({ saved: true, score: leaderboardScore(config().rule, Number(existing.steps), Number(existing.code_lines), Number(existing.seconds)) });
+    }
+    const lines = b.mode === 'auto' ? codeLines(b.source) : 0;
     db.prepare(`INSERT INTO leaderboard_submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-      .run(b.submission_id, owner, b.participant_id, b.display_name.trim(), b.competition, b.level_id, b.mode, b.content_version, steps, b.mode === 'auto' ? codeLines(b.source) : 0, b.seconds, Number(b.completed), new Date().toISOString());
-    res.status(201).json({ saved: true });
+      .run(b.submission_id, owner, b.participant_id, b.display_name.trim(), b.competition, b.level_id, b.mode, b.content_version, steps, lines, b.seconds, Number(b.completed), new Date().toISOString());
+    res.status(201).json({ saved: true, score: leaderboardScore(config().rule, steps, lines, b.seconds) });
   });
   router.get('/leaderboard', (req, res) => {
     const c = config(), competition = String(req.query.competition ?? ''), level = String(req.query.level ?? ''), mode = String(req.query.mode ?? '');
@@ -71,7 +77,7 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
     let entries: Entry[] = [];
     if (competition === 'coin' || competition === 'future') {
       const rows = getDb().prepare(`SELECT a.*, p.display_name FROM attempts a JOIN players p USING(player_uuid)
-        WHERE a.mode = ? AND a.finalized_at IS NOT NULL AND a.status IN ('success','incomplete','command_limit')`).all(mode);
+        WHERE a.mode = ? AND a.finalized_at IS NOT NULL AND a.status = 'success'`).all(mode);
       entries = rows.filter(a => { const l = getLevelForAssignment(String(a.assignment_key)); return l?.level_id === level && (level.startsWith('FL') ? 'future' : 'coin') === competition; }).map(a => {
         const duration = (Date.parse(String(a.finalized_at)) - Date.parse(String(a.started_at))) / 1000;
         return { id: String(a.attempt_id), participant: String(a.player_uuid), name: String(a.display_name), steps: Number(a.steps),
@@ -80,7 +86,7 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
           submitted_at: String(a.finalized_at), completed: a.status === 'success' };
       });
     } else {
-      const rows = getDb().prepare(`SELECT * FROM leaderboard_submissions WHERE competition = ? AND level_id = ? AND mode = ? AND content_version = ?`).all(competition, level, mode, String(req.query.version ?? ''));
+      const rows = getDb().prepare(`SELECT * FROM leaderboard_submissions WHERE competition = ? AND level_id = ? AND mode = ? AND content_version = ? AND completed = 1`).all(competition, level, mode, String(req.query.version ?? ''));
       entries = rows.map(a => ({ id: String(a.submission_id), participant: String(a.participant_id), name: String(a.display_name), steps: Number(a.steps), code_lines: Number(a.code_lines), seconds: Number(a.seconds), submitted_at: String(a.submitted_at), completed: !!a.completed }));
     }
     const latest = new Map<string, Entry>();

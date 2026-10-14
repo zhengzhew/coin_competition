@@ -1,12 +1,13 @@
 import { useId } from 'react';
 import type { ThirdSnapshot } from '@coin-path/shared';
+import StrawberryStatus from './StrawberryStatus';
 
 export default function StrawberryBoard({ state }: { state: ThirdSnapshot }) {
   const id = useId().replace(/:/g, ''), berryId = `${id}-berry`;
   const count = state.objects.length - state.collected.length - Number(!!state.holding);
   const facing = ['朝上', '朝右', '朝下', '朝左'][Math.round(state.heading / (Math.PI / 2)) % 4];
   return <div className="strawberry-board">
-    <div className="strawberry-legend"><span><i className="edge-key" />任意边缘可交付</span><span>8 × 8 棋盘 · 坐标 0–7</span></div>
+    <div className="farm-map-meta">8 × 8 棋盘 · 坐标 0–7</div>
     <svg viewBox="0 0 600 594" role="img" aria-label={`草莓棋盘，剩余 ${count} 株。小车坐标 (${state.x}, ${7 - state.z})，${facing}${state.holding ? '，携带一株草莓' : ''}`} data-testid="strawberry-board">
       <defs><g id={berryId}><path d="M-16-7C-27 4-12 22 0 28 12 22 27 4 16-7 9-15-9-15-16-7Z" fill="#df4c4a" stroke="#af343b" strokeWidth="2" /><path d="M0-12-13-20-9-7-21-8-9 0 0-7 9 0 21-8 9-7 13-20Z" fill="#427641" /><path d="M0-12Q-2-21 4-25" fill="none" stroke="#427641" strokeWidth="3" /><g fill="#ffe5ae"><ellipse cx="-11" cy="4" rx="1.6" ry="2.4" /><ellipse cx="9" cy="5" rx="1.6" ry="2.4" /><ellipse cy="12" rx="1.6" ry="2.4" /><ellipse cy="21" rx="1.4" ry="2" /></g></g></defs>
       <rect x="46" y="22" width="532" height="532" rx="16" fill="#d5e2bc" />
@@ -24,6 +25,6 @@ export default function StrawberryBoard({ state }: { state: ThirdSnapshot }) {
         {state.holding && <g transform="translate(20 -19)"><circle r="14" fill="#fff8df" stroke="#d3ad4e" strokeWidth="2" /><use href={`#${berryId}`} transform="translate(0 -1) scale(.42)" /></g>}
       </g>
     </svg>
-    <div className="strawberry-position">小车 ({state.x}, {7 - state.z}) · {facing}<span>{state.holding ? '携带 1 株 · 请到边缘放下' : '夹爪空闲'}</span></div>
+    <StrawberryStatus state={state} />
   </div>;
 }

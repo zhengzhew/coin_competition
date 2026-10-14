@@ -127,13 +127,15 @@ try {
     const solution = solveStrawberryRoute(demo);
     if (i === 0) {
       await source().fill(`move(1)\nmove(-1)\n${solution.program}`); await start(); await phase('completed');
-      assert.equal(await page.getByTestId('farm-score').innerText(), '83 分'); assert.match(await page.getByTestId('farm-best').innerText(), /^12/);
+      await page.getByText('已提交排行榜', { exact: true }).waitFor();
+      assert.equal(await page.getByTestId('farm-score').innerText(), '？？'); assert.match(await page.getByTestId('farm-best').innerText(), /^12/);
       await page.getByRole('button', { name: '再挑战一次' }).click();
     }
     await source().fill(solution.program); await start(); await phase('completed');
     assert.equal(await stage().getAttribute('data-collected'), String(demo.scene_config.objects.length));
     assert.equal(await stage().getAttribute('data-holding'), ''); assert.equal(await stage().getAttribute('data-steps'), String(solution.steps));
-    assert.equal(await page.getByTestId('farm-score').innerText(), '100 分'); assert.match(await page.getByTestId('farm-best').innerText(), new RegExp(`^${solution.steps}`));
+    await page.getByText('已提交排行榜', { exact: true }).waitFor();
+    assert.equal(await page.getByTestId('farm-score').innerText(), '？？'); assert.match(await page.getByTestId('farm-best').innerText(), new RegExp(`^${solution.steps}`));
     await page.screenshot({ path: join(output, `level-${i + 1}-complete.png`), fullPage: true });
     if (i === 0) {
       await source().fill(`move(1)\nmove(-1)\n${solution.program}`); await start(); await phase('completed'); assert.match(await page.getByTestId('farm-best').innerText(), /^10/);

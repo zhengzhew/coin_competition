@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { strawberryLevels, STRAWBERRY_POSITIONS } from './levels.js';
-import { compileStrawberryProgram, solveStrawberryRoute, strawberryScore, StrawberryGridEngine } from './strawberry.js';
+import { compileStrawberryProgram, solveStrawberryRoute, StrawberryGridEngine } from './strawberry.js';
 import { createRobotRuntime, validateRobotScenario } from '../gameplay/robot/runtime.js';
 import type { ThirdDemo } from '../third/types.js';
 
@@ -66,7 +66,7 @@ test('movement cannot cross a plant or boundary and counts each successful forwa
   assert.equal(session.snapshot().steps, 2); assert.equal(session.phase, 'stopped'); assert.match(session.snapshot().message, /驶出棋盘/);
   session = execute(strawberryLevels[0], 'move(4)\nturn_right()\nmove(6)');
   assert.equal(session.snapshot().steps, 7); assert.equal(session.snapshot().x, 3); assert.match(session.snapshot().message, /草莓所在格/);
-  assert.equal(strawberryScore(7, 10, session.snapshot().completed), 0);
+  assert.equal(session.snapshot().completed, false);
 });
 test('solver matches the analytical one-plant optimum throughout the interior', () => {
   for (let x = 1; x < 7; x++) for (let y = 1; y < 7; y++) {
@@ -75,15 +75,13 @@ test('solver matches the analytical one-plant optimum throughout the interior', 
     assert.equal(solveStrawberryRoute(fixture([0, 0], [x, y])).steps, expected, `${x},${y}`);
   }
 });
-test('all optimal route witnesses complete, require one delivery per plant, and score 100', () => {
+test('all optimal route witnesses complete and require one delivery per plant', () => {
   strawberryLevels.forEach((demo, i) => {
     const solution = solveStrawberryRoute(demo), session = execute(demo, solution.program), s = session.snapshot();
     assert.equal(solution.steps, [10, 12, 16, 21, 38][i]); assert.equal(s.completed, true); assert.equal(s.holding, null);
     assert.equal(s.collected.length, demo.scene_config.objects.length); assert.equal(s.steps, solution.steps);
-    assert.equal(strawberryScore(s.steps!, solution.steps, s.completed), 100);
     const longer = execute(demo, `move(1)\nmove(-1)\n${solution.program}`).snapshot();
     assert.equal(longer.completed, true); assert.equal(longer.steps, solution.steps + 2);
-    assert.ok(strawberryScore(longer.steps!, solution.steps, true) < 100);
     session.reset(); assert.equal(session.snapshot().steps, 0); assert.equal(session.snapshot().collected.length, 0);
   });
 });
@@ -93,7 +91,6 @@ test('the 3x3 cluster requires delivery of the ninth plant before completion', (
   assert.equal(session.snapshot().collected.length, 8);
   assert.notEqual(session.snapshot().holding, null);
   assert.equal(session.snapshot().completed, false);
-  assert.equal(strawberryScore(session.snapshot().steps!, solution.steps, false), 0);
   const tooMany = structuredClone(demo); tooMany.scene_config.objects.push({ id: 'tenth', x: 1, z: 1 });
   assert.throws(() => createRobotRuntime(tooMany, 'auto'), /草莓棋盘/);
   assert.throws(() => solveStrawberryRoute(tooMany), /9 株/);
@@ -110,7 +107,7 @@ test('partial delivery is not completion; re-running starts fresh; snapshots do 
   session.stop(); session.tick(5); assert.equal(session.snapshot().steps, 1);
   assert.throws(() => session.start('release(1)'), /第 1 行/); assert.equal(session.snapshot().steps, 1);
 });
-test('invalid configurations fail before play; unreachable scenes fail scoring calculation', () => {
+test('invalid configurations fail before play; unreachable scenes fail route calculation', () => {
   const demo = structuredClone(strawberryLevels[0]); demo.scene_config.objects.push({ ...demo.scene_config.objects[0], id: 'other' });
   assert.throws(() => createRobotRuntime(demo, 'auto'), /草莓棋盘/);
   const blocked = fixture([0, 0], [4, 4]); blocked.scene_config.walls = [{ x: 0, z: 6 }, { x: 1, z: 7 }];

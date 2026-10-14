@@ -122,6 +122,3 @@ export function solveStrawberryRoute(demo: ThirdDemo): { steps: number; program:
   }
   return { steps: distances.get(end)!, program: program.join('\n') };
 }
-
-export const strawberryScore = (steps: number, optimal: number, completed: boolean) =>
-  completed && steps >= optimal && steps >= 0 ? (steps === 0 ? 100 : Math.floor(100 * optimal / steps)) : 0;

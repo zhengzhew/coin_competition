@@ -82,7 +82,7 @@ export default function FarmApp() {
     isCompleted={item => !!completed[`auto.${item.demo_id}`]} onComplete={onComplete} />;
 
   return <div className="third-game-shell farm-shell"><div className="app future-city third-game farm-game farm-welcome competition-template competition-welcome" data-module="farm">
-    <CompetitionWelcome module={competitionModules.farm} onHome={() => go(farmPath())} footer="挑战进度保存在本浏览器 · 本地评分">
+    <CompetitionWelcome module={competitionModules.farm} onHome={() => go(farmPath())} footer="挑战进度保存在本浏览器 · 总分按教师规则计算">
       {invalid ? <section className="onboarding-card"><h2>没有找到这个农场任务</h2><p>请回到生态农场，重新选择任务。</p><button className="identity-confirm" onClick={() => go(farmPath())}>返回生态农场</button></section>
         : !confirmed ? <form className="onboarding-card" aria-labelledby="farm-identity-heading" onSubmit={event => {
           event.preventDefault(); if (!name.trim()) return;
