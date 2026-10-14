@@ -102,12 +102,11 @@ try {
   assert.ok(await source().evaluate(node => node.scrollTop) > 0, 'execution auto-scrolls to the highlighted line');
   assert.equal(await page.getByTestId('running-code-line').count(), 1);
   await page.screenshot({ path: join(output, 'running-line-highlight.png'), fullPage: true });
-  await page.getByRole('button', { name: '停止', exact: true }).click(); await phase('stopped');
+  await page.getByRole('button', { name: '停止', exact: true }).click(); await phase('ready');
   const stoppedSteps = await stage().getAttribute('data-steps'); await wait(300); assert.equal(await stage().getAttribute('data-steps'), stoppedSteps);
   assert.equal(await page.getByTestId('running-code-line').count(), 0);
-  assert.equal(await page.getByTestId('competition-stop-reset').innerText(), '重置');
+  assert.equal(await page.getByTestId('competition-stop-reset').innerText(), '停止');
   assert.equal(await page.getByRole('button', { name: '重置代码', exact: true }).count(), 0);
-  await page.getByRole('button', { name: '重置', exact: true }).click();
   assert.equal(await stage().getAttribute('data-steps'), '0'); assert.equal(await source().inputValue(), longProgram);
   assert.equal(await stage().getAttribute('data-x'), '0'); assert.equal(await stage().getAttribute('data-map-y'), '0');
   assert.equal(await stage().getAttribute('data-heading'), '0'); assert.equal(await page.getByTestId('farm-strawberry').count(), 1);
@@ -175,7 +174,7 @@ try {
   await source().fill('move(1)'); await start(); await phase('stopped'); assert.equal(await stage().getAttribute('data-map-y'), '1');
   checks.push('WebGL context loss falls back to the grid without losing playable state');
   await page.goto(origin + '/farm/unknown/'); await page.getByRole('heading', { name: '没有找到这个农场任务' }).waitFor();
-  assert.deepEqual(farmApiRequests, []); assert.deepEqual(remoteRequests, []);
+  assert.ok(farmApiRequests.every(url => /\/api\/(players\/bootstrap|leaderboard)/.test(url))); assert.deepEqual(remoteRequests, []);
   checks.push('player isolation, invalid routes, no farm API submission or remote dependencies');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(origin + '/demo/collect/auto/simulation3d/collect-simulation3d-sample/'); await page.locator('canvas[data-third-scene][data-ready=true]').waitFor();

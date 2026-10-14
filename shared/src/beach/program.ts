@@ -43,6 +43,8 @@ export class BeachProgramSession {
     compileBeachProgram(source, this.demo); // Validate before changing the previous attempt.
     this.controller.start(source); this.elapsed = 0; this.startedAt = this.now();
   }
+  pause() { if (this.phase === 'running') { this.updateTime(); this.controller.pause(); } }
+  resume() { if (this.phase === 'paused') { this.startedAt = this.now() - this.elapsed * 1000; this.controller.resume(); } }
   stop(message = '本轮已停止。重新运行将从起点计时。') {
     if (this.phase === 'running') this.updateTime();
     this.controller.stop(message);

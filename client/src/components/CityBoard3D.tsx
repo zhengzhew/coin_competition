@@ -7,7 +7,7 @@ import RobotFallback from './RobotFallback';
 import FactoryStatus from './FactoryStatus';
 import { createSaikaoRobot, type SaikaoRobot } from './SaikaoRobot';
 
-export default function CityBoard3D({ level, state }: { level: LevelDef; state: GameState }) {
+export default function CityBoard3D({ level, state, paused = false }: { level: LevelDef; state: GameState; paused?: boolean }) {
   const host = useRef<HTMLDivElement>(null);
   const runtime = useRef<CityScene | null>(null);
   const latestState = useRef(state);
@@ -36,6 +36,7 @@ export default function CityBoard3D({ level, state }: { level: LevelDef; state: 
   }, [level, fallback]);
 
   useEffect(() => { runtime.current?.update(state); }, [state]);
+  useEffect(() => { if (runtime.current) runtime.current.paused = paused; }, [paused, ready]);
   useEffect(() => {
     const changed = () => setFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener('fullscreenchange', changed);

@@ -7,10 +7,10 @@ export const STRAWBERRY_POSITIONS: ReadonlyArray<ReadonlyArray<readonly [number,
   Array.from({ length: 9 }, (_, i) => [3 + i % 3, 3 + Math.floor(i / 3)] as const),
 ];
 export const strawberryLevels: ThirdDemo[] = STRAWBERRY_POSITIONS.map((positions, index) => ({
-  demo_id: `strawberry-${index + 1}`, competition_id: 'farm', content_version: 'strawberry-grid-1',
+  demo_id: `strawberry-${index + 1}`, competition_id: 'farm', content_version: 'strawberry-grid-2',
   grid_task: 'strawberry-edge', category: 'place', simulation: 'grid', supported_modes: ['auto'], status: 'ready',
   title: ['单株草莓', '两株草莓', '四株草莓', '一排草莓', '草莓方阵'][index],
-  objective: `采摘 ${positions.length} 株草莓，逐株送到任意边缘，用更少步数完成。`,
+  objective: `采摘 ${positions.length} 株草莓，逐株送到任意边缘并朝外放下，用更少步数完成。`,
   description: '观察坐标，选择采摘方向与交付边缘，规划更短的路线。',
   scene_config: { kind: 'grid', width: 8, depth: 8, start: { x: 0, z: 7, heading: 0 }, walls: [],
     objects: positions.map(([x, y], i) => ({ id: `strawberry-${i + 1}`, x, z: 7 - y })) },

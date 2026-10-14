@@ -12,6 +12,7 @@ import {
   type ReplayResult,
   type TelemetryEvent,
 } from '@coin-path/shared';
+import { registerLeaderboardRoutes } from './leaderboard.js';
 import { getDb } from './db.js';
 import { allLevels, competitionLevels, getLevel, getLevelForAssignment, loadLevels } from './levels.js';
 import { buildInsights, type InsightAttempt, type InsightEvent } from './insights.js';
@@ -75,6 +76,8 @@ function teacherGuard(req: Request, res: Response, next: NextFunction) {
   if (req.header('x-teacher-key') !== configured) return res.status(401).json({ error: '教师密钥错误' });
   next();
 }
+
+registerLeaderboardRoutes(apiRouter, requirePlayer, teacherGuard);
 
 function scoreReplay(level: LevelDef, result: ReplayResult, mode:Mode, commands:Action[], source?:unknown) {
   if(level.robot&&level.optimal_actions!==undefined)return scoreRobotChallenge(level,result,mode,commands,source);
@@ -232,6 +235,9 @@ apiRouter.post('/attempts/:id/commands', requirePlayer, (req, res) => {
   if (!Array.isArray(incoming) || incoming.length>level.max_commands || incoming.some((item) => !allowed.has(item))) {
     return res.status(422).json({ error: '指令不属于当前关卡，或超出指令上限' });
   }
+  const activeSeconds = req.body?.active_seconds;
+  if (activeSeconds !== undefined && (typeof activeSeconds !== 'number' || !Number.isFinite(activeSeconds) || activeSeconds < 0 || activeSeconds > (Date.now() - Date.parse(String(attempt.started_at))) / 1000 + 2)) return res.status(422).json({ error: '用时无效' });
+  if (activeSeconds !== undefined) database.prepare('UPDATE attempts SET active_seconds = ? WHERE attempt_id = ?').run(activeSeconds, String(req.params.id));
   const previous = JSON.parse(String(attempt.commands || '[]')) as Direction[];
   const commands = [...previous, ...incoming as Action[]].slice(0, level.max_commands);
   const result = replay(level, commands, level.required_order);
@@ -467,7 +473,7 @@ apiRouter.delete('/teacher/players/:uuid/data', teacherGuard, (req, res) => {
     const scope = playerDataScope(id);
     if (!scope) { database.exec('ROLLBACK;'); return res.status(404).json({ error: '该 UUID 不存在或已删除' }); }
     // Exact UUID only; query filters never broaden or narrow this destructive scope.
-    for (const table of ['events', 'event_streams', 'attempts', 'assignments', 'players']) {
+    for (const table of ['leaderboard_submissions', 'events', 'event_streams', 'attempts', 'assignments', 'players']) {
       database.prepare(`DELETE FROM ${table} WHERE player_uuid = ?`).run(id);
     }
     database.exec('COMMIT;');
@@ -486,6 +492,7 @@ apiRouter.delete('/teacher/data', teacherGuard, (_req, res) => {
   database.exec('BEGIN IMMEDIATE;');
   try {
     database.exec(`
+      DELETE FROM leaderboard_submissions;
       DELETE FROM events;
       DELETE FROM event_streams;
       DELETE FROM attempts;

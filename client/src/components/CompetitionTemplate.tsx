@@ -17,11 +17,12 @@ export function CompetitionMission({ number, title, objective, children }: { num
   return <div className="competition-mission-heading farm-mission-heading module-mission-heading"><span className="competition-mission-number farm-mission-number">{String(number).padStart(2, '0')}</span><h1>{title}</h1><p><span>任务目标</span><strong>{objective}</strong></p>{children}</div>;
 }
 
-export function CompetitionActions({ running, busy = false, canReset, onRun, onStop, onReset, runLabel = '▶ 运行程序', runTrack, stopTrack, testId }: {
+export function CompetitionActions({ running, busy = false, canReset, onRun, onStop, onReset, runLabel = '▶ 运行程序', runTrack, stopTrack, testId, paused = false, onPause }: {
+  paused?: boolean; onPause?: () => void;
   running: boolean; busy?: boolean; canReset: boolean; onRun: () => void; onStop: () => void; onReset: () => void;
   runLabel?: string; runTrack?: string; stopTrack?: string; testId?: string;
 }) {
-  return <div className="third-program-actions module-program-actions"><button className="run-btn" disabled={running || busy} onClick={onRun} data-track-id={runTrack} data-testid={testId}>{running ? '正在执行…' : busy ? '正在处理…' : runLabel}</button><button className="secondary-action third-stop" disabled={canReset ? busy : !running} onClick={canReset ? onReset : onStop} data-track-id={canReset ? 'attempt.reset' : stopTrack} data-testid="competition-stop-reset">{canReset ? '重置' : '停止'}</button></div>;
+  return <div className="third-program-actions module-program-actions"><button className="run-btn" disabled={running ? !onPause : busy} onClick={running && onPause ? onPause : onRun} data-track-id={runTrack} data-testid={testId}>{running ? onPause ? paused ? '继续' : '暂停' : '正在执行…' : busy ? '正在处理…' : runLabel}</button><button className="secondary-action third-stop" disabled={canReset ? busy : !running} onClick={canReset ? onReset : onStop} data-track-id={canReset ? 'attempt.reset' : stopTrack} data-testid="competition-stop-reset">{canReset ? '重置' : '停止'}</button></div>;
 }
 
 export function CompetitionWelcome({ module, onHome, children, footer }: { module: CompetitionModule; onHome: () => void; children: ReactNode; footer: string }) {

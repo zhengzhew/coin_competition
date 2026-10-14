@@ -27,7 +27,9 @@
     "test:future:browser": "npm run build && node scripts/verify-curriculum-browser.mjs",
     "test:policy": "npm run build -w shared && npm run build -w server && node scripts/verify-attempt-policy.mjs && node scripts/verify-insights.mjs",
     "loadtest": "node scripts/loadtest.mjs",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test:leaderboard": "npm run build -w shared && npm run build -w server && node scripts/verify-leaderboard.mjs",
+    "test:controls:browser": "npm run build && node scripts/verify-controls-leaderboard-browser.mjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",

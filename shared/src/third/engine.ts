@@ -70,7 +70,7 @@ export class ThirdEngine {
       this.value = {
         x: this.grid.x, z: this.demo.scene_config.depth - 1 - this.grid.y,
         heading: headings.indexOf(robot.facing) * Math.PI / 2,
-        holding: robot.holding, collected, actions: this.grid.consumed_commands,
+        holding: robot.holding, collected, steps: this.grid.steps, actions: this.grid.consumed_commands,
         objects: this.demo.scene_config.objects.map(o => {
           const pos = robot.cargo[o.id];
           return pos ? { ...o, x: pos[0], z: this.demo.scene_config.depth - 1 - pos[1] } : { ...o };

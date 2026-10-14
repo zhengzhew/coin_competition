@@ -7,6 +7,7 @@ export class BeachSession {
   arena: ThirdPhysicsArena;
   phase: 'ready' | 'running' | 'stopped' | 'completed' = 'ready';
   elapsed = 0;
+  private distance = 0;
   readonly inputs = new Map<string, ThirdAction>();
   private startedAt = 0;
   private message = '';
@@ -15,7 +16,7 @@ export class BeachSession {
     this.arena = new ThirdPhysicsArena(demo);
   }
   reset() {
-    this.inputs.clear(); this.arena = new ThirdPhysicsArena(this.demo); this.elapsed = 0; this.phase = 'ready'; this.message = '';
+    this.inputs.clear(); this.arena = new ThirdPhysicsArena(this.demo); this.elapsed = 0; this.distance = 0; this.phase = 'ready'; this.message = '';
   }
   start() {
     if (this.phase === 'running') return;
@@ -40,13 +41,16 @@ export class BeachSession {
     const held = new Set(this.inputs.values()), config = this.demo.scene_config;
     if (config.kind !== 'simulation3d') return;
     // Limit physics catch-up after slow frames without discounting the real race clock.
+    const before = this.arena.snapshot();
     this.arena.step(Math.min(dt, .1), (Number(held.has('forward')) - Number(held.has('backward'))) * config.speed,
       (Number(held.has('turn_right')) - Number(held.has('turn_left'))) * config.turnSpeed);
+    const after = this.arena.snapshot();
+    this.distance += Math.hypot(after.x - before.x, after.z - before.z);
     if (this.arena.snapshot().completed) { this.phase = 'completed'; this.inputs.clear(); }
   }
   snapshot() {
     const state = this.arena.snapshot();
-    return { ...state, phase: this.phase, elapsed: this.elapsed, score: beachScore(this.elapsed, this.phase === 'completed'),
+    return { ...state, steps: Number((this.distance / 12).toFixed(2)), phase: this.phase, elapsed: this.elapsed, score: beachScore(this.elapsed, this.phase === 'completed'),
       message: this.message || (this.phase === 'ready' ? '观察贝壳位置，准备好后点击「开始计时」。' : state.message) };
   }
 }

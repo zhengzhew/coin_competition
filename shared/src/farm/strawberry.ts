@@ -31,7 +31,7 @@ export class StrawberryGridEngine {
       if (available.some(o => o.x === x && o.z === z)) { fail('草莓所在格不能通行。请停在相邻格，面向草莓采摘。'); return; }
       if (config.walls.some(w => w.x === x && w.z === z)) { fail('前方有障碍，请调整路线。'); return; }
       s.x = x; s.z = z; s.steps!++;
-      s.message = s.holding ? '携带中：到任意边缘格放下草莓。' : '行驶中：面向相邻草莓后采摘。';
+      s.message = s.holding ? '携带中：到任意边缘格，面朝棋盘外放下草莓。' : '行驶中：面向相邻草莓后采摘。';
     } else if (action === 'grab') {
       if (s.holding) { fail('一次只能携带一株草莓，请先到边缘放下。'); return; }
       const berry = available.find(o => o.x === s.x + dx && o.z === s.z + dz);
@@ -40,6 +40,7 @@ export class StrawberryGridEngine {
     } else if (action === 'release') {
       if (!s.holding) { fail('夹爪中没有草莓，请先采摘。'); return; }
       if (!atEdge(s.x, s.z, config.width, config.depth)) { fail('请让小车到达棋盘的任意边缘格，再放下草莓。'); return; }
+      if (s.x + dx >= 0 && s.x + dx < config.width && s.z + dz >= 0 && s.z + dz < config.depth) { fail('请先转向，让车头朝向棋盘外，再放下草莓。'); return; }
       s.collected.push(s.holding); s.holding = null;
       s.completed = s.collected.length === config.objects.length;
       s.message = s.completed ? '全部草莓已送达边缘！' : '草莓已送达边缘，继续采摘下一株。';
@@ -97,7 +98,7 @@ export function solveStrawberryRoute(demo: ThirdDemo): { steps: number; program:
       distances.set(next, distance); previous.set(next, { key, action, dir });
       if (cost === 0) queue.set(--head, next); else queue.set(tail++, next);
     };
-    if (holding >= 0 && atEdge(x, z, c.width, c.depth)) offer(encode(pos, mask, -1), 0, 'release');
+    if (holding >= 0 && atEdge(x, z, c.width, c.depth)) offer(encode(pos, mask, -1), 0, 'release', z === 0 ? 0 : x === c.width - 1 ? 1 : z === c.depth - 1 ? 2 : 3);
     for (let dir = 0; dir < 4; dir++) {
       const nx = x + vectors[dir][0], nz = z + vectors[dir][1];
       if (nx < 0 || nz < 0 || nx >= c.width || nz >= c.depth || c.walls.some(w => w.x === nx && w.z === nz)) continue;
@@ -112,7 +113,7 @@ export function solveStrawberryRoute(demo: ThirdDemo): { steps: number; program:
   for (let key = end; key !== start;) { const item = previous.get(key)!; path.push(item); key = item.key; }
   let heading = direction(c.start.heading); const program: string[] = [];
   for (const step of path.reverse()) {
-    if (step.action !== 'release') {
+    {
       const turns = (step.dir - heading + 4) % 4;
       if (turns === 3) program.push('turn_left()'); else for (let t = 0; t < turns; t++) program.push('turn_right()');
       heading = step.dir;

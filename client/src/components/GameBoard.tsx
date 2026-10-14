@@ -4,10 +4,10 @@ import './GameBoard.css';
 import { isFuture, skin } from '../theme';
 import CityBoard from './CityBoard3D';
 
-interface Props { level: LevelDef; state: GameState; }
+interface Props { level: LevelDef; state: GameState; paused?: boolean; }
 
-export default function GameBoard({ level, state }: Props) {
-  return isFuture ? <CityBoard level={level} state={state} /> : <FlatBoard level={level} state={state} />;
+export default function GameBoard({ level, state, paused }: Props) {
+  return isFuture ? <CityBoard paused={paused} level={level} state={state} /> : <FlatBoard level={level} state={state} />;
 }
 
 function FlatBoard({ level, state }: Props) {

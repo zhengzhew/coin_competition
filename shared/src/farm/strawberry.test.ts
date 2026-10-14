@@ -47,14 +47,16 @@ test('picking requires the front orthogonal neighbor, then only one berry may be
   engine.act('forward'); assert.equal(engine.snapshot().x, 4); assert.equal(engine.snapshot().steps, 1, 'picked cell becomes traversable');
   const diagonal = new StrawberryGridEngine(fixture([3, 3], [4, 4])); diagonal.act('grab'); assert.equal(diagonal.snapshot().holding, null);
 });
-test('all four edges accept delivery at the car position regardless of heading', () => {
+test('all four edges require an outward heading before delivery', () => {
   for (const [start, berry, heading] of [
     [[0, 3], [1, 3], Math.PI / 2], [[7, 3], [6, 3], 3 * Math.PI / 2],
     [[3, 0], [3, 1], 0], [[3, 7], [3, 6], Math.PI],
   ] as Array<[[number, number], [number, number], number]>) {
     const engine = new StrawberryGridEngine(fixture(start, berry, heading));
     engine.act('release'); assert.equal(engine.snapshot().completed, false);
-    engine.act('grab'); engine.act('turn_right'); engine.act('release');
+    engine.act('grab'); engine.act('release'); assert.equal(engine.snapshot().completed, false);
+    engine.act('turn_right'); engine.act('release'); assert.equal(engine.snapshot().completed, false);
+    engine.act('turn_right'); engine.act('release');
     assert.equal(engine.snapshot().completed, true); assert.equal(engine.snapshot().steps, 0);
     assert.deepEqual(engine.snapshot().collected, ['a']); engine.act('release'); assert.deepEqual(engine.snapshot().collected, ['a']);
   }

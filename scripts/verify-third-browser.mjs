@@ -205,7 +205,7 @@ try {
   const editor = page.getByRole('textbox', { name: '指令程序', exact: true });
   await editor.fill('wait(10)'); await editor.press('w'); assert.equal(await stage().getAttribute('data-z'), '96.0000');
   await editor.fill('wait(10)'); await start(); await page.getByRole('button', { name: '停止', exact: true }).click();
-  assert.equal(await stage().getAttribute('data-phase'), 'stopped');
+  assert.equal(await stage().getAttribute('data-phase'), 'ready');
   await editor.fill('forward(1)\n# saved draft'); await page.reload(); await ready('simulation3d');
   assert.equal(await editor.inputValue(), 'forward(1)\n# saved draft');
   await page.getByRole('button', { name: '恢复示例程序' }).click();

@@ -6,7 +6,7 @@ import StrawberryBoard from './StrawberryBoard';
 import { createSaikaoRobot, type SaikaoRobot } from '../components/SaikaoRobot';
 import '../components/CityBoard3D.css';
 
-export default function StrawberryBoard3D({ state }: { state: ThirdSnapshot }) {
+export default function StrawberryBoard3D({ state, paused = false }: { state: ThirdSnapshot; paused?: boolean }) {
   const host = useRef<HTMLDivElement>(null), runtime = useRef<StrawberryScene | null>(null);
   const latest = useRef(state); latest.current = state;
   const [ready, setReady] = useState(false), [fallback, setFallback] = useState(false);
@@ -24,6 +24,7 @@ export default function StrawberryBoard3D({ state }: { state: ThirdSnapshot }) {
     return () => { cancelled = true; runtime.current?.dispose(); runtime.current = null; };
   }, [fallback]);
   useEffect(() => { runtime.current?.update(state); }, [state]);
+  useEffect(() => { if (runtime.current) runtime.current.paused = paused; }, [paused, ready]);
   useEffect(() => {
     const changed = () => setFullscreen(Boolean(document.fullscreenElement)); document.addEventListener('fullscreenchange', changed);
     return () => document.removeEventListener('fullscreenchange', changed);

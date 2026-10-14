@@ -116,7 +116,8 @@ try {
   await page.getByRole('button', { name: '停止', exact: true }).click(); const codeStopped = await snapshot(), codeTime = await page.getByTestId('beach-timer').innerText();
   await advance(1000); assert.deepEqual(await snapshot(), codeStopped); assert.equal(await page.getByTestId('beach-timer').innerText(), codeTime);
   await page.getByRole('button', { name: '重置', exact: true }).click(); assert.equal((await snapshot()).z, 96); assert.equal(await editor().inputValue(), 'move_to(60, 36)\nturn_to(90)');
-  await start(); await page.evaluate(() => window.dispatchEvent(new Event('blur'))); assert.equal((await snapshot()).phase, 'stopped');
+  await start(); await page.evaluate(() => window.dispatchEvent(new Event('blur'))); assert.equal((await snapshot()).phase, 'paused');
+  await page.getByRole('button', { name: '停止', exact: true }).click();
   await editor().fill(programs['shells-3']); await level(4); await ready(); assert.equal(await editor().inputValue(), '');
   await editor().fill(programs['shells-4']); await level(3); await ready(); assert.equal(await editor().inputValue(), programs['shells-3']);
   await screenshot('06-level-three-code.png');
@@ -150,7 +151,7 @@ try {
   await page.goto(origin + '/demo/place/manual/simulation3d/place-simulation3d-sample/');
   await page.locator('canvas[data-third-scene][data-ready=true]').waitFor(); assert.equal(await page.locator('canvas[data-beach-scene]').count(), 0);
   checks.push('farm entry and original 3D placement DEMO still render');
-  assert.deepEqual(errors, []); assert.deepEqual(remote, []); assert.deepEqual(api, []);
+  assert.deepEqual(errors, []); assert.deepEqual(remote, []); assert.ok(api.every(url => /\/api\/(players\/bootstrap|leaderboard)/.test(url)));
   writeFileSync(join(output, 'report.json'), JSON.stringify({ checks, errors, remote, api, temp }, null, 2)); console.log(JSON.stringify({ checks, errors, output }, null, 2));
 } catch (error) { if (page) { await page.screenshot({ path: join(output, 'failure.png'), fullPage: true }).catch(() => {}); console.error(await page.locator('body').innerText()); } throw error; }
 finally { await browser?.close(); server.kill(); }

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { createUuid, validateCount, type Direction, type PythonConfig, type TemplateRow } from '@coin-path/shared';
 import './PythonEditor.css';
 import { CompetitionActions } from './CompetitionTemplate';
@@ -10,6 +11,7 @@ interface Props {
   onRun: () => void;
   onReset: () => void;
   onStop: () => void;
+  paused: boolean; onPause: () => void;
   canReset: boolean;
   executing: boolean;
   activeRowId: string | null;
@@ -31,7 +33,8 @@ const DIRECTION_NAMES: Record<Direction, string> = {
   right: '向右',
 };
 
-export default function PythonEditor({ config, rows, onChange, onRun, onReset, onStop, canReset, executing, activeRowId, isRunning, error }: Props) {
+export default function PythonEditor({ config, rows, onChange, onRun, onReset, onStop, canReset, executing, activeRowId, isRunning, error, paused, onPause }: Props) {
+  const cursor = useRef<string | null>(null);
   const viewport = useExecutingRow(activeRowId);
   const activeLine = rows.findIndex(row => row.row_id === activeRowId) + 1;
   const updateCount = (index: number, count: string) => {
@@ -43,7 +46,9 @@ export default function PythonEditor({ config, rows, onChange, onRun, onReset, o
   const addCommand = (direction: Direction) => {
     if (rows.length >= config.max_rows) return;
     const rowId = createUuid();
-    onChange([...rows, { row_id: rowId, direction, count: '' }]);
+    const at = rows.findIndex(row => row.row_id === cursor.current);
+    const index = at < 0 ? rows.length : at;
+    onChange([...rows.slice(0, index), { row_id: rowId, direction, count: '' }, ...rows.slice(index)]);
     requestAnimationFrame(() => {
       document.querySelector<HTMLInputElement>(`[data-row-id="${rowId}"] input`)?.focus();
     });
@@ -82,7 +87,7 @@ export default function PythonEditor({ config, rows, onChange, onRun, onReset, o
           const direction = row.direction as Direction;
           const countValid = row.count === '' || row.count === null || validateCount(row.count).valid;
           return (
-            <div key={row.row_id} className={`editor-row${activeRowId === row.row_id ? ' is-executing' : ''}`} data-row-id={row.row_id} data-testid={activeRowId === row.row_id ? 'running-code-line' : undefined}>
+            <div onMouseEnter={() => { cursor.current = row.row_id; }} onFocus={() => { cursor.current = row.row_id; }} onClick={() => { cursor.current = row.row_id; }} key={row.row_id} className={`editor-row${activeRowId === row.row_id ? ' is-executing' : ''}`} data-row-id={row.row_id} data-testid={activeRowId === row.row_id ? 'running-code-line' : undefined}>
               <span className="row-number">{index + 1}</span>
               <span className="code-fixed command-name">move_{direction}(</span>
               <input
@@ -114,7 +119,7 @@ export default function PythonEditor({ config, rows, onChange, onRun, onReset, o
 
       {rows.length >= config.max_rows && <p className="row-limit">本关最多添加 {config.max_rows} 行指令</p>}
       {error && <p className="editor-error" role="alert">{error}</p>}
-      <CompetitionActions running={executing} busy={isRunning} canReset={canReset} onRun={onRun} onStop={onStop} onReset={onReset} runTrack="python.run" stopTrack="attempt.stop" />
+      <CompetitionActions running={executing} paused={paused} onPause={onPause} busy={isRunning} canReset={canReset} onRun={onRun} onStop={onStop} onReset={onReset} runTrack="python.run" stopTrack="attempt.stop" />
     </section>
   );
 }

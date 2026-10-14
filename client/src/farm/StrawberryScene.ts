@@ -151,6 +151,7 @@ export class StrawberryScene {
     this.compassNeedle.innerHTML = '<path d="M0 -21 7 12 0 7 -7 12Z" fill="#528047"/><path d="M0 21 5 10 0 12 -5 10Z" fill="#c1cbaf"/>';
     this.compass.append(this.compassNeedle); this.host.append(this.compass);
   }
+  paused = false;
   update(state: ThirdSnapshot, reset = false) {
     const fresh = reset || state.actions < this.state.actions;
     this.state = state; this.destination.copy(this.world(state.x, state.z));
@@ -202,11 +203,11 @@ export class StrawberryScene {
   }
   private frame(time: number) {
     if (this.disposed) return;
-    const dt = Math.min(.05, Math.max(0, (time - this.lastFrame) / 1000)); this.lastFrame = time;
-    this.robot.position.lerp(this.destination, this.reducedMotion ? 1 : 1 - Math.exp(-dt * 24));
-    if (this.robot.position.distanceTo(this.destination) < .002) this.robot.position.copy(this.destination);
+    const dt = this.paused ? 0 : Math.min(.05, Math.max(0, (time - this.lastFrame) / 1000)); this.lastFrame = time;
+    if (!this.paused) this.robot.position.lerp(this.destination, this.reducedMotion ? 1 : 1 - Math.exp(-dt * 24));
+    if (!this.paused && this.robot.position.distanceTo(this.destination) < .002) this.robot.position.copy(this.destination);
     const turn = Math.atan2(Math.sin(-this.state.heading - this.robot.rotation.y), Math.cos(-this.state.heading - this.robot.rotation.y));
-    this.robot.rotation.y += turn * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 24));
+    if (!this.paused) this.robot.rotation.y += turn * (this.reducedMotion ? 1 : 1 - Math.exp(-dt * 24));
     if (this.view === 'follow') {
       const delta = this.robot.position.clone(); delta.y = .2; delta.sub(this.controls.target);
       this.controls.target.add(delta); this.camera.position.add(delta);

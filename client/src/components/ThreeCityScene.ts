@@ -46,6 +46,7 @@ export class CityScene {
   private segmentTime = 1;
   private heading = 0;
   private lastFrame = 0;
+  paused = false;
   private elapsed = 0;
   private disposed = false;
   private diagnosticFrame = 0;
@@ -504,7 +505,7 @@ export class CityScene {
   }
   private frame(time:number) {
     if(this.disposed)return;
-    const delta=Math.min(.05,Math.max(0,(time-this.lastFrame)/1000));this.lastFrame=time;this.elapsed+=delta;
+    const delta=this.paused ? 0 : Math.min(.05,Math.max(0,(time-this.lastFrame)/1000));this.lastFrame=time;this.elapsed+=delta;
     if(this.state.robot?.automation) {
       this.factoryCart.position.lerp(this.factoryCartTarget,this.reducedMotion?1:Math.min(1,delta*12));
       const id=this.state.robot.automation.cart_cargo;

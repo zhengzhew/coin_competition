@@ -95,6 +95,17 @@ function initSchema(database: DatabaseSync) {
     CREATE INDEX IF NOT EXISTS idx_events_attempt
       ON events(attempt_id, seq);
   `);
+  const columns = database.prepare('PRAGMA table_info(attempts)').all();
+  if (!columns.some(column => column.name === 'active_seconds')) database.exec('ALTER TABLE attempts ADD COLUMN active_seconds REAL');
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS leaderboard_config (id INTEGER PRIMARY KEY CHECK (id = 1), value TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS leaderboard_submissions (
+      submission_id TEXT PRIMARY KEY, player_uuid TEXT NOT NULL REFERENCES players(player_uuid), participant_id TEXT NOT NULL,
+      display_name TEXT NOT NULL, competition TEXT NOT NULL, level_id TEXT NOT NULL, mode TEXT NOT NULL, content_version TEXT NOT NULL,
+      steps REAL NOT NULL, code_lines INTEGER NOT NULL, seconds REAL NOT NULL, completed INTEGER NOT NULL, submitted_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_leaderboard_scope ON leaderboard_submissions(competition, level_id, mode, submitted_at);
+  `);
 }
 
 export function closeDb() {

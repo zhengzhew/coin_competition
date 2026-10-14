@@ -8,7 +8,8 @@ import GameBoard from './components/GameBoard';
 import LevelNav from './components/LevelNav';
 import PythonEditor from './components/PythonEditor';
 import RobotEditor from './components/RobotEditor';
-import AttemptTimer from './components/AttemptTimer';
+import { LevelMetrics } from './components/Leaderboard';
+import { useAttemptClock } from './components/useAttemptClock';
 import { CompetitionHeader, CompetitionMission, CompetitionActions, CompetitionWelcome } from './components/CompetitionTemplate';
 import { competitionModules } from './competition-modules';
 import { executionRows } from './program-execution';
@@ -52,8 +53,12 @@ export default function App() {
   const [rows, setRows] = useState<TemplateRow[]>([]);
   const [submittedLines,setSubmittedLines]=useState<number|null>(null);
   const [animating, setAnimating] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const clock = useAttemptClock(attempt?.attempt_id, !!attempt && gameState?.status === 'running' && !paused);
+  const clockSeconds = useRef(clock.seconds); clockSeconds.current = clock.seconds;
+  const freezeClock = useRef(clock.freeze); freezeClock.current = clock.freeze;
   const [activeRowId, setActiveRowId] = useState<string | null>(null);
-  const programRunRef = useRef<{ stopped: boolean } | null>(null);
+  const programRunRef = useRef<{ stopped: boolean; paused: boolean; executed: Action[]; source: string; submitting: boolean } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [loadingError, setLoadingError] = useState<string | null>(null);
@@ -146,7 +151,7 @@ export default function App() {
 
   const stopRemoteAttempt = (current = attemptRef.current) => {
     if (!current || current.attempt_id.startsWith('local-')) return;
-    void fetch(`/api/attempts/${current.attempt_id}/stop`, { method: 'POST', credentials: 'include' });
+    return fetch(`/api/attempts/${current.attempt_id}/stop`, { method: 'POST', credentials: 'include' }).catch(() => null);
   };
 
   const resetGame = useCallback((stopRemote = true) => {
@@ -232,7 +237,7 @@ export default function App() {
     }
   };
 
-  const beginAttempt = async (preserveProgram: boolean): Promise<AttemptInfo | null> => {
+  const beginAttempt = async (preserveProgram: boolean, cancel?: { stopped: boolean }): Promise<AttemptInfo | null> => {
     const level = levelRef.current;
     if (!level || startingRef.current || switchingRef.current) return null;
     startingRef.current = true;
@@ -252,12 +257,15 @@ export default function App() {
     if (!preserveProgram&&!level.robot) setRows(generateInitialRows(level.python));
     const assignmentKey = modeRef.current === 'keyboard' ? level.keyboard_id : level.python_id;
     try {
+      await commandChain.current;
+      if (cancel?.stopped) return null;
       const response = await fetch('/api/attempts', {
         method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ assignment_key: assignmentKey }),
       });
       const body = await response.json();
       if (response.status === 409 && body.code === 'ATTEMPT_LIMIT_REACHED') {
+        if (cancel?.stopped) return null;
         const next = { attempt_id: `local-${createUuid()}`, trial_index: 0, assignment_key: assignmentKey };
         attemptRef.current = next; setAttempt(next);
         setMessage('3 次正式尝试已用完，当前为练习模式，不计算成绩。');
@@ -265,6 +273,7 @@ export default function App() {
       }
       if (!response.ok) throw new Error(body.error || '无法开始本轮');
       const next = body as AttemptInfo;
+      if (cancel?.stopped) { stopRemoteAttempt(next); return null; }
       attemptRef.current = next; setAttempt(next);
       telemetryRef.current?.track('attempt_started', 'attempt.start', { assignment_key: assignmentKey, trial_index: next.trial_index, ...preparation });
       return next;
@@ -308,11 +317,11 @@ export default function App() {
     });
   };
 
-  const sendCommands = async (currentAttempt: AttemptInfo, commands: Action[], programSnapshot?: string) => {
+  const sendCommands = async (currentAttempt: AttemptInfo, commands: Action[], programSnapshot?: string, activeSeconds = clockSeconds.current()) => {
     if (currentAttempt.attempt_id.startsWith('local-')) return null;
     const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/commands`, {
       method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ commands, program_snapshot: programSnapshot }),
+      body: JSON.stringify({ commands, program_snapshot: programSnapshot, active_seconds: activeSeconds }),
     });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error || '指令提交失败');
@@ -326,9 +335,11 @@ export default function App() {
     if (lightTimer.current !== null) window.clearTimeout(lightTimer.current);
     lightTimer.current = window.setTimeout(() => setLitDirection(null), 180);
     const nextState = applyLocalCommand(direction, 'keyboard');
+    const activeSeconds = clockSeconds.current();
+    if (nextState?.status !== 'running') freezeClock.current();
     commandChain.current = commandChain.current.then(async () => {
       try {
-        const server = await sendCommands(currentAttempt, [direction]);
+        const server = await sendCommands(currentAttempt, [direction], undefined, activeSeconds);
         if (server?.is_terminal && attemptRef.current?.attempt_id === currentAttempt.attempt_id) acceptServerResult(server);
       } catch (error) { if (attemptRef.current?.attempt_id === currentAttempt.attempt_id) setMessage(error instanceof Error ? error.message : '指令提交失败'); }
     });
@@ -366,11 +377,11 @@ export default function App() {
       telemetryRef.current?.track('program_validation_failed', 'python.run', { errors: validation.errors });
       return;
     }
-    setEditorError(null); setActiveRowId(null); setAnimating(true);
-    const currentAttempt = await beginAttempt(true);
-    if (!currentAttempt) { setAnimating(false); return; }
-    const run = { stopped: false }; programRunRef.current = run;
-    const rowIds = executionRows(rows, !!level.robot), executed: Action[] = [];
+    setEditorError(null); setActiveRowId(null); setPaused(false); setAnimating(true);
+    const run = { stopped: false, paused: false, executed: [] as Action[], source: generatePythonSource(rows, level.python), submitting: false }; programRunRef.current = run;
+    const currentAttempt = await beginAttempt(true, run);
+    if (!currentAttempt) { if (programRunRef.current === run) programRunRef.current = null; setAnimating(false); return; }
+    const rowIds = executionRows(rows, !!level.robot);
     setSubmittedLines(countCodeLines(rows));
     const programSnapshot = generatePythonSource(rows, level.python);
     telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length, code_line_count: countCodeLines(rows), optimal_code_lines: level.optimal_code_lines });
@@ -378,12 +389,19 @@ export default function App() {
       for (const [index, direction] of validation.expanded.entries()) {
         if (run.stopped) break;
         setActiveRowId(rowIds[index]);
-        await sleep(level.robot ? 320 : 240);
+        let remaining = level.robot ? 320 : 240;
+        while (!run.stopped && (remaining > 0 || run.paused)) {
+          const ticking = !run.paused, before = performance.now();
+          await sleep(16);
+          if (ticking && !run.paused) remaining -= performance.now() - before;
+        }
         if (run.stopped) break;
         const state = applyLocalCommand(direction, 'python_blank');
-        executed.push(direction);
+        run.executed.push(direction);
         if (state?.status !== 'running') break;
       }
+      if (run.stopped) return;
+      freezeClock.current();
       setActiveRowId(null);
       if (currentAttempt.attempt_id.startsWith('local-')) {
         const state = gameRef.current;
@@ -391,55 +409,43 @@ export default function App() {
         setMessage(run.stopped ? '已停止，点击重置回到起点；代码会保留。' : '练习已完成，本次不计算成绩。');
         return;
       }
-      // Normal runs retain the full source/command contract required by code scoring.
-      // An interrupted run submits only commands that actually executed.
-      let server = await sendCommands(currentAttempt, run.stopped ? executed : validation.expanded, programSnapshot);
-      if (run.stopped && !server?.is_terminal && !level.step_limit) {
-        const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/stop`, { method: 'POST', credentials: 'include' });
-        if (!response.ok) throw new Error('本轮停止未能保存，请检查连接。');
-        setMessage('已停止，点击重置回到起点；代码会保留。');
-      } else {
-        if (server && !server.is_terminal) {
-          const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
-          if (!response.ok) throw new Error('本轮成绩未能保存，请检查连接。');
-          server = await response.json();
-        }
-        if (server && attemptRef.current?.attempt_id === currentAttempt.attempt_id) acceptServerResult(server);
+      run.submitting = true;
+      let server = await sendCommands(currentAttempt, validation.expanded, programSnapshot);
+      if (run.stopped) return;
+      if (server && !server.is_terminal) {
+        const response = await fetch(`/api/attempts/${currentAttempt.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
+        if (!response.ok) throw new Error('本轮成绩未能保存，请检查连接。');
+        server = await response.json();
       }
+      if (!run.stopped && server && attemptRef.current?.attempt_id === currentAttempt.attempt_id) acceptServerResult(server);
     } catch (error) {
+      if (run.stopped) return;
       const state = gameRef.current;
       if (state?.status === 'running') commitGame({ ...state, status: 'stopped' });
       setMessage(error instanceof Error ? error.message : '程序提交失败');
-    } finally { programRunRef.current = null; setActiveRowId(null); setAnimating(false); }
+    } finally { if (programRunRef.current === run) { programRunRef.current = null; setActiveRowId(null); setAnimating(false); setPaused(false); } }
   };
 
+  const pauseProgram = () => {
+    const run = programRunRef.current;
+    if (!run) return;
+    run.paused = !run.paused; setPaused(run.paused);
+  };
   const stopAttempt = async () => {
-    if (programRunRef.current) {
-      programRunRef.current.stopped = true;
-      setActiveRowId(null);
-      const state = gameRef.current;
-      if (state) commitGame({ ...state, status: 'stopped' });
-      telemetryRef.current?.track('attempt_stopped', 'attempt.stop', {});
-      return;
-    }
     const current = attemptRef.current;
-    if (!current) return;
-    await commandChain.current;
-    if (levelRef.current?.step_limit && !current.attempt_id.startsWith('local-')) {
-      try {
-        const response = await fetch(`/api/attempts/${current.attempt_id}/finalize`, { method: 'POST', credentials: 'include' });
-        const result = await response.json() as ServerResult;
-        if (!response.ok) throw new Error('结算失败');
-        acceptServerResult(result);
-        return;
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : '结算失败');
-        return;
-      }
+    const run = programRunRef.current, seconds = clockSeconds.current(), queued = commandChain.current;
+    if (run) run.stopped = true;
+    programRunRef.current = null; setAnimating(false); setPaused(false); setActiveRowId(null);
+    resetGame(false);
+    if (current) {
+      const save = async () => {
+        if (run?.executed.length && !run.submitting) {
+          try { await sendCommands(current, run.executed, run.source, seconds); } catch { /* Stop still cancels the server attempt if prefix saving failed. */ }
+        }
+        await stopRemoteAttempt(current);
+      };
+      commandChain.current = queued.then(save); await commandChain.current;
     }
-    stopRemoteAttempt(current);
-    const state = gameRef.current;
-    if (state) commitGame({ ...state, status: 'stopped' });
     telemetryRef.current?.track('attempt_stopped', 'attempt.stop', {});
   };
 
@@ -485,7 +491,7 @@ export default function App() {
     <div className={`app compact-competition competition-template${isFuture ? ' future-city' : ''}`} data-module={competition}>
       <CompetitionHeader module={module} onHome={returnHome} mode={mode === 'keyboard' ? '手动操作' : '编程控制'}
         disabled={animating || switchingMode} player={{ name: player.display_name, id: player.player_uuid }}
-        timer={<AttemptTimer attemptId={attempt?.attempt_id} running={active} />}
+        timer={<div className="competition-timer"><span>本轮用时</span><output data-testid="competition-timer">{clock.elapsed.toFixed(1)}<small> 秒</small></output></div>}
         switchControl={<button className="mode-toggle" onClick={() => void switchMode()} disabled={animating || switchingMode}
           title="切换后重新开始本关，已编写的代码会保留" data-track-id="header.mode.switch">{switchingMode ? '正在切换…' : mode === 'keyboard' ? '切换到编程控制' : '切换到手动操作'}</button>} />
 
@@ -513,7 +519,7 @@ export default function App() {
               <CompetitionMission number={currentLevelIndex + 1} title={currentLevel.title} objective={currentLevel.objective}>
                 {currentLevel.required_order && <div className="competition-order"><small>指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
               </CompetitionMission>
-              <GameBoard level={currentLevel} state={gameState} />
+              <GameBoard paused={paused} level={currentLevel} state={gameState} />
               <div className="status-bar">
                 {currentLevel.robot ? <div data-track-id="status.actions"><small>行动次数{currentLevel.optimal_actions!==undefined&&` · 最优 ≤ ${currentLevel.optimal_actions}`}</small><b>{gameState.consumed_commands}</b></div> : <><div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
                 <div><small>碰撞次数</small><b>{gameState.collisions}</b></div></>}
@@ -536,7 +542,7 @@ export default function App() {
                   <button className={`dpad-btn down${litDirection === 'down' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
                 </div>}
                 <CompetitionActions running={active} canReset={!!attempt && !active} onRun={() => void beginAttempt(true)} onStop={() => void stopAttempt()} onReset={() => resetGame(false)} runLabel={progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '▶ 开始控制'} runTrack="attempt.start" stopTrack="attempt.stop" />
-              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!!attempt && !active} executing={active && animating} activeRowId={activeRowId} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!!attempt && !active} executing={active && animating} activeRowId={activeRowId} isRunning={animating} error={editorError} />}
+              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} isRunning={animating} error={editorError} />}
 
               {score && <section className="score-panel">
                 <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ {score.max_score??100}</em></div>
@@ -556,7 +562,7 @@ export default function App() {
           </div>
         </main>
       </div>
-      <footer><span>{isFuture ? '未来城市 · 循环挑战' : '玩家操作与时间节点已记录'}</span><span>{isFuture ? '测试操作将记录，用于任务分析' : currentLevel.step_limit ? '规则：步数用完直接结算，不设强制失败' : '规则：捡完全部金币即结束，不必返回起点'}</span></footer>
+      <footer><LevelMetrics steps={gameState.steps} lines={mode === 'python_blank' ? countCodeLines(rows) : 0} seconds={clock.elapsed} scope={{ competition, level: currentLevel.level_id, mode }} /></footer>
     </div>
   );
 }

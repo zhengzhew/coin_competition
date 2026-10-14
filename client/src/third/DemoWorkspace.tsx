@@ -1,6 +1,12 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { THIRD_FIXED_STEP, THIRD_OID_SPEED_FACTOR, thirdMapPosition, type ThirdAction, type ThirdDemo, type ThirdMode } from '@coin-path/shared';
+import { createUuid, THIRD_FIXED_STEP, THIRD_OID_SPEED_FACTOR, thirdMapPosition, type ThirdAction, type ThirdDemo, type ThirdMode } from '@coin-path/shared';
 import { createRobotRuntime, migrateThirdProgramCommands } from '@coin-path/shared';
+import { LevelMetrics } from '../components/Leaderboard';
+import { sourceLineCount, useLeaderboardSubmission } from '../components/useLeaderboardSubmission';
+import '../farm/Strawberry.css';
+import FarmCodeEditor from '../farm/FarmCodeEditor';
+import { CompetitionActions } from '../components/CompetitionTemplate';
+import { useCodeInsertion } from '../components/useCodeInsertion';
 import CityBoard3D from '../components/CityBoard3D';
 import { categoryLabels, modeLabels, simulationLabels, demoPath, demos } from './demo-catalog';
 import '../App.css';
@@ -22,12 +28,14 @@ interface FarmPresentation {
 }
 
 export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDemo; mode: ThirdMode; go: (path: string) => void; farm?: FarmPresentation }) {
+  const [demoPlayer] = useState(() => { let id: string; try { id = localStorage.getItem('demo.player.id') || createUuid(); localStorage.setItem('demo.player.id', id); } catch { id = createUuid(); } return { id, name: `试玩玩家 ${id.slice(0, 4)}` }; });
   const [session] = useState(() => createRobotRuntime(demo, mode));
   const [state, setState] = useState(() => session.snapshot());
   const storageKey = `${farm ? `farm.program.${farm.player.id}` : 'third.program'}.${demo.demo_id}.${demo.content_version}.${demo.simulation}`;
   const [source, setSource] = useState(() => {
     try { const draft = localStorage.getItem(storageKey); return migrateThirdProgramCommands(draft !== null && draft.length <= 8000 ? draft : demo.starter); } catch { return demo.starter; }
   });
+  const { field, insert } = useCodeInsertion(source, setSource);
   const [error, setError] = useState('');
   const [storageNotice, setStorageNotice] = useState('');
   const [commandGroup, setCommandGroup] = useState<'normal' | 'oid'>('normal');
@@ -54,7 +62,7 @@ export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDem
     };
     const up = (event: KeyboardEvent) => { const action = keyActions[event.key.toLowerCase()]; if (action) { session.release(action); sync(); } };
     const releasePointer = () => { pointerActions.current.forEach(action => session.release(action)); pointerActions.current.clear(); };
-    const stop = () => { session.stop('已暂停。返回后点击开始，或重新运行程序。'); releasePointer(); accumulator = 0; last = 0; sync(); };
+    const stop = () => { mode === 'auto' ? session.pause() : session.stop(); releasePointer(); accumulator = 0; last = 0; sync(); };
     const visibility = () => { if (document.hidden) stop(); };
     const focus = (event: FocusEvent) => { if (editable(event.target) && mode === 'manual') { session.stop('输入时已暂停机器人。'); sync(); } };
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', stop);
@@ -70,25 +78,26 @@ export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDem
   const stateRef = useRef(state); stateRef.current = state;
   const completedCallback = farm?.onComplete;
   useEffect(() => { if (state.completed) completedCallback?.(demo); }, [state.completed, completedCallback, demo]);
+  const submission = useLeaderboardSubmission('demo', demo, farm?.player ?? demoPlayer, mode, source, state);
   const actionLabel = (action: string, label: string) => demo.simulation === 'simulation3d' ?
     action === 'grab' ? '合拢夹爪' : action === 'release' ? '张开夹爪' : label : label;
   const gripText = state.gripper ? ({ open: '夹爪已张开', opening: '夹爪正在张开', closing: '夹爪正在合拢',
     closed: '夹爪已闭合（空夹）', holding: `双侧夹持：${state.holding}`, blocked: '夹爪受阻，未夹稳' })[state.gripper.phase]
     : state.holding ? `夹爪持有：${state.holding}` : '夹爪已张开';
-  const running = state.phase === 'running';
+  const paused = state.phase === 'paused', running = state.phase === 'running' || paused;
   const start = () => { try { session.start(source); setError(''); sync(); } catch (e) { setError((e as Error).message); } };
-  const stop = () => { session.stop(); sync(); };
+  const stop = () => { session.reset(); sync(); };
   const reset = () => { session.reset(); setError(''); sync(); };
   const levels = farm?.levels || demos.filter(item => item.category === demo.category && item.simulation === demo.simulation && item.supported_modes.includes(mode));
   const levelPath = (item: ThirdDemo) => farm ? farm.path(item) : demoPath(item.category, mode, item.simulation, item.demo_id);
   const modeLabel = farm ? (mode === 'manual' ? '手动操作' : '编程控制') : modeLabels[mode];
   const programControls = farm ? [controls[0], controls[2], controls[1], controls[3], controls[4], controls[5]] : controls;
-  const insertLoop = () => setSource(s => `${s}${s && !s.endsWith('\n') ? '\n' : ''}for i in range(2):\n    forward(${demo.simulation === 'grid' ? 1 : 12})`);
+  const insertLoop = () => insert(`for i in range(2):\n    forward(${demo.simulation === 'grid' ? 1 : 12})`);
   const restoreSource = () => { setSource(demo.starter); setError(''); };
   const grid = session.engine.gridPresentation();
   const mapPosition = thirdMapPosition(state.x, state.z, demo.scene_config.depth);
   const continuous = demo.scene_config.kind === 'simulation3d' ? demo.scene_config : undefined;
-  const insertCommand = (command: string) => setSource(current => `${current}${current.endsWith('\n') || !current ? '' : '\n'}${command}`);
+  const insertCommand = insert;
   const selectedAction = (action: ThirdAction) => {
     const templates: Record<ThirdAction, string> = { forward: `forward(${demo.simulation === 'grid' ? 1 : 12})`, backward: `backward(${demo.simulation === 'grid' ? 1 : 12})`, turn_left: 'turn_left(90)', turn_right: 'turn_right(90)', grab: 'grab()', release: 'release()', wait: 'wait(1)' };
     insertCommand(templates[action]);
@@ -124,14 +133,14 @@ export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDem
             : <div className="panel-heading"><div><span>{demo.simulation === 'grid' ? '未来城市 · 棋盘模拟' : '智慧农场 · 3D 模拟'}</span><b>{demo.objective}</b><small className="board-rule-hint">{demo.simulation === 'grid' ? '按格移动；左右转向 90°。' : mode === 'auto' ? '按程序连续驾驶，距离单位为厘米。' : '连续驾驶；按住移动，松开减速。'}{demo.category === 'place' ? demo.simulation === 'simulation3d' ? mode === 'auto' ? 'grab() 合拢、release() 张开夹爪。' : '方块可推动；G 合拢、R 张开夹爪。' : '车头前方夹取或放下货物。' : '接近目标即可收集。'}</small></div><div className="legend robot-legend">{demo.category === 'collect' ? <span><i className="legend-patrol" />收集点</span> : <><span><i className="legend-cargo" />货物</span><span><i className="legend-dock" />交货点</span></>}</div></div>}
           {!farm && demo.simulation === 'simulation3d' && <div className="third-physical-scale" aria-label="场景尺寸"><span>地图 120 × 120 cm · 每格 12 cm</span><span>车体 19 × 19 · 夹爪 19 × 6 · 货块 6 × 6 cm</span></div>}
           <div className="third-stage" data-testid="third-stage" data-x={state.x.toFixed(4)} data-map-y={mapPosition.y.toFixed(4)} data-z={state.z.toFixed(4)} data-heading={state.heading.toFixed(4)} data-phase={state.phase} data-collected={state.collected.length} data-holding={state.holding || ''} data-gripper={state.gripper?.phase} data-objects={JSON.stringify(state.objects)}>
-            {grid ? <CityBoard3D level={grid.level} state={grid.state} /> : <Suspense fallback={<p className="city3d-loading">正在加载三维场地…</p>}><SimulationScene demo={demo} state={state} onReady={onReady} /></Suspense>}
+            {grid ? <CityBoard3D paused={paused} level={grid.level} state={grid.state} /> : <Suspense fallback={<p className="city3d-loading">正在加载三维场地…</p>}><SimulationScene demo={demo} state={state} onReady={onReady} /></Suspense>}
           </div>
-          <div className="status-bar"><div><small>行动次数</small><b>{state.actions}</b></div><div><small>已完成目标</small><b data-testid="third-progress">{state.collected.length}<em> / {state.objects.length}</em></b></div><div className={`status-pill ${state.completed ? 'status-success' : ''}`}>{({ ready: '准备就绪', running: '运行中', stopped: '已停止', completed: '已完成' })[state.phase]}</div></div>
+          <div className="status-bar"><div><small>行动次数</small><b>{state.actions}</b></div><div><small>已完成目标</small><b data-testid="third-progress">{state.collected.length}<em> / {state.objects.length}</em></b></div><div className={`status-pill ${state.completed ? 'status-success' : ''}`}>{({ ready: '准备就绪', running: '运行中', paused: '已暂停', stopped: '已停止', completed: '已完成' })[state.phase]}</div></div>
         </section>
         <aside className="control-column">
           {!farm && <section className="attempt-summary" aria-label="本关状态"><div className="attempt-summary-metrics"><div><span>当前模式</span><strong>{modeLabel}<small> · 试用</small></strong></div><div><span>本轮用时</span><strong>{state.elapsed.toFixed(1)}<small> 秒</small></strong></div></div><p>功能验证样例，暂不计正式比赛成绩。</p></section>}
           {mode === 'auto' ? <section className="python-editor robot-editor third-program-editor" aria-label="程序编辑器">
-            <div className="editor-header"><h3>指令程序</h3>{farm && <span className="farm-editor-units">{running && state.line ? `第 ${state.line} 行` : '厘米 / 度'}</span>}<button className="robot-restart" title={farm ? '恢复本关示例代码，并重新开始本轮' : undefined} onClick={() => { reset(); if (farm) restoreSource(); }}>{farm ? '重置代码' : '重置'}</button></div>
+            <div className="editor-header"><h3>指令程序</h3>{farm && <span className="farm-editor-units">{running && state.line ? `第 ${state.line} 行` : '厘米 / 度'}</span>}<button className="robot-restart" disabled={running} title={farm ? '恢复本关示例代码，并重新开始本轮' : undefined} onClick={() => { reset(); if (farm) restoreSource(); }}>{farm ? '重置代码' : '重置'}</button></div>
             {!farm && <div className="code-line-metrics"><span>当前 <b>{source.split('\n').filter(line => line.trim() && !line.trim().startsWith('#')).length}</b> 行</span><span>{running && state.line ? `执行第 ${state.line} 行` : demo.simulation === 'grid' ? '距离：格' : '距离：厘米'}</span></div>}
             <div className="third-editor-fields">
             {continuous && !farm && <div className="third-command-tabs" role="tablist" aria-label="指令分类">
@@ -152,14 +161,10 @@ export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDem
             </section>}
             </div>
             {!farm && <label className="robot-editor-target" htmlFor="third-program">{demo.simulation === 'grid' ? '前进、后退按格填写，转向为 90° 的倍数' : '普通：厘米 / 秒；精准定位：绝对坐标（厘米）/ 朝向（度）'}</label>}
-            <textarea id="third-program" className="third-program-source" aria-label="指令程序" spellCheck={false} autoComplete="off" value={source} disabled={running} maxLength={8000} onChange={e => setSource(e.target.value)} onKeyDown={e => {
-              if (e.key === 'Tab') { e.preventDefault(); const field = e.currentTarget, start = field.selectionStart, end = field.selectionEnd;
-                setSource(source.slice(0, start) + '    ' + source.slice(end)); requestAnimationFrame(() => field.setSelectionRange(start + 4, start + 4)); }
-            }} />
+            <FarmCodeEditor inputRef={field} source={source} onChange={setSource} running={running} activeLine={running ? state.line : null} />
             {(!farm || storageNotice) && <div className="third-source-tools">{!farm && <button className="robot-restart" disabled={running} onClick={restoreSource}>恢复示例程序</button>}<small role={storageNotice ? 'status' : undefined}>{storageNotice || '草稿已保存在本浏览器'}</small></div>}
             {error && <p className="editor-error" role="alert">{error}</p>}
-            </div><div className="third-program-actions"><button className="run-btn" disabled={running || !ready} onClick={start} data-testid="third-start">{running ? '正在执行…' : '▶ 运行程序'}</button>
-            <button className="secondary-action third-stop" disabled={!running} onClick={stop}>停止</button></div>
+            </div><CompetitionActions running={running} paused={paused} onPause={() => { paused ? session.resume() : session.pause(); sync(); }} busy={!ready} canReset={!running} onRun={start} onStop={stop} onReset={reset} testId="third-start" />
           </section> : <section className="keyboard-card">
             <div className="mini-heading"><span>{demo.category === 'place' ? '驾驶与夹爪' : '方向控制'}</span><small>相对车头方向</small></div>
             <div className="robot-controls">{controls.filter(([action]) => demo.category === 'place' || !['grab', 'release'].includes(action)).map(([action, key, label]) => <button key={action} disabled={!running} aria-label={`${actionLabel(action, label)} ${key}`} onPointerDown={e => { e.preventDefault(); e.currentTarget.setPointerCapture(e.pointerId); pointerActions.current.add(action); session.press(action); sync(); }}
@@ -174,6 +179,6 @@ export default function DemoWorkspace({ demo, mode, go, farm }: { demo: ThirdDem
         </aside>
       </div></main>
     </div>
-    <footer><span>{farm ? '生态农场 · 机器人挑战' : `DEMO 展示中心 · ${categoryLabels[demo.category]} · ${modeLabel}`}</span><span role={farm?.storageNotice ? 'status' : undefined}>{farm ? farm.storageNotice || '进度与草稿保存在本浏览器 · 暂不计正式成绩' : `${demo.simulation === 'grid' ? '棋盘模拟：按格移动' : '3D 模拟：连续运动'} · 本地试用`}</span></footer>
+    <footer><LevelMetrics steps={state.steps ?? 0} lines={mode === 'auto' ? sourceLineCount(source) : 0} seconds={state.elapsed} scope={{ competition: 'demo', level: demo.demo_id, mode, version: demo.content_version }} note={demo.simulation === 'simulation3d' ? '连续行驶按每 12 厘米折合 1 步' : undefined}><small role="status">{submission.notice}</small>{submission.failed && <button onClick={submission.retry}>重试提交</button>}</LevelMetrics></footer>
   </section></div>;
 }

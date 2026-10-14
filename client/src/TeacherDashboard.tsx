@@ -1,3 +1,4 @@
+import LeaderboardSettings from './components/LeaderboardSettings';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import './TeacherDashboard.css';
 type Numeric = number | null;
@@ -94,6 +95,7 @@ export default function TeacherDashboard() {
         <small>当前：{params.get('competition') === 'future' ? '未来城市' : params.get('competition') === 'coin' ? '旷野淘金' : '全部测试赛'} · {params.get('uuid') || '全部学生'} · {params.get('level') || '全部关卡'} · {params.get('mode') ? modeName(params.get('mode')!) : '全部模式'}。分析与导出使用同一范围；删除 UUID 时始终删除该学生全部测试赛、关卡和模式。</small>
       </form>
       {error && <div className="teacher-error" role="alert">{error}</div>}{notice && <div className="teacher-notice" role="status">{notice}</div>}
+      <LeaderboardSettings auth={key} />
       <section className="metric-grid"><Metric label="正式参与学生" value={s.students} note={`${s.journeys} 个学生×关卡×模式样本`} /><Metric label="首次平均分" value={fmt(s.first_score)} note={`${s.first_n} 个有效首轮成绩`} /><Metric label="最终平均分" value={fmt(s.best_score)} note="每个样本取前三次最高分" /><Metric label="满分达成率" value={fmt(s.mastery_rate, '%')} note={`${s.mastered} / ${s.journeys} 个已开始样本`} /><Metric label="重试提升" value={fmt(s.gain, ' 分')} note={`${s.gain_n} 个有首轮及重试成绩的配对样本`} /></section>
       <nav className="analysis-tabs" aria-label="分析视角">{[['design','关卡诊断'],['students','学生与逐次成绩'],['quality','口径与数据管理']].map(([id,title]) => <button key={id} aria-pressed={tab === id} onClick={() => setTab(id)}>{title}</button>)}</nav>
       {tab === 'design' && <>

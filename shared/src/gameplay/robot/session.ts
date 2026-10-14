@@ -4,8 +4,9 @@ import { THIRD_MAX_SECONDS, THIRD_OID_SPEED_FACTOR, type ThirdAction, type Third
 
 export class RobotSession {
   readonly engine: ThirdEngine;
-  phase: 'ready' | 'running' | 'stopped' | 'completed' = 'ready';
+  phase: 'ready' | 'running' | 'paused' | 'stopped' | 'completed' = 'ready';
   elapsed = 0;
+  private distance = 0;
   line: number | null = null;
   message = '';
   readonly held = new Set<ThirdAction>();
@@ -24,7 +25,7 @@ export class RobotSession {
   reset() {
     if (this.disposed) throw new Error('运行实例已释放');
     this.engine.reset(); this.held.clear(); this.program = []; this.index = 0;
-    this.remaining = 0; this.entered = false; this.settling = 0; this.elapsed = 0; this.line = null; this.phase = 'ready'; this.message = '';
+    this.remaining = 0; this.entered = false; this.settling = 0; this.elapsed = 0; this.distance = 0; this.line = null; this.phase = 'ready'; this.message = '';
     this.precisionTarget = undefined; this.oidDestination = undefined; this.oidPhase = undefined; this.oidNoProgress = 0; this.oidBestError = Infinity;
   }
   start(source: string) {
@@ -35,9 +36,11 @@ export class RobotSession {
     } else if (this.phase === 'completed' || this.elapsed >= this.maxSeconds) this.reset();
     this.phase = 'running'; this.message = '';
   }
+  pause() { if (this.phase === 'running') { this.phase = 'paused'; this.held.clear(); } }
+  resume() { if (this.phase === 'paused') this.phase = 'running'; }
   stop(message = '已停止。') {
     this.held.clear();
-    if (this.phase === 'running') { this.phase = 'stopped'; this.message = message; }
+    if (this.phase === 'running' || this.phase === 'paused') { this.phase = 'stopped'; this.message = message; }
   }
   press(action: ThirdAction) {
     if (this.mode !== 'manual' || this.phase !== 'running' || this.held.has(action)) return;
@@ -51,6 +54,12 @@ export class RobotSession {
     if (this.engine.snapshot().completed) { this.phase = 'completed'; this.message = ''; this.held.clear(); }
   }
   tick(dt: number) {
+    const before = this.engine.snapshot();
+    this.advance(dt);
+    const after = this.engine.snapshot();
+    this.distance += Math.hypot(after.x - before.x, after.z - before.z);
+  }
+  private advance(dt: number) {
     if (!Number.isFinite(dt) || dt < 0) throw new Error('时间步长无效');
     if (this.phase !== 'running' || dt === 0) return;
     this.elapsed += dt;
@@ -144,7 +153,7 @@ export class RobotSession {
       } else { this.oidPhase = 'holding'; this.entered = false; this.index++; }
     }
   }
-  snapshot() { const state = this.engine.snapshot(); return { ...state, phase: this.phase, elapsed: this.elapsed, line: this.line,
+  snapshot() { const state = this.engine.snapshot(); return { ...state, steps: state.steps ?? Number((this.distance / (this.demo.simulation === 'grid' ? 1 : 12)).toFixed(2)), phase: this.phase, elapsed: this.elapsed, line: this.line,
     oid: this.precisionTarget ? { x: (this.oidDestination ?? this.precisionTarget).x, y: this.demo.scene_config.depth - (this.oidDestination ?? this.precisionTarget).z,
       heading: (this.oidDestination ?? this.precisionTarget).heading, phase: this.oidPhase } : undefined,
     message: this.message || (this.phase === 'running' && this.oidPhase && this.oidPhase !== 'holding' ? '精准定位中，速度为普通移动的 50%。' : state.message) }; }

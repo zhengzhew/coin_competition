@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 
-export default function FarmCodeEditor({ source, onChange, running, activeLine }: {
+export default function FarmCodeEditor({ source, onChange, running, activeLine, inputRef }: {
+  inputRef?: RefObject<HTMLTextAreaElement | null>;
   source: string; onChange: (value: string) => void; running: boolean; activeLine: number | null;
 }) {
-  const field = useRef<HTMLTextAreaElement>(null);
+  const fallback = useRef<HTMLTextAreaElement>(null);
+  const field = inputRef ?? fallback;
   const [scroll, setScroll] = useState({ top: 0, left: 0 });
   useEffect(() => {
     if (!activeLine || !field.current) return;
@@ -20,6 +22,7 @@ export default function FarmCodeEditor({ source, onChange, running, activeLine }
     )}</pre></div>
     <textarea ref={field} className="third-program-source" aria-label="指令程序" value={source} disabled={running} wrap="off" spellCheck={false} autoComplete="off" maxLength={8000}
       onScroll={event => setScroll({ top: event.currentTarget.scrollTop, left: event.currentTarget.scrollLeft })}
+      onKeyDown={event => { if (event.key === 'Tab') { event.preventDefault(); const el = event.currentTarget, start = el.selectionStart; onChange(source.slice(0, start) + '    ' + source.slice(el.selectionEnd)); requestAnimationFrame(() => el.setSelectionRange(start + 4, start + 4)); } }}
       onChange={event => onChange(event.target.value)} />
   </div>;
 }

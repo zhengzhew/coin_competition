@@ -50,10 +50,11 @@ try {
     await page.getByTestId('running-code-line').waitFor();
     await page.waitForFunction(() => Number(document.querySelector('.status-bar > div:first-child b')?.textContent) > 0);
     await page.screenshot({ path: join(output, `${module}-running.png`), fullPage: true });
+    const stopSaved = page.waitForResponse(r => r.url().endsWith('/stop') && r.request().method() === 'POST');
     await page.getByTestId('competition-stop-reset').click();
     const sent = (await submitted).postDataJSON().commands;
     assert.ok(sent.length >= 1 && sent.length < 20, 'stop sends only the executed prefix');
-    await page.getByRole('button', { name: '重置', exact: true }).click();
+    await stopSaved;
     assert.deepEqual(await sourceValues(), preserved, 'reset keeps all code fields');
     assert.equal(await page.getByTestId('running-code-line').count(), 0);
     assert.equal(await page.getByTestId('competition-stop-reset').innerText(), '停止');
