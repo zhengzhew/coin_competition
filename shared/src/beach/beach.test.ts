@@ -13,7 +13,7 @@ test('four programming levels preserve the original pair and add a row and a 3 b
     assert.equal(level.simulation, 'simulation3d');
     assert.deepEqual(level.scene_config.objects.map(o => { const p = thirdMapPosition(o.x, o.z, 120); return [p.x, p.y]; }), BEACH_OID_POSITIONS[index]);
     assert.equal(level.scene_config.objects.length, [2, 4, 10, 12][index]);
-    assert.equal(level.content_version, 'beach-code-2.0.0');
+    assert.equal(level.content_version, index === 3 ? 'beach-code-2.1.0' : 'beach-code-2.0.0');
     for (const obj of level.scene_config.objects) assert.equal(isShellAtEdge(obj.x, obj.z, 0, 120, 120), false);
   }
   assert.deepEqual(BEACH_OID_POSITIONS[0], [[36, 70], [18, 80]]);
@@ -23,6 +23,8 @@ test('four programming levels preserve the original pair and add a row and a 3 b
   assert.equal(new Set(row.slice(1).map((o, i) => o.x - row[i].x)).size, 1);
   const xs = [...new Set(rectangle.map(o => o.x))], zs = [...new Set(rectangle.map(o => o.z))];
   assert.equal(xs.length, 4); assert.equal(zs.length, 3);
+  assert.equal(Math.max(...xs) - Math.min(...xs), 42, 'compact columns leave room for the open gripper');
+  assert.equal(Math.max(...zs) - Math.min(...zs), 28, 'rows use the same compact spacing as columns');
   for (const x of xs) for (const z of zs) assert.equal(rectangle.filter(o => o.x === x && o.z === z).length, 1);
 });
 

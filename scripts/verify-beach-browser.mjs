@@ -58,7 +58,10 @@ try {
     const positions = (await snapshot()).objects.map(o => [o.x, 120 - o.z]);
     if (n <= 2) assert.deepEqual(positions, oldCoordinates[n - 1]);
     if (n === 3) { assert.equal(new Set(positions.map(p => p[1])).size, 1); assert.equal(new Set(positions.map(p => p[0])).size, 10); }
-    if (n === 4) { assert.equal(new Set(positions.map(p => p[1])).size, 3); assert.equal(new Set(positions.map(p => p[0])).size, 4); }
+    if (n === 4) {
+      assert.deepEqual([...new Set(positions.map(p => p[0]))], [39, 53, 67, 81]);
+      assert.deepEqual([...new Set(positions.map(p => p[1]))], [46, 60, 74]);
+    }
     await page.getByRole('button', { name: '俯视', exact: true }).click(); await advance(100); await screenshot(`level-${n}-layout.png`);
   }
   checks.push('four programming-only levels, original maps preserved, 10-shell row, 3 by 4 rectangle, visible coordinate lists and map readout');

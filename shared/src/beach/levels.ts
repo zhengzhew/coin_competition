@@ -4,12 +4,12 @@ export const BEACH_OID_POSITIONS = [
   [[36, 70], [18, 80]],
   [[30, 32], [84, 38], [36, 78], [88, 90]],
   Array.from({ length: 10 }, (_, i) => [20 + i * 9, 72] as const),
-  Array.from({ length: 12 }, (_, i) => [20 + (i % 4) * 20, 20 + Math.floor(i / 4) * 44] as const),
+  Array.from({ length: 12 }, (_, i) => [39 + (i % 4) * 14, 46 + Math.floor(i / 4) * 14] as const),
 ] as const;
 const titles = ['初潮寻贝', '四海拾珍', '一排贝壳', '一堆贝壳'];
-const arrangements = ['', '', '10 个贝壳整齐排成一长条，可用循环完成多次收集。', '12 个贝壳按 3 行 4 列整齐排放，可用循环完成多次收集。'];
+const arrangements = ['', '', '10 个贝壳整齐排成一长条，可用循环完成多次收集。', '12 个贝壳按 3 行 4 列紧密排列，可用循环完成多次收集。'];
 export const beachLevels: ThirdDemo[] = BEACH_OID_POSITIONS.map((positions, index) => ({
-  competition_id: 'beach', demo_id: `shells-${index + 1}`, content_version: 'beach-code-2.0.0',
+  competition_id: 'beach', demo_id: `shells-${index + 1}`, content_version: index === 3 ? 'beach-code-2.1.0' : 'beach-code-2.0.0',
   scene_task: 'seashell-edge', category: 'place', simulation: 'simulation3d', supported_modes: ['auto'],
   title: titles[index],
   objective: `${arrangements[index]}将 ${positions.length} 个贝壳完整送入任意浅蓝色边缘带并停稳，完成全部交付`,
