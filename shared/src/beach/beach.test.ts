@@ -6,15 +6,24 @@ import { beachScore, isShellAtEdge } from './rules.js';
 import { thirdMapPosition } from '../third/geometry.js';
 import type { ThirdAction } from '../third/types.js';
 
-test('four 3D levels keep exact OID layouts, with programming copies after the manual pair', () => {
+test('four programming levels preserve the original pair and add a row and a 3 by 4 rectangle', () => {
   assert.equal(beachLevels.length, 4);
   for (const [index, level] of beachLevels.entries()) {
-    assert.deepEqual(level.supported_modes, [index < 2 ? 'manual' : 'auto']);
+    assert.deepEqual(level.supported_modes, ['auto']);
     assert.equal(level.simulation, 'simulation3d');
-    assert.deepEqual(level.scene_config.objects.map(o => { const p = thirdMapPosition(o.x, o.z, 120); return [p.x, p.y]; }), BEACH_OID_POSITIONS[index % 2]);
-    assert.equal(level.scene_config.objects.length, index % 2 ? 4 : 2);
-    if (index >= 2) { assert.deepEqual(level.scene_config, beachLevels[index - 2].scene_config); assert.notEqual(level.scene_config, beachLevels[index - 2].scene_config); }
+    assert.deepEqual(level.scene_config.objects.map(o => { const p = thirdMapPosition(o.x, o.z, 120); return [p.x, p.y]; }), BEACH_OID_POSITIONS[index]);
+    assert.equal(level.scene_config.objects.length, [2, 4, 10, 12][index]);
+    assert.equal(level.content_version, 'beach-code-2.0.0');
+    for (const obj of level.scene_config.objects) assert.equal(isShellAtEdge(obj.x, obj.z, 0, 120, 120), false);
   }
+  assert.deepEqual(BEACH_OID_POSITIONS[0], [[36, 70], [18, 80]]);
+  assert.deepEqual(BEACH_OID_POSITIONS[1], [[30, 32], [84, 38], [36, 78], [88, 90]]);
+  const row = beachLevels[2].scene_config.objects, rectangle = beachLevels[3].scene_config.objects;
+  assert.equal(new Set(row.map(o => o.z)).size, 1);
+  assert.equal(new Set(row.slice(1).map((o, i) => o.x - row[i].x)).size, 1);
+  const xs = [...new Set(rectangle.map(o => o.x))], zs = [...new Set(rectangle.map(o => o.z))];
+  assert.equal(xs.length, 4); assert.equal(zs.length, 3);
+  for (const x of xs) for (const z of zs) assert.equal(rectangle.filter(o => o.x === x && o.z === z).length, 1);
 });
 
 test('whole shell must fit on one of four edges; faster completed races score higher', () => {
@@ -80,7 +89,7 @@ test('a held shell is accepted after settling at the edge without release input'
   assert.equal(session.phase, 'completed');
 });
 
-for (const demo of beachLevels.filter(level => level.supported_modes[0] === 'manual')) test(`${demo.demo_id}: complete every shell through manual driving and physical grasp/release`, () => {
+for (const demo of beachLevels.slice(0, 2)) test(`${demo.demo_id}: manual runtime still completes the original layout through physical grasp/release`, () => {
   let clock = 0; const session = new BeachSession(demo, () => clock); session.start();
   const tick = () => { clock += 1000 / 60; session.tick(1 / 60); };
   const act = (action: ThirdAction) => { session.press('control', action); session.release('control'); };

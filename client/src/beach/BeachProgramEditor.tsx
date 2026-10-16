@@ -17,10 +17,10 @@ export default function BeachProgramEditor({ source, running, ready, activeLine,
   return <section className="beach-control-card beach-program-editor" aria-label="代码操控">
     <div className="beach-card-heading"><h2>指令程序</h2><span>{running && activeLine ? `正在执行第 ${activeLine} 行` : '按顺序执行'}</span></div>
     <div className="beach-program-fields" ref={fields}>
-    <div className="beach-command-palette" aria-label="可用指令">{BEACH_PROGRAM_COMMANDS.map(command => <button key={command.action} disabled={running} title={`插入 ${command.template}`} onClick={() => insert(command.template)}><b>{command.label}</b><code>{command.hint}</code></button>)}</div>
+    <div className="beach-command-palette" aria-label="可用指令">{BEACH_PROGRAM_COMMANDS.map(command => <button key={command.action} disabled={running} title={`插入 ${command.template}`} onClick={() => insert(command.template)}><b>{command.label}</b><code>{command.hint}</code></button>)}<button disabled={running} title="插入循环" onClick={() => insert('for i in range(4):\n    ')}><b>循环</b><code>for i in range(次数):</code></button></div>
     <p className="beach-code-hint">距离：厘米 · 角度：度<br />移动到点以车体中心为准；0° 向上，90° 向右。</p>
     <FarmCodeEditor inputRef={field} source={source} onChange={onChange} running={running} activeLine={running ? activeLine : null} />
-    <details className="beach-code-guide"><summary>指令参数说明</summary><p>前进／后退填写大于 0、最多 120 cm 的距离；左转／右转填写大于 0、最多 360° 的角度。</p><p>移动到点：X、Y 为 0–120 的整数厘米坐标，左下角 (0,0)；转到角度：0–360° 的绝对角度。精准定位速度为普通移动／转向的 50%。</p><p>合拢与张开不填参数。每行一条指令，可以用 # 写注释；停稳到位即可自动交付。</p></details>
+    <details className="beach-code-guide"><summary>指令参数说明</summary><p>前进／后退填写大于 0、最多 120 cm 的距离；左转／右转填写大于 0、最多 360° 的角度。</p><p>移动到点：X、Y 为 0–120 的整数厘米坐标，左下角 (0,0)；转到角度：0–360° 的绝对角度。精准定位速度为普通移动／转向的 50%。</p><p>合拢与张开不填参数。每行一条指令，可以用 # 写注释；停稳到位即可自动交付。</p><p>重复动作可写在 for i in range(次数): 下方，每层缩进 4 个空格。次数为 1–20，最多嵌套两层，展开后最多 256 条指令；参数填写数字，不支持变量或表达式。</p></details>
     {error && <p className="beach-code-error" role="alert">{error}</p>}{notice && <small role="status">{notice}</small>}
     </div>
     <div className="beach-program-actions">

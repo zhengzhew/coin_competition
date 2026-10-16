@@ -25,6 +25,7 @@ async function request(path, body) {
 try {
   const db = getDb();
   const stamp = new Date().toISOString();
+  db.prepare('INSERT INTO leaderboard_config VALUES (1, ?)').run(JSON.stringify({ start: null, end: null, rule: { base: 100, steps: -1, code_lines: 0, seconds: 0, min: 0, max: 100 } }));
   db.prepare('INSERT INTO players VALUES (?, ?, ?, ?, ?)').run('policy-player', 'Test', 'python', stamp, stamp);
   cookie = 'player_uuid=policy-player';
   for (const mode of ['K', 'P']) {
@@ -36,8 +37,8 @@ try {
         const attempt = await response.json();
         assert.equal(attempt.trial_index, trial);
         assert.equal((await request(`/attempts/${attempt.attempt_id}/stop`, {})).status, 200);
-        // Distinct synthetic scores prove aggregation uses MAX, not last/average.
-        db.prepare('UPDATE attempts SET score = ? WHERE attempt_id = ?').run([25, 90, 50][trial - 1], attempt.attempt_id);
+        // Current-rule scores must use metrics, not stored legacy values; aggregate with MAX.
+        db.prepare("UPDATE attempts SET score = 999, status = 'success', steps = ?, program_snapshot = 'move_up(1)', active_seconds = 1 WHERE attempt_id = ?").run([75, 10, 50][trial - 1], attempt.attempt_id);
       }
       const rejected = await request('/attempts', { assignment_key: key });
       assert.equal(rejected.status, 409);

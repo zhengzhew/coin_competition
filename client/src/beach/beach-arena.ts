@@ -21,7 +21,7 @@ export function buildShell(parent: THREE.Group, keep: Keep, material: Material, 
   const base = new THREE.Mesh(keep(new THREE.SphereGeometry(1, 16, 8)), material(color)); base.scale.set(1.4, .6, 1.2); base.position.set(0, .65, 2); parent.add(base);
 }
 
-export function buildBeachArena(scene: THREE.Scene, config: ThirdSceneConfig, keep: Keep, material: Material) {
+export function buildBeachArena(scene: THREE.Scene, config: ThirdSceneConfig, keep: Keep, material: Material, showCoordinates = true) {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = 1536;
   const ctx = canvas.getContext('2d')!, scale = canvas.width / config.width, edge = BEACH_EDGE_WIDTH * scale;
   ctx.fillStyle = '#f2deb0'; ctx.fillRect(0, 0, 1536, 1536);
@@ -38,11 +38,12 @@ export function buildBeachArena(scene: THREE.Scene, config: ThirdSceneConfig, ke
   ctx.strokeStyle = '#b8996140'; ctx.lineWidth = 1;
   for (let i = 12; i < 120; i += 12) { const p = i * scale; ctx.beginPath(); ctx.moveTo(p, edge); ctx.lineTo(p, 1536 - edge); ctx.moveTo(edge, p); ctx.lineTo(1536 - edge, p); ctx.stroke(); }
   ctx.fillStyle = '#307c81'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '600 23px system-ui';
-  for (let i = 0; i <= 120; i += 12) {
+  for (let i = 0; showCoordinates && i <= 120; i += 12) {
     const p = Math.max(25, Math.min(1510, i * scale));
     ctx.fillText(String(i), p, 1510); if (i > 0) ctx.fillText(String(i), 27, 1536 - p);
   }
-  ctx.font = '600 28px system-ui'; ctx.fillText('岸 边 交 付 区', 768, edge / 2); ctx.fillText('X →', 1230, 1460);
+  ctx.font = '600 28px system-ui'; ctx.fillText('岸 边 交 付 区', 768, edge / 2);
+  if (showCoordinates) ctx.fillText('X →', 1230, 1460);
   const texture = keep(new THREE.CanvasTexture(canvas)); texture.colorSpace = THREE.SRGBColorSpace;
   const ground = new THREE.Mesh(keep(new THREE.PlaneGeometry(config.width, config.depth)), keep(new THREE.MeshStandardMaterial({ map: texture, roughness: 1 })));
   ground.rotation.x = -Math.PI / 2; ground.position.set(config.width / 2, .4, config.depth / 2); ground.receiveShadow = true; scene.add(ground);

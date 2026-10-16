@@ -2,11 +2,11 @@ import type { Router, RequestHandler } from 'express';
 import { strawberryLevels, beachLevels, robotDemoManifests, createRobotRuntime } from '@coin-path/shared';
 import { getDb } from './db.js';
 import { getLevelForAssignment } from './levels.js';
+import { codeLines, formalMetrics, leaderboardScore, type ScoreRule } from './scoring.js';
+export { leaderboardScore } from './scoring.js';
 
-interface Rule { base: number; steps: number; code_lines: number; seconds: number; min: number; max: number }
-interface Config { start: string | null; end: string | null; rule: Rule | null }
+interface Config { start: string | null; end: string | null; rule: ScoreRule | null }
 const defaults: Config = { start: null, end: null, rule: null };
-const codeLines = (source: string) => source.split(/\r?\n/).filter(line => line.replace(/#.*$/, '').trim()).length;
 export function validateLeaderboardConfig(value: unknown): Config {
   if (!value || typeof value !== 'object') throw new Error('配置必须为 JSON 对象');
   const c = value as Config;
@@ -19,18 +19,14 @@ export function validateLeaderboardConfig(value: unknown): Config {
   }
   return { start: c.start ? new Date(c.start).toISOString() : null, end: c.end ? new Date(c.end).toISOString() : null, rule: c.rule };
 }
-function config(): Config {
+export function leaderboardConfig(): Config {
   const row = getDb().prepare('SELECT value FROM leaderboard_config WHERE id = 1').get();
   return row ? JSON.parse(String(row.value)) : defaults;
-}
-export function leaderboardScore(rule: Rule | null, steps: number, lines: number | null, seconds: number | null) {
-  if (!rule || lines === null || seconds === null) return null;
-  return Math.round(Math.max(rule.min, Math.min(rule.max, rule.base + rule.steps * steps + rule.code_lines * lines + rule.seconds * seconds)) * 100) / 100;
 }
 interface Entry { id: string; participant: string; name: string; steps: number; code_lines: number | null; seconds: number | null; submitted_at: string; completed: boolean; score?: number | null }
 
 export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHandler, teacherGuard: RequestHandler) {
-  router.get('/teacher/leaderboard', teacherGuard, (_req, res) => res.json(config()));
+  router.get('/teacher/leaderboard', teacherGuard, (_req, res) => res.json(leaderboardConfig()));
   router.put('/teacher/leaderboard', teacherGuard, (req, res) => {
     try {
       const value = validateLeaderboardConfig(req.body);
@@ -62,15 +58,15 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
     if (existing) {
       if (existing.player_uuid !== owner) return res.status(409).json({ error: '提交编号冲突' });
       if (!existing.completed) return res.status(422).json({ error: '此记录未完成任务，不能加入排行榜' });
-      return res.json({ saved: true, score: leaderboardScore(config().rule, Number(existing.steps), Number(existing.code_lines), Number(existing.seconds)) });
+      return res.json({ saved: true, score: leaderboardScore(leaderboardConfig().rule, Number(existing.steps), Number(existing.code_lines), Number(existing.seconds)) });
     }
     const lines = b.mode === 'auto' ? codeLines(b.source) : 0;
     db.prepare(`INSERT INTO leaderboard_submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(b.submission_id, owner, b.participant_id, b.display_name.trim(), b.competition, b.level_id, b.mode, b.content_version, steps, lines, b.seconds, Number(b.completed), new Date().toISOString());
-    res.status(201).json({ saved: true, score: leaderboardScore(config().rule, steps, lines, b.seconds) });
+    res.status(201).json({ saved: true, score: leaderboardScore(leaderboardConfig().rule, steps, lines, b.seconds) });
   });
   router.get('/leaderboard', (req, res) => {
-    const c = config(), competition = String(req.query.competition ?? ''), level = String(req.query.level ?? ''), mode = String(req.query.mode ?? '');
+    const c = leaderboardConfig(), competition = String(req.query.competition ?? ''), level = String(req.query.level ?? ''), mode = String(req.query.mode ?? '');
     const scope = req.query.scope === 'history' ? 'history' : 'current';
     const sort = String(req.query.sort ?? 'steps'), order = req.query.order === 'desc' ? -1 : 1;
     if (!['steps', 'code_lines', 'seconds', 'score'].includes(sort) || sort === 'score' && !c.rule) return res.status(422).json({ error: '总分隐藏时不可排序，或排序字段无效' });
@@ -79,10 +75,8 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
       const rows = getDb().prepare(`SELECT a.*, p.display_name FROM attempts a JOIN players p USING(player_uuid)
         WHERE a.mode = ? AND a.finalized_at IS NOT NULL AND a.status = 'success'`).all(mode);
       entries = rows.filter(a => { const l = getLevelForAssignment(String(a.assignment_key)); return l?.level_id === level && (level.startsWith('FL') ? 'future' : 'coin') === competition; }).map(a => {
-        const duration = (Date.parse(String(a.finalized_at)) - Date.parse(String(a.started_at))) / 1000;
-        return { id: String(a.attempt_id), participant: String(a.player_uuid), name: String(a.display_name), steps: Number(a.steps),
-          code_lines: mode === 'keyboard' ? 0 : a.program_snapshot ? codeLines(String(a.program_snapshot)) : null,
-          seconds: a.active_seconds === null ? Number.isFinite(duration) && duration >= 0 ? duration : null : Number(a.active_seconds),
+        return { id: String(a.attempt_id), participant: String(a.player_uuid), name: String(a.display_name),
+          ...formalMetrics(a),
           submitted_at: String(a.finalized_at), completed: a.status === 'success' };
       });
     } else {

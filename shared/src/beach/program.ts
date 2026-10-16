@@ -20,8 +20,9 @@ export function compileBeachProgram(source: string, demo: ThirdDemo) {
   for (const [index, text] of source.split(/\r?\n/).entries()) {
     const line = text.replace(/#.*$/, '').trim();
     if (!line) continue;
+    if (/^for\b/.test(line)) continue; // The shared compiler validates counts, indentation and nesting.
     const call = /^(\w+)\s*\(/.exec(line);
-    if (!call || !allowed.has(call[1])) throw new Error(`第 ${index + 1} 行：仅支持前进、后退、移动到点、转到角度、左转、右转、合拢、张开这八种指令。`);
+    if (!call || !allowed.has(call[1])) throw new Error(`第 ${index + 1} 行：仅支持前进、后退、移动到点、转到角度、左转、右转、合拢、张开这八种指令，以及 for i in range(n): 循环。`);
   }
   // Match the manual race: no extra 120-second DEMO cutoff; source length is still bounded.
   return compileThirdProgram(source, demo, Infinity);
@@ -32,16 +33,17 @@ export class BeachProgramSession {
   private readonly controller: RobotSession;
   elapsed = 0;
   private startedAt = 0;
+  private accumulator = 0;
   constructor(readonly demo: ThirdDemo, private readonly now: () => number = () => performance.now()) {
     if (demo.scene_task !== 'seashell-edge' || demo.scene_config.kind !== 'simulation3d' || !demo.supported_modes.includes('auto')) throw new Error('需要海边拾贝编程关卡');
     this.controller = new RobotSession(demo, 'auto', Infinity);
   }
   get phase() { return this.controller.phase; }
-  reset() { this.controller.reset(); this.elapsed = 0; }
+  reset() { this.controller.reset(); this.elapsed = 0; this.accumulator = 0; }
   start(source: string) {
     if (this.phase === 'running') return;
     compileBeachProgram(source, this.demo); // Validate before changing the previous attempt.
-    this.controller.start(source); this.elapsed = 0; this.startedAt = this.now();
+    this.controller.start(source); this.elapsed = 0; this.accumulator = 0; this.startedAt = this.now();
   }
   pause() { if (this.phase === 'running') { this.updateTime(); this.controller.pause(); } }
   resume() { if (this.phase === 'paused') { this.startedAt = this.now() - this.elapsed * 1000; this.controller.resume(); } }
@@ -54,10 +56,12 @@ export class BeachProgramSession {
     if (this.phase !== 'running') return;
     if (!Number.isFinite(dt) || dt < 0) throw new Error('时间步长无效');
     this.updateTime();
-    // Bound each controller step as well as physics substeps for accurate command endpoints.
-    let remaining = Math.min(dt, .1);
-    while (remaining > 1e-8 && this.phase === 'running') {
-      const step = Math.min(remaining, 1 / 60); this.controller.tick(step); remaining -= step;
+    // Carry fractional frames forward: tiny remainder steps destabilize shell contacts.
+    // Keep the existing catch-up cap and real wall-clock scoring after slow frames.
+    const step = 1 / 60;
+    this.accumulator += Math.min(dt, .1);
+    while (this.accumulator + 1e-9 >= step && this.phase === 'running') {
+      this.controller.tick(step); this.accumulator = Math.max(0, this.accumulator - step);
     }
   }
   snapshot() {

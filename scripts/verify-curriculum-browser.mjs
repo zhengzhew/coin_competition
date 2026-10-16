@@ -20,7 +20,8 @@ try {
   const context=await browser.newContext({viewport:{width:1452,height:1114}});
   const api=async(path,body)=>{const response=await context.request.fetch(origin+'/api'+path,{method:body===undefined?'GET':'POST',data:body});assert.ok(response.ok(),`${path}: ${response.status()}`);return response.json();};
   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(origin+'/future/');await page.locator('[data-track-id="onboarding.mode.keyboard"]').click();await page.locator('canvas[data-ready=true]').waitFor();
+  const enter=async(target,mode)=>{await target.goto(origin+'/future/');await target.getByLabel('你的名字',{exact:true}).fill('课程浏览器测试');await target.getByRole('button',{name:'确认',exact:true}).click();await target.locator(`[data-track-id="onboarding.mode.${mode}"]`).click();};
+  await enter(page,'keyboard');await page.locator('canvas[data-ready=true]').waitFor();
   const levels=await api('/levels?competition=future');assert.deepEqual(levels.map(l=>l.level_id),['FL31','FL32','FL33','FL34','FL35','FL36']);
   await page.locator('[data-track-id="attempt.start"]').click();
   const keys={forward:'w',backward:'s',turn_left:'a',turn_right:'d',grab:'g',release:'r',wait:'Space'};
@@ -31,8 +32,8 @@ try {
     const result=await (await response).json();assert.equal(Number(await page.locator('[data-track-id="status.actions"] b').innerText()),result.consumed_commands);
     if(result.is_terminal)break;
   }
-  await page.locator('.score-total b').filter({hasText:'80'}).waitFor();
-  assert.equal(await page.locator('.score-total em').innerText(),'/ 80');
+  await page.locator('.score-total b').filter({hasText:'？？'}).waitFor();
+  assert.equal(await page.locator('.score-total em').count(),0);
   assert.equal(await page.locator('[data-track-id="attempt.next_level"]').count(),1);
   for(const [index,level] of levels.entries()) {
     const rows=curriculumReferencePrograms()[index],commands=validateAndExpand(rows,level.python).expanded;
@@ -42,7 +43,7 @@ try {
       assert.equal(result.score.total_score,assignment_key===level.keyboard_id?80:100);assert.equal(result.collisions,0);assert.deepEqual(result.collected_order,expected.collected_order);assert.equal(result.consumed_commands,expected.consumed_commands);
     }
     // Check real map and actual code editor execution for every curriculum level.
-    const code=await context.newPage();code.on('pageerror',e=>errors.push(e.message));await code.goto(origin+'/future/');await code.locator('[data-track-id="onboarding.mode.python_blank"]').click();
+    const code=await context.newPage();code.on('pageerror',e=>errors.push(e.message));await enter(code,'python_blank');
     await code.locator(`[data-track-id="nav.level.${level.level_id}"]`).click();await code.locator(`canvas[data-level-id="${level.level_id}"][data-ready=true]`).waitFor();
     await code.screenshot({path:join(output,`${index+1}-map.png`)});
     const marks=await code.locator('canvas').evaluate(c=>JSON.parse(c.dataset.checkpoints));
@@ -82,20 +83,16 @@ try {
       if(row.direction==='repeat') {
         await code.getByRole('button',{name:'循环',exact:true}).last().click();await code.getByRole('textbox',{name:'循环次数'}).last().fill(row.count);
         for(const child of row.children)await add(child);
-      } else {await code.locator(`[data-track-id="python.command.add.${row.direction}"]`).click();if(['forward','backward','wait'].includes(row.direction))await code.locator('.robot-code-row').last().locator('input').fill(row.count);}
+      } else {await code.getByRole('button',{name:'循环',exact:true}).last().click();await code.locator(`[data-track-id="python.command.add.${row.direction}"]`).click();if(['forward','backward','wait'].includes(row.direction))await code.locator('.robot-code-row').last().locator('input').fill(row.count);}
     };
     assert.equal(await code.locator('[data-track-id="python.loop.add"]').count(),0);
     for(const row of rows)await add(row);
-    assert.match(await code.locator('[data-track-id="python.line-count"]').innerText(),new RegExp(`当前 ${level.optimal_code_lines} 行`));
-    const written=await snapshot();
-    await code.locator('[data-track-id="python.restart"]').click();
-    assert.deepEqual(await snapshot(),written);
-    await code.locator('[data-track-id="python.run"]').click();await code.locator('.score-total b').filter({hasText:'100'}).waitFor({timeout:45000});
+    assert.equal(Number(await code.getByTestId('level-lines').innerText()),level.optimal_code_lines);
+    await code.locator('[data-track-id="python.run"]').click();await code.locator('.score-total b').filter({hasText:'？？'}).waitFor({timeout:45000});
     assert.equal(Number(await code.locator('[data-track-id="status.actions"] b').innerText()),expected.consumed_commands);
-    assert.match(await code.locator('[data-track-id="python.line-result"]').innerText(),/达成最优目标/);
     await code.screenshot({path:join(output,`${index+1}-completed.png`)});
     const completedProgram=await snapshot();
-    await code.locator('[data-track-id="python.restart"]').click();
+    await code.getByRole('button',{name:'重置',exact:true}).click();
     assert.deepEqual(await snapshot(),completedProgram);
     assert.equal(Number(await code.locator('[data-track-id="status.actions"] b').innerText()),0);
     assert.equal(await code.locator('.score-total b').count(),0);
@@ -111,7 +108,7 @@ try {
   // and keep all instructions inside their loops.
   const retryContext=await browser.newContext({viewport:{width:1452,height:1114}});
   const retry=await retryContext.newPage();retry.on('pageerror',e=>errors.push(e.message));
-  await retry.goto(origin+'/future/');await retry.locator('[data-track-id="onboarding.mode.python_blank"]').click();
+  await enter(retry,'python_blank');
   await retry.getByRole('textbox',{name:'循环次数'}).fill('2');
   await retry.locator('[data-track-id="python.command.add.forward"]').click();
   assert.equal(await retry.locator('.robot-loop .robot-code-row').count(),1);

@@ -9,6 +9,7 @@ import LevelNav from './components/LevelNav';
 import PythonEditor from './components/PythonEditor';
 import RobotEditor from './components/RobotEditor';
 import { LevelMetrics } from './components/Leaderboard';
+import { CompetitionResult, RunSummary, scoringRuleHint } from './components/CompetitionResult';
 import { useAttemptClock } from './components/useAttemptClock';
 import { CompetitionHeader, CompetitionMission, CompetitionActions, CompetitionWelcome } from './components/CompetitionTemplate';
 import { competitionModules } from './competition-modules';
@@ -28,7 +29,7 @@ interface Player {
 interface AttemptInfo { attempt_id: string; trial_index: number; assignment_key: string; }
 interface ServerResult {
   status: GameStatus; steps: number; collisions: number; collected_order: string[];
-  score: ScoreResult; is_terminal?: boolean; verified?: boolean;
+  score: ScoreResult; leaderboard_score: number | null; is_terminal?: boolean; verified?: boolean;
 }
 
 const sleep = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -49,9 +50,8 @@ export default function App() {
   useEffect(() => () => { if (lightTimer.current !== null) window.clearTimeout(lightTimer.current); }, []);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [attempt, setAttempt] = useState<AttemptInfo | null>(null);
-  const [score, setScore] = useState<ScoreResult | null>(null);
+  const [score, setScore] = useState<{ value: number | null; completed: boolean } | null>(null);
   const [rows, setRows] = useState<TemplateRow[]>([]);
-  const [submittedLines,setSubmittedLines]=useState<number|null>(null);
   const [animating, setAnimating] = useState(false);
   const [paused, setPaused] = useState(false);
   const clock = useAttemptClock(attempt?.attempt_id, !!attempt && gameState?.status === 'running' && !paused);
@@ -100,7 +100,6 @@ export default function App() {
     if (attemptRef.current && gameRef.current?.status === 'running') stopRemoteAttempt();
     const preserveProgram=levelRef.current?.level_id===level.level_id;
     setActiveRowId(null);
-    setSubmittedLines(null);
     markLevelEntry('level_selected');
     levelRef.current = level;
     setCurrentLevel(level);
@@ -157,7 +156,6 @@ export default function App() {
   const resetGame = useCallback((stopRemote = true) => {
     if (programRunRef.current || startingRef.current) return;
     setActiveRowId(null);
-    setSubmittedLines(null);
     const level = levelRef.current;
     if (!level) return;
     markLevelEntry('retry');
@@ -307,12 +305,12 @@ export default function App() {
   };
 
   const acceptServerResult = (result: ServerResult) => {
-    setScore(result.score);
+    setScore({ value: result.leaderboard_score, completed: result.status === 'success' });
     setMessage(null);
     const current = gameRef.current;
     if (current && result.status !== 'running') commitGame({ ...current, status: result.status });
     telemetryRef.current?.track('attempt_verified', 'attempt.result', {
-      status: result.status, score: result.score.total_score, steps: result.steps,
+      status: result.status, score: result.leaderboard_score, steps: result.steps,
       collisions: result.collisions, collected_order: result.collected_order,
     });
   };
@@ -382,7 +380,6 @@ export default function App() {
     const currentAttempt = await beginAttempt(true, run);
     if (!currentAttempt) { if (programRunRef.current === run) programRunRef.current = null; setAnimating(false); return; }
     const rowIds = executionRows(rows, !!level.robot);
-    setSubmittedLines(countCodeLines(rows));
     const programSnapshot = generatePythonSource(rows, level.python);
     telemetryRef.current?.track('program_run_started', 'python.run', { program_snapshot: programSnapshot, expanded_steps: validation.expanded.length, code_line_count: countCodeLines(rows), optimal_code_lines: level.optimal_code_lines });
     try {
@@ -497,10 +494,10 @@ export default function App() {
 
       <div className="app-body">
         <LevelNav levels={levels} currentLevelId={currentLevel.level_id} onSelect={selectLevel} disabled={animating || switchingMode}>
-          <details className="competition-instructions" open><summary>操作提示</summary><ul>
+          <details className="competition-instructions" open><summary>关卡规则</summary><ul>
             <li>{currentLevel.rule_hint}</li>
             <li>{mode === 'keyboard' ? 'WASD / 方向键或按钮操控。' : currentLevel.robot ? '点击指令加入循环，填写循环次数和移动格数。' : '点击指令添加代码，括号内填写移动格数。'}</li>
-            {isFuture && <li>拖动旋转视角，滚轮缩放。</li>}
+            <li>暂停不计时，停止后回到起点。</li><li>{scoringRuleHint}</li>
           </ul><div className="legend">
             {currentLevel.robot ? <>
               {currentLevel.coins.some(c => c.type === 'checkpoint') && <span><i className="legend-patrol" />巡逻点</span>}
@@ -509,8 +506,8 @@ export default function App() {
           </div></details>
           <details className="competition-instructions"><summary>成绩与机会</summary><div className="competition-attempt-info" aria-label="本关成绩与尝试次数">
             <div><span>{attempt?.attempt_id.startsWith('local-') ? '当前挑战' : attempt ? '正式尝试' : '剩余机会'}</span><b>{attempt?.attempt_id.startsWith('local-') ? '练习' : <>{attempt ? attempt.trial_index : progress?.remaining_attempts ?? '—'}<small> / 3</small></>}</b></div>
-            <div><span>本关最高</span><b>{progress?.final_score ?? '—'}<small> 分</small></b></div></div>
-            <ul><li>每种模式各 3 次机会，取最高分；练习不计分。</li>{currentLevel.optimal_actions !== undefined && <li data-track-id="score.rules">完成 60 分，行动最优 80 分{mode === 'python_blank' && '，代码最优 100 分'}。</li>}</ul>
+            <div><span>本关最高</span><b>{progress?.final_score ?? '？？'}{typeof progress?.final_score === 'number' && <small> 分</small>}</b></div></div>
+            <ul><li>每种模式各 3 次机会，取最高分；练习不计分。</li></ul>
           </details>
         </LevelNav>
         <main className="game-area">
@@ -520,12 +517,7 @@ export default function App() {
                 {currentLevel.required_order && <div className="competition-order"><small>指定顺序</small><b>{displayOrder?.join(' → ')}</b></div>}
               </CompetitionMission>
               <GameBoard paused={paused} level={currentLevel} state={gameState} />
-              <div className="status-bar">
-                {currentLevel.robot ? <div data-track-id="status.actions"><small>行动次数{currentLevel.optimal_actions!==undefined&&` · 最优 ≤ ${currentLevel.optimal_actions}`}</small><b>{gameState.consumed_commands}</b></div> : <><div><small>{currentLevel.step_limit ? '步数预算' : '有效步数'}</small><b>{gameState.steps}{currentLevel.step_limit && <em> / {currentLevel.step_limit}</em>}</b></div>
-                <div><small>碰撞次数</small><b>{gameState.collisions}</b></div></>}
-                <div><small>{isFuture ? '已完成目标' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
-                <div className={`status-pill status-${attempt ? gameState.status : 'draft'}`}>{attempt ? statusLabel(gameState.status) : '准备就绪'}</div>
-              </div>
+
             </section>
 
             <aside className="control-column">
@@ -542,27 +534,20 @@ export default function App() {
                   <button className={`dpad-btn down${litDirection === 'down' ? ' is-lit' : ''}`} onClick={() => executeKeyboard('down')} disabled={!active} data-track-id="move.down" aria-label="向下">↓</button>
                 </div>}
                 <CompetitionActions running={active} canReset={!!attempt && !active} onRun={() => void beginAttempt(true)} onStop={() => void stopAttempt()} onReset={() => resetGame(false)} runLabel={progress?.remaining_attempts === 0 ? '开始练习（不计分）' : '▶ 开始控制'} runTrack="attempt.start" stopTrack="attempt.stop" />
-              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} optimalLines={currentLevel.optimal_code_lines} completedLines={!animating&&gameState.status==='success'&&gameState.collected.length===currentLevel.coins.length?submittedLines:null} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} isRunning={animating} error={editorError} />}
+              </section> : currentLevel.robot ? <RobotEditor key={currentLevel.level_id} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} factory={!!currentLevel.robot.automation} rows={rows} onChange={setRows} onRun={()=>void runPython()} isRunning={animating} error={editorError} /> : <PythonEditor config={currentLevel.python} rows={rows} onChange={setRows} onRun={() => void runPython()} onReset={() => resetGame(false)} onStop={() => void stopAttempt()} canReset={!animating && !!attempt && !active} paused={paused} onPause={pauseProgram} executing={animating} activeRowId={activeRowId} isRunning={animating} error={editorError} />}
 
-              {score && <section className="score-panel">
-                <div className="score-total"><span>{currentLevel.step_limit ? '本关结算' : '本轮得分'}</span><b>{score.total_score}</b><em>/ {score.max_score??100}</em></div>
-                {score.optimal_actions!==undefined
-                  ? <><div className="score-parts"><span>完成 {score.collection_score}/60</span><span>行动 {score.action_score}/20</span>{mode==='python_blank'&&<span>代码 {score.code_score}/20</span>}</div><p data-track-id="score.thresholds">行动 {score.action_count} / {score.optimal_actions} 次{mode==='python_blank'&&` · 代码 ${score.code_lines??'未核验'} / ${score.optimal_code_lines} 行`}</p><p>{score.total_score===0?'完成全部目标后得 60 分。':score.total_score===60?'任务完成，减少行动次数可得 80 分。':score.total_score===80?(mode==='keyboard'?'行动次数达标，已获键盘模式最高分！':'行动次数达标，精简代码可得 100 分。'):'行动次数与代码行数均达标！'}</p></>
-                  : currentLevel.step_limit
-                  ? <><div className="score-parts"><span>价值 {score.collected_value} / {score.total_value}</span><span>预算 {score.steps} / {currentLevel.step_limit} 步</span></div><p>{score.collected_value === score.optimal_value ? `你拿到了预算内最高的 ${score.optimal_value} 点价值！` : `预算内最高可得 ${score.optimal_value} 点，再比较一下目标价值和绕行距离。`}</p></>
-                  : <><div className="score-parts"><span>{currentLevel.robot?'目标':skin.resourceName} {score.collection_score}/60</span><span>{currentLevel.robot?'完成':'路线'} {score.route_score}/40</span></div><p>{currentLevel.show_optimal_feedback ? (score.steps === score.optimal_steps ? '你走出了最短路线！' : `最短 ${score.optimal_steps} 步，本轮 ${score.steps} 步。`) : (isFuture ? '本轮已结算，查看完成目标。' : '全部金币都已收集，操控任务完成！')}</p></>}
-                {score.total_score >= (score.max_score??100)
-                  ? nextLevel
-                    ? <button onClick={() => selectLevel(nextLevel)} data-track-id="attempt.next_level">下一关</button>
-                    : <p role="status">最后一关已满分完成！</p>
-                  : <button onClick={() => resetGame(false)} data-track-id="attempt.reset_after_score">重新挑战</button>}
-              </section>}
+              {score && <CompetitionResult score={score.value} completed={score.completed} onReset={() => resetGame(false)} onNext={nextLevel ? () => selectLevel(nextLevel) : undefined} />}
               {displayMessage && <div className={`message${practiceCompleted ? ' success' : ''}`} role="status">{displayMessage}</div>}
             </aside>
           </div>
         </main>
       </div>
-      <footer><LevelMetrics steps={gameState.steps} lines={mode === 'python_blank' ? countCodeLines(rows) : 0} seconds={clock.elapsed} scope={{ competition, level: currentLevel.level_id, mode }} /></footer>
+      <footer><RunSummary>
+        <div><small>{isFuture ? '已完成目标' : '已拾取价值'}</small><b>{collectedValue}<em> / {totalValue}</em></b></div>
+        {currentLevel.step_limit && <div><small>步数预算</small><b>{currentLevel.step_limit}</b></div>}
+        {currentLevel.robot ? <div data-track-id="status.actions"><small>行动次数</small><b>{gameState.consumed_commands}</b></div> : <div><small>碰撞次数</small><b>{gameState.collisions}</b></div>}
+        <div className={`status-pill status-${attempt ? gameState.status : 'draft'}`}>{paused ? '已暂停' : attempt ? statusLabel(gameState.status) : '准备就绪'}</div>
+      </RunSummary><LevelMetrics steps={gameState.steps} lines={mode === 'python_blank' ? countCodeLines(rows) : 0} seconds={clock.elapsed} scope={{ competition, level: currentLevel.level_id, mode }} /></footer>
     </div>
   );
 }

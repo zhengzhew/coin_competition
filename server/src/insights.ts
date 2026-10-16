@@ -16,7 +16,7 @@ function median(values: number[]) {
 const ended = (a: InsightAttempt) => a.status !== 'running';
 const scored = (a: InsightAttempt) => ended(a) && a.score !== null && Number.isFinite(a.score);
 
-export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[], levels: LevelDef[]) {
+export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[], levels: LevelDef[], scoring?: { scoreMax: number | null }) {
   const formal = attempts.filter(a => a.trial_index >= 1 && a.trial_index <= 3);
   const preparation = new Map<string, number>();
   const owners = new Map(formal.map(a => [a.attempt_id, a.player_uuid]));
@@ -41,7 +41,7 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
     const first = rows.find(a => a.trial_index === 1 && scored(a));
     const best = completed.length ? Math.max(...completed.map(a => a.score!)) : null;
     const level=levels.find(level=>level.keyboard_id===rows[0].assignment_key||level.python_id===rows[0].assignment_key);
-    const maxScore=level?.optimal_actions!==undefined&&rows[0].mode==='keyboard'?80:100;
+    const maxScore=scoring ? scoring.scoreMax : level?.optimal_actions!==undefined&&rows[0].mode==='keyboard'?80:100;
     return {
       player_uuid: rows[0].player_uuid, display_name: rows[0].display_name,
       assignment_key: rows[0].assignment_key, level_id: levelIdForAssignment(rows[0].assignment_key), mode: rows[0].mode,
@@ -49,8 +49,8 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
       first_score: first?.score ?? null, best_score: best,
       gain: first && completed.length >= 2 ? round(best! - first.score!) : null,
       max_score:maxScore,
-      mastered: best !== null && best >= maxScore,
-      exhausted: rows.length >= 3 && rows.every(ended) && best !== null && best < maxScore,
+      mastered: best !== null && maxScore !== null && best >= maxScore,
+      exhausted: rows.length >= 3 && rows.every(ended) && best !== null && maxScore !== null && best < maxScore,
       scores: rows.map(a => ({ trial: a.trial_index, score: scored(a) ? a.score : null, status: a.status })),
     };
   });
@@ -66,10 +66,10 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
       students: new Set(rows.map(a => a.player_uuid)).size, journeys: groups.length, attempts: rows.length,
       ended: finished.length, active: rows.length - finished.length,
       first_n: first.length, first_score: mean(first.map(g => g.first_score!)),
-      first_mastery: first.length ? round(first.filter(g => g.first_score! >= g.max_score).length / first.length * 100) : null,
+      first_mastery: first.length ? round(first.filter(g => g.max_score !== null && g.first_score! >= g.max_score).length / first.length * 100) : null,
       best_score: mean(groups.flatMap(g => g.best_score === null ? [] : [g.best_score])),
       mastered: groups.filter(g => g.mastered).length,
-      mastery_rate: groups.length ? round(groups.filter(g => g.mastered).length / groups.length * 100) : null,
+      mastery_rate: groups.length && scoring?.scoreMax !== null ? round(groups.filter(g => g.mastered).length / groups.length * 100) : null,
       retry_rate: groups.length ? round(groups.filter(g => g.attempts > 1).length / groups.length * 100) : null,
       exhausted: groups.filter(g => g.exhausted).length, gain: mean(gains), gain_n: gains.length,
       preparation_s: median(prep), preparation_n: prep.length,
@@ -98,7 +98,7 @@ export function buildInsights(attempts: InsightAttempt[], events: InsightEvent[]
     modes: ['keyboard', 'python_blank'].map(mode => ({ mode,
       ...aggregate(formal.filter(a => a.mode === mode), journeys.filter(g => g.mode === mode)) })),
     journeys,
-    quality: { excluded_legacy: attempts.length - formal.length, missing_scores: formal.filter(a => ended(a) && !scored(a)).length,
+    quality: { excluded_legacy: attempts.length - formal.length, missing_scores: formal.filter(a => ended(a) && (!scoring || a.status === 'success') && !scored(a)).length,
       missing_timestamps: formal.filter(a => ended(a) && (!a.finalized_at || !Number.isFinite(Date.parse(a.finalized_at) - Date.parse(a.started_at)) || Date.parse(a.finalized_at) < Date.parse(a.started_at))).length,
       invalid_preparation: invalidPreparation, validation_errors: events.filter(e => e.event_type === 'program_validation_failed').length },
   };

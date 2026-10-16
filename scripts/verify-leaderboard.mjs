@@ -6,6 +6,8 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
 import { strawberryLevels, beachLevels, robotDemoManifests, solveStrawberryRoute, solve } from '../shared/dist/index.js';
+import { generatePythonSource, validateAndExpand } from '../shared/dist/index.js';
+import { curriculumReferencePrograms } from '../shared/dist/curriculum-reference.js';
 
 process.env.COIN_DATA_DIR = mkdtempSync(join(tmpdir(), 'leaderboard-test-'));
 process.env.TEACHER_KEY = 'leaderboard-test';
@@ -80,17 +82,57 @@ try {
   const formalLevel = getLevelForAssignment('P01'), commands = solve(formalLevel, formalLevel.required_order);
   assert.ok(commands?.length);
   const program = '# 完成路线\n' + commands.map(dir => `move_${dir}(1)`).join('\n');
-  assert.equal((await request(`/attempts/${successful.attempt_id}/commands`, 'POST', { commands, program_snapshot: program, active_seconds: .02 })).status, 200);
+  const completion = await request(`/attempts/${successful.attempt_id}/commands`, 'POST', { commands, program_snapshot: program, active_seconds: .02 });
+  assert.equal(completion.status, 200);
   await request(`/attempts/${successful.attempt_id}/finalize`, 'POST', {});
   const formal = (await request(formalScope)).data;
   assert.equal(formal.rows.length, 1); assert.equal(formal.rows[0].id, successful.attempt_id);
   assert.equal(formal.rows[0].code_lines, commands.length); assert.equal(formal.rows[0].seconds, .02);
+  assert.equal(completion.data.leaderboard_score, formal.rows[0].score, 'coin completion uses the same rule as leaderboard');
+  const submittedAt = formal.rows[0].submitted_at;
+  await request(`/attempts/${successful.attempt_id}/finalize`, 'POST', {});
+  assert.equal((await request(formalScope)).data.rows[0].submitted_at, submittedAt, 'repeated finalize preserves the original submission time');
+  assert.equal((await request('/assignments/P01')).data.final_score, completion.data.leaderboard_score);
+  const formalDashboard = (await request('/teacher/dashboard?competition=coin&level=L01&mode=python_blank')).data;
+  assert.equal(formalDashboard.insights.overview.best_score, Math.round(completion.data.leaderboard_score * 10) / 10);
+  assert.equal(formalDashboard.recent_attempts.find(a => a.attempt_id === successful.attempt_id).score, completion.data.leaderboard_score);
+  for (const mode of ['keyboard', 'python_blank']) {
+    const task = getLevelForAssignment(mode === 'keyboard' ? 'FK31' : 'FP31');
+    const rows = curriculumReferencePrograms()[0], source = generatePythonSource(rows, task.python);
+    const key = mode === 'keyboard' ? task.keyboard_id : task.python_id;
+    const round = (await request('/attempts', 'POST', { assignment_key: key })).data;
+    const done = (await request(`/attempts/${round.attempt_id}/commands`, 'POST', { commands: validateAndExpand(rows, task.python).expanded, program_snapshot: source, active_seconds: .1 })).data;
+    assert.equal(done.status, 'success');
+    const rank = (await request(`/leaderboard?competition=future&level=${task.level_id}&mode=${mode}`)).data.rows[0];
+    assert.equal(done.leaderboard_score, rank.score);
+    assert.equal((await request(`/assignments/${key}`)).data.final_score, rank.score);
+    assert.equal(rank.code_lines, mode === 'keyboard' ? 0 : source.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length);
+  }
+  for (const [competition, task] of [['beach', beachLevels[0]], ['demo', robotDemoManifests[0].configuration]]) {
+    const sample = { ...payload, submission_id: randomUUID(), competition, level_id: task.demo_id, content_version: task.content_version, mode: task.supported_modes[0], source: '', steps: 4, seconds: 8 };
+    const saved = (await request('/leaderboard/submissions', 'POST', sample)).data;
+    assert.equal(saved.score, 92);
+    assert.equal((await request(`/leaderboard?competition=${competition}&level=${task.demo_id}&mode=${sample.mode}&version=${task.content_version}`)).data.rows[0].score, saved.score);
+  }
   const later = (await request('/attempts', 'POST', { assignment_key: 'P01' })).data;
   await request(`/attempts/${later.attempt_id}/finalize`, 'POST', {});
   assert.equal((await request(formalScope)).data.rows[0].id, successful.attempt_id, 'later failure preserves previous success');
   await request('/teacher/leaderboard', 'PUT', { start: null, end: null, rule: null });
   assert.equal((await request(scope)).data.rows[0].score, null);
   assert.equal((await request('/leaderboard/submissions', 'POST', retry)).data.score, null);
+  assert.equal((await request('/assignments/P01')).data.final_score, null, 'clearing rule also hides personal best');
+  const hiddenDashboard = (await request('/teacher/dashboard')).data;
+  assert.equal(hiddenDashboard.overview.average_score, null);
+  assert.equal(hiddenDashboard.insights.overview.mastery_rate, null);
+  assert.ok(hiddenDashboard.recent_attempts.every(a => a.score === null));
+  const storedScore = getDb().prepare('SELECT score FROM attempts WHERE attempt_id = ?').get(successful.attempt_id).score;
+  await request('/teacher/leaderboard', 'PUT', { start: null, end: null, rule: { base: 200, steps: 0, code_lines: 0, seconds: 0, min: 0, max: 200 } });
+  const updated = (await request('/teacher/dashboard?competition=coin&level=L01')).data;
+  assert.equal(updated.insights.overview.best_score, 200);
+  assert.equal(updated.insights.overview.mastery_rate, 100);
+  assert.equal((await request('/assignments/P01')).data.final_score, 200);
+  assert.equal((await request(formalScope)).data.rows[0].score, 200);
+  assert.equal(getDb().prepare('SELECT score FROM attempts WHERE attempt_id = ?').get(successful.attempt_id).score, storedScore, 'current-rule view preserves original stored history');
   await request(`/teacher/players/${player}/data`, 'DELETE', { confirm_uuid: player });
   assert.equal((await request(scope)).data.rows.length, 0, 'player deletion also removes leaderboard submissions');
   console.log('Leaderboard API: success-only submission, legacy invalid exclusion, replay, idempotency, periods, sorting, latest success, auth, persistence, rules, formal history and deletion passed.');

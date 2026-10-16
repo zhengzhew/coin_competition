@@ -43,7 +43,7 @@ try {
   result=await command('g');assert.equal(result.robot.holding,'A');assert.equal(result.collected_order.length,0);
   await page.waitForTimeout(400);await page.screenshot({path:join(output,'02-grab-follow.png')});
   await command('d');await command('d');result=await command('r');assert.equal(result.score.total_score,100);assert.equal(result.robot.holding,null);
-  await page.locator('.score-total b').filter({hasText:'100'}).waitFor();
+  await page.locator('.score-total b').filter({hasText:'？？'}).waitFor();
   // Exercise all six scenes through the same authenticated backend in both modes.
   const api=async(path,body)=>{
     const response=await context.request.fetch(origin+'/api'+path,{method:body===undefined?'GET':'POST',data:body});
@@ -62,18 +62,16 @@ try {
   await code.goto(origin+'/future/');
   await code.locator('[data-track-id="onboarding.mode.python_blank"]').click();
   await code.locator('[data-track-id="nav.level.FL23"]').click();
-  assert.match(await code.locator('[data-track-id="python.line-count"]').innerText(),/当前 0 行.*最优目标 8 行/s);
+  assert.equal(Number(await code.getByTestId('level-lines').innerText()),0);
   await code.locator('[data-track-id="python.loop.add"]').click();await code.getByRole('button',{name:'循环',exact:true}).click();
   await code.getByRole('textbox',{name:'循环次数'}).fill('3');
   for(const action of cycle) await code.locator(`[data-track-id="python.command.add.${action}"]`).click();
-  assert.match(await code.locator('[data-track-id="python.line-count"]').innerText(),/当前 12 行/);
+  assert.equal(Number(await code.getByTestId('level-lines').innerText()),12);
   await code.screenshot({path:join(output,'03-loop-code.png')});
-  await code.locator('[data-track-id="python.run"]').click();await code.locator('.score-total b').filter({hasText:'100'}).waitFor({timeout:30000});
+  await code.locator('[data-track-id="python.run"]').click();await code.locator('.score-total b').filter({hasText:'？？'}).waitFor({timeout:30000});
   assert.equal(Number(await code.locator('[data-track-id="status.actions"] b').innerText()),26,'loop counts executed actions, excluding commands after completion');
-  await code.locator('[data-track-id="python.line-result"]').filter({hasText:'本轮 12 行'}).waitFor();
   await code.locator('[data-track-id="python.command.add.grab"]').click();
-  assert.match(await code.locator('[data-track-id="python.line-count"]').innerText(),/当前 13 行/);
-  assert.match(await code.locator('[data-track-id="python.line-result"]').innerText(),/本轮 12 行/,'editing after submission does not change the submitted result');
+  assert.equal(Number(await code.getByTestId('level-lines').innerText()),13);
   await code.screenshot({path:join(output,'04-loop-success.png')});
   for(const level of levels) {
     await code.locator(`[data-track-id="nav.level.${level.level_id}"]`).click();

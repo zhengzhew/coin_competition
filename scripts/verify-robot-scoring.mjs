@@ -30,7 +30,8 @@ try {
     const finalized=await api(`/attempts/${attempt.attempt_id}/finalize`,{});
     assert.equal(finalized.score.total_score,expected,`${key} finalize`);
     const assignment=await api(`/assignments/${key}`);
-    assert.equal(assignment.attempts.at(-1).score,expected,`${key} persisted`);
+    assert.equal(assignment.attempts.at(-1).score,null,`${key} hides global score without a teacher rule`);
+    assert.equal(result.leaderboard_score,null);
     return result;
   };
   for(const [i,level] of levels.entries()) {
@@ -43,12 +44,12 @@ try {
     const index=body.findIndex(row=>['forward','backward'].includes(row.direction)&&Number(row.count)>1);
     const row=body[index];body.splice(index,1,{...row,count:String(Number(row.count)-1)},{...row,row_id:'split',count:'1'});
     await run(level,'python_blank',longer,80);
-    assert.equal((await api(`/assignments/${level.keyboard_id}`)).final_score,80);
+    assert.equal((await api(`/assignments/${level.keyboard_id}`)).final_score,null);
     console.log('PASS',level.level_id,'keyboard 60/80, code 60/80/100, finalize and storage');
   }
   const dashboard=await api('/teacher/dashboard?competition=future&level=FL31&mode=keyboard');
-  assert.equal(dashboard.insights.overview.mastery_rate,100);
-  assert.equal(dashboard.insights.overview.first_mastery,100);
+  assert.equal(dashboard.insights.overview.mastery_rate,null);
+  assert.equal(dashboard.insights.overview.first_mastery,null);
   // New player for incomplete and mismatched-code cases (no classroom data touched).
   cookie='';await api('/players/bootstrap',{});
   const level=levels[0],rows=curriculumReferencePrograms()[0];
@@ -56,7 +57,7 @@ try {
   await run(level,'python_blank',incomplete,0);
   await run(level,'python_blank',rows,80,{program_snapshot:'for i in range(1):\n    grab()\n',code_line_count:1});
   await run(level,'python_blank',rows,80,{program_snapshot:null,code_line_count:1});
-  console.log('PASS incomplete=0; fake or missing code cannot earn 100; keyboard mastery uses 80.');
+  console.log('PASS incomplete=0; fake or missing code cannot earn 100; legacy scoring remains reproducible; displayed scores require a teacher rule.');
 } finally {
   await new Promise(r=>server.close(r));closeDb();
   assert.ok(resolve(directory).startsWith(resolve(tmpdir())+sep)&&directory.includes('robot-scoring-'));

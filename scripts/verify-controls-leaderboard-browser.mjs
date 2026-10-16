@@ -116,7 +116,7 @@ try {
   await page.getByText('已提交排行榜', { exact: true }).waitFor();
   assert.equal(leaderboardPosts.length, 2, 'each successful run submits exactly once');
   assert.equal(typeof completion.score, 'number'); assert.notEqual(completion.score, 100);
-  assert.equal(await page.getByTestId('farm-score').innerText(), `${completion.score} 分`);
+  assert.equal(await page.getByTestId('farm-score').innerText(), String(completion.score));
   await page.screenshot({ path: join(output, 'farm-rule-score.png'), fullPage: true });
   await page.getByRole('button', { name: /排行榜/ }).click();
   await page.getByRole('dialog').getByText('控制验收员', { exact: true }).waitFor();

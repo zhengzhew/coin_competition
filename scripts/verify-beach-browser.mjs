@@ -38,114 +38,78 @@ try {
   const confirm = () => page.getByRole('button', { name: '确认，前往海边 →' }).click();
   const screenshot = name => page.screenshot({ path: join(output, name), fullPage: true });
   const layout = async () => { assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true); const box = await page.locator('canvas[data-beach-scene]').boundingBox(); assert.ok(box.width > 260 && box.height > 200, JSON.stringify(box)); };
+  const names = ['初潮寻贝', '四海拾珍', '一排贝壳', '一堆贝壳'];
+  const counts = [2, 4, 10, 12];
+  const level = n => page.getByRole('button', { name: `${n} ${names[n - 1]}`, exact: true }).click();
+  const editor = () => page.getByRole('textbox', { name: '指令程序', exact: true });
   await page.goto(origin + '/beach/'); await page.getByLabel('你的名字', { exact: true }).fill('拾贝测试员'); await screenshot('01-welcome.png');
   await confirm(); assert.equal(await page.locator('.experience-grid button').count(), 4);
-  await page.getByRole('button', { name: /初潮寻贝.*手动驾驶/ }).click(); await ready(); await layout(); await screenshot('02-level-one.png');
+  assert.equal(await page.getByText('手动驾驶', { exact: false }).count(), 0);
+  await page.getByRole('button', { name: /初潮寻贝.*代码操控/ }).click(); await ready(); await layout();
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000)); clockInstalled = true;
-  assert.deepEqual((await snapshot()).objects.map(o => [o.x, 120 - o.z]), [[36, 70], [18, 80]]);
-  await page.keyboard.down('w'); await advance(500); await page.keyboard.up('w'); assert.equal((await snapshot()).z, 96);
-  await start(); await page.keyboard.down('w'); await advance(300); await page.keyboard.down('ArrowUp'); await page.keyboard.up('w'); const z = (await snapshot()).z;
-  await advance(300); assert.ok((await snapshot()).z < z); await page.keyboard.up('ArrowUp');
-  await page.getByRole('button', { name: '停止', exact: true }).click(); const stopped = await snapshot(); const time = await page.getByTestId('beach-timer').innerText(); await advance(2000); assert.deepEqual(await snapshot(), stopped); assert.equal(await page.getByTestId('beach-timer').innerText(), time);
-  await start(); assert.equal((await snapshot()).z, 96); await page.evaluate(() => window.dispatchEvent(new Event('blur'))); assert.equal((await snapshot()).phase, 'stopped');
-  checks.push('production routes, identity, exact OID coordinates, keyboard aliases, stop and blur lifecycle');
-  await start();
-  const forward = page.getByRole('button', { name: '前进 W / ↑', exact: true });
-  await forward.focus(); await page.keyboard.down('Space'); await advance(300); await page.keyboard.up('Space');
-  assert.ok((await snapshot()).z < 95, 'focused control supports held keyboard activation');
-  const control = await forward.boundingBox(); await page.mouse.move(control.x + control.width / 2, control.y + control.height / 2);
-  const beforePointer = (await snapshot()).z; await page.mouse.down(); await advance(300); await page.mouse.up();
-  assert.ok((await snapshot()).z < beforePointer, 'pointer controls drive the same simulation');
-  await page.getByRole('button', { name: '停止', exact: true }).click();
-  checks.push('screen controls support pointer hold and accessible keyboard hold without extra simulation steps');
-  await start();
-  let held = null;
-  const hold = async key => { if (key === held) return; if (held) await page.keyboard.up(held); held = key; if (key) await page.keyboard.down(key); };
-  const wait = async ms => { await hold(null); await advance(ms); };
-  const turn = async target => {
-    for (let i = 0; i < 400; i++) {
-      const s = await snapshot(), error = Math.atan2(Math.sin(target - s.heading), Math.cos(target - s.heading));
-      if (Math.abs(error) < .024) { await wait(100); return; }
-      await hold(error > 0 ? 'd' : 'a'); await advance(Math.max(16, Math.min(100, Math.abs(error) / (Math.PI / 2) * 1000)));
-    }
-    throw new Error('keyboard turn did not converge');
-  };
-  const drive = async (x, z, backwards = false) => {
-    for (let i = 0; i < 1200; i++) {
-      const s = await snapshot(), distance = Math.hypot(s.x - x, s.z - z);
-      if (distance < .5) { await wait(100); return; }
-      const heading = Math.atan2(x - s.x, s.z - z) + (backwards ? Math.PI : 0), error = Math.atan2(Math.sin(heading - s.heading), Math.cos(heading - s.heading));
-      if (Math.abs(error) > .035) await turn(heading);
-      await hold(backwards ? 's' : 'w'); await advance(Math.max(16, Math.min(100, distance / 18 * 1000)));
-    }
-    throw new Error(`keyboard drive to ${x},${z} failed: ${JSON.stringify(await snapshot())}`);
-  };
-  await drive(60, 76);
-  for (const [index, shell] of [{ id: 'A', x: 36, z: 50 }, { id: 'B', x: 18, z: 40 }].entries()) {
-    if (index) { await drive(60, 76); await drive(60, 68); }
-    const lane = index ? 68 : 76;
-    await drive(shell.x, lane); await drive(shell.x, shell.z + 12.5); await turn(0); await page.keyboard.press('g'); await advance(1800);
-    assert.equal((await snapshot()).holding, shell.id, JSON.stringify(await snapshot()));
-    await drive(shell.x, 19.5); await advance(2000); assert.equal((await snapshot()).collected, index + 1, 'edge placement is accepted without R');
-    if (!index) await drive(shell.x, lane, true);
+  const oldCoordinates = [[[36, 70], [18, 80]], [[30, 32], [84, 38], [36, 78], [88, 90]]];
+  for (let n = 1; n <= 4; n++) {
+    await level(n); await ready();
+    assert.equal(await page.locator('.beach-game').getAttribute('data-mode'), 'auto');
+    assert.equal(await page.locator('.beach-keypad').count(), 0);
+    assert.equal((await snapshot()).objects.length, counts[n - 1]);
+    assert.equal(await page.getByRole('region', { name: '贝壳坐标', exact: true }).count(), 1);
+    assert.equal(await page.getByLabel('精准定位读数', { exact: true }).count(), 1);
+    const positions = (await snapshot()).objects.map(o => [o.x, 120 - o.z]);
+    if (n <= 2) assert.deepEqual(positions, oldCoordinates[n - 1]);
+    if (n === 3) { assert.equal(new Set(positions.map(p => p[1])).size, 1); assert.equal(new Set(positions.map(p => p[0])).size, 10); }
+    if (n === 4) { assert.equal(new Set(positions.map(p => p[1])).size, 3); assert.equal(new Set(positions.map(p => p[0])).size, 4); }
+    await page.getByRole('button', { name: '俯视', exact: true }).click(); await advance(100); await screenshot(`level-${n}-layout.png`);
   }
-  assert.equal((await snapshot()).phase, 'completed'); assert.ok(Number((await page.getByTestId('beach-score').innerText()).replace(' 分', '')) > 0);
-  const finalTime = await page.getByTestId('beach-timer').innerText(); await advance(4000); assert.equal(await page.getByTestId('beach-timer').innerText(), finalTime); await screenshot('03-complete.png');
-  assert.ok(await page.evaluate(() => Object.keys(localStorage).some(key => key.startsWith('beach.best-times.'))));
-  checks.push('complete two-shell race without release input, automatic gripper opening, result, frozen timer and saved best');
-  await page.clock.resume(); await page.reload(); await confirm(); await ready(); assert.notEqual(await page.getByTestId('beach-best').innerText(), '—');
-  await page.getByRole('button', { name: '2 四海拾珍', exact: true }).click(); await ready(); assert.equal((await snapshot()).objects.length, 4);
-  await page.getByRole('button', { name: '俯视', exact: true }).click(); await advance(100); await screenshot('04-level-two.png');
-  await page.setViewportSize({ width: 390, height: 844 }); await advance(100); await layout(); await screenshot('05-mobile.png');
-  checks.push('best survives reload, independent four-shell level, top camera and mobile layout');
-  await page.setViewportSize({ width: 1543, height: 950 });
-  const level = n => page.getByRole('button', { name: n === 3 ? '3 初潮寻贝 · 编程' : '4 四海拾珍 · 编程', exact: true }).click();
-  const editor = () => page.getByRole('textbox', { name: '指令程序', exact: true });
-  await level(3); await ready(); await layout();
-  assert.equal(await page.locator('.beach-game').getAttribute('data-mode'), 'auto');
-  assert.equal(await page.locator('.beach-keypad').count(), 0);
-  assert.deepEqual((await snapshot()).objects.map(o => [o.x, 120 - o.z]), [[36, 70], [18, 80]]);
-  assert.deepEqual(await page.locator('.beach-command-palette b').allTextContents(), ['前进', '后退', '移动到点', '转到角度', '左转', '右转', '合拢', '张开']);
-  for (const button of await page.locator('.beach-command-palette button').all()) await button.click();
+  checks.push('four programming-only levels, original maps preserved, 10-shell row, 3 by 4 rectangle, visible coordinate lists and map readout');
+  await level(1); await ready();
+  assert.deepEqual(await page.locator('.beach-command-palette b').allTextContents(), ['前进', '后退', '移动到点', '转到角度', '左转', '右转', '合拢', '张开', '循环']);
+  for (const button of (await page.locator('.beach-command-palette button').all()).slice(0, 8)) await button.click();
   assert.equal(await editor().inputValue(), 'forward(12)\nbackward(12)\nmove_to(60, 48)\nturn_to(90)\nturn_left(90)\nturn_right(90)\ngrab()\nrelease()');
+  await editor().fill(''); await page.getByTitle('插入循环', { exact: true }).click();
+  await page.getByTitle('插入 forward(12)', { exact: true }).click();
+  assert.equal(await editor().inputValue(), 'for i in range(4):\n    forward(12)');
   await editor().fill('wait(1)'); await start(); assert.match(await page.getByRole('alert').innerText(), /第 1 行.*八种指令/); assert.equal((await snapshot()).phase, 'ready');
+  await editor().fill('for i in range(2):\n  forward(12)'); await start(); assert.match(await page.getByRole('alert').innerText(), /缩进|循环内/);
   await editor().fill('move_to(60, 36)\nturn_to(90)');
-  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 1000));
   await start(); await advance(200); assert.equal(await editor().isDisabled(), true); assert.equal(await page.getByTestId('running-code-line').getAttribute('data-line'), '1');
   await page.keyboard.down('s'); await advance(400); await page.keyboard.up('s'); assert.ok((await snapshot()).z < 95, 'manual reverse input cannot override code');
-  await page.getByRole('button', { name: '停止', exact: true }).click(); const codeStopped = await snapshot(), codeTime = await page.getByTestId('beach-timer').innerText();
-  await advance(1000); assert.deepEqual(await snapshot(), codeStopped); assert.equal(await page.getByTestId('beach-timer').innerText(), codeTime);
-  await page.getByRole('button', { name: '重置', exact: true }).click(); assert.equal((await snapshot()).z, 96); assert.equal(await editor().inputValue(), 'move_to(60, 36)\nturn_to(90)');
+  await page.getByRole('button', { name: '暂停', exact: true }).click(); const paused = await snapshot(), pausedTime = await page.getByTestId('beach-timer').innerText();
+  await advance(1000); assert.deepEqual(await snapshot(), paused); assert.equal(await page.getByTestId('beach-timer').innerText(), pausedTime);
+  await page.getByRole('button', { name: '继续', exact: true }).click(); await advance(500); assert.equal((await snapshot()).phase, 'running');
+  await page.getByRole('button', { name: '停止', exact: true }).click(); const stopped = await snapshot(); await advance(1000); assert.deepEqual(await snapshot(), stopped); assert.equal(stopped.z, 96);
+  assert.equal(await editor().inputValue(), 'move_to(60, 36)\nturn_to(90)');
   await start(); await page.evaluate(() => window.dispatchEvent(new Event('blur'))); assert.equal((await snapshot()).phase, 'paused');
   await page.getByRole('button', { name: '停止', exact: true }).click();
-  await editor().fill(programs['shells-3']); await level(4); await ready(); assert.equal(await editor().inputValue(), '');
-  await editor().fill(programs['shells-4']); await level(3); await ready(); assert.equal(await editor().inputValue(), programs['shells-3']);
-  await screenshot('06-level-three-code.png');
-  checks.push('exact eight code buttons, source insertion, unsupported command error, line highlight, code-only control, stop/reset/blur and independent drafts');
-  const completeCode = async n => {
+  checks.push('eight commands plus working loop insertion, validation, line highlight, code-only controls, pause/resume, stop/reset and blur');
+  for (let n = 1; n <= 4; n++) {
+    await level(n); await ready(); await editor().fill(programs[`shells-${n}`]);
+  }
+  for (let n = 1; n <= 4; n++) {
+    await level(n); await ready(); assert.equal(await editor().inputValue(), programs[`shells-${n}`]);
     await start(); let scrolled = false;
-    for (let i = 0; i < 160 && (await snapshot()).phase === 'running'; i++) {
+    for (let i = 0; i < 360 && (await snapshot()).phase === 'running'; i++) {
       await advance(1000); if (await editor().evaluate(el => el.scrollTop > 0)) scrolled = true;
     }
     assert.equal((await snapshot()).phase, 'completed', JSON.stringify(await snapshot()));
-    assert.equal((await snapshot()).collected, n === 3 ? 2 : 4); assert.equal(scrolled, true, 'current source line scrolls into view');
-    assert.ok(parseFloat(await page.getByTestId('beach-score').innerText()) > 0);
+    assert.equal((await snapshot()).collected, counts[n - 1]);
+    if (n !== 3) assert.equal(scrolled, true, 'current source line scrolls into view');
+    assert.equal(await page.getByTestId('beach-score').innerText(), '？？');
     const time = await page.getByTestId('beach-timer').innerText(); await advance(2000); assert.equal(await page.getByTestId('beach-timer').innerText(), time);
-    await page.getByTestId('beach-score').scrollIntoViewIfNeeded(); await screenshot(`0${n + 4}-level-${n}-complete.png`);
-  };
-  await completeCode(3); await level(4); await ready();
-  assert.deepEqual((await snapshot()).objects.map(o => [o.x, 120 - o.z]), [[30, 32], [84, 38], [36, 78], [88, 90]]);
-  assert.equal(await editor().inputValue(), programs['shells-4']);
+    await page.getByTestId('beach-score').scrollIntoViewIfNeeded(); await screenshot(`level-${n}-complete.png`);
+    console.log(`completed level ${n}: ${counts[n - 1]} shells`);
+  }
+  checks.push('all four levels complete physically through the browser, new levels use loops, timer freezes and execution lines follow');
+  await page.clock.resume(); await page.reload(); await confirm(); await ready();
+  for (let n = 1; n <= 4; n++) {
+    await level(n); await ready(); assert.equal(await editor().inputValue(), programs[`shells-${n}`]); assert.notEqual(await page.getByTestId('beach-best').innerText(), '—');
+  }
   for (const [width, height] of [[1280, 720], [1024, 768], [390, 844]]) {
     await page.setViewportSize({ width, height }); await advance(100); await layout();
     if (width >= 1000) { const run = await page.getByTestId('beach-start').boundingBox(); assert.ok(run.y >= 0 && run.y + run.height < height, 'run button stays in view'); }
     await screenshot(`code-layout-${width}.png`);
   }
-  await page.setViewportSize({ width: 1543, height: 950 }); await advance(100); await completeCode(4);
-  await page.clock.resume(); await page.reload(); await confirm(); await ready();
-  assert.equal(await editor().inputValue(), programs['shells-4']); assert.notEqual(await page.getByTestId('beach-best').innerText(), '—');
-  await level(3); await ready(); assert.equal(await editor().inputValue(), programs['shells-3']); assert.notEqual(await page.getByTestId('beach-best').innerText(), '—');
-  checks.push('code completes both copied maps, execution auto-scroll, independent saved bests and drafts after reload, frozen scoring and three responsive code layouts');
+  checks.push('independent bests and drafts survive reload; desktop, tablet and phone layouts fit');
   await page.goto(origin + '/beach/missing/'); await page.getByRole('heading', { name: '这片沙滩还未开放' }).waitFor();
   await page.goto(origin + '/farm/'); await page.getByRole('heading', { name: '欢迎来到生态农场' }).waitFor();
   await page.goto(origin + '/demo/place/manual/simulation3d/place-simulation3d-sample/');

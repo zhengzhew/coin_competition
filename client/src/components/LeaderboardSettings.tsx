@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import './Leaderboard.css';
 const sample = { base: 100, steps: -1, code_lines: -2, seconds: -0.5, min: 0, max: 100 };
 const localDate = (iso: string | null) => { if (!iso) return ''; const date = new Date(iso); return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };
-export default function LeaderboardSettings({ auth }: { auth: string }) {
+export default function LeaderboardSettings({ auth, onSaved }: { auth: string; onSaved?: () => void }) {
   const [start, setStart] = useState(''), [end, setEnd] = useState(''), [rule, setRule] = useState('');
   const [message, setMessage] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false), [loaded, setLoaded] = useState(false);
   useEffect(() => { let live = true;
@@ -16,6 +16,7 @@ export default function LeaderboardSettings({ auth }: { auth: string }) {
       const response = await fetch('/api/teacher/leaderboard', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-teacher-key': auth }, body: JSON.stringify(body) });
       const result = await response.json(); if (!response.ok) throw new Error(result.error);
       setMessage('已保存，所有游戏使用此时间范围和计分规则；重新打开或刷新排行榜即可生效。');
+      onSaved?.();
     } catch (e) { setError(e instanceof SyntaxError ? 'JSON 格式有误，请检查括号、逗号和数字。' : (e as Error).message); }
     finally { setBusy(false); }
   };

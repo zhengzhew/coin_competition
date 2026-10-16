@@ -1,3 +1,4 @@
+import MapStatus from '../../components/MapStatus';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -7,8 +8,8 @@ import { buildFarmArena } from './farm-arena';
 import { buildBeachArena, buildShell } from '../../beach/beach-arena';
 
 type View = 'orbit' | 'top' | 'follow';
-export default function SimulationScene({ demo, state, onReady }: {
-  demo: ThirdDemo; state: ThirdSnapshot; onReady: (ready: boolean) => void;
+export default function SimulationScene({ demo, state, onReady, showCoordinates = true }: {
+  demo: ThirdDemo; state: ThirdSnapshot; onReady: (ready: boolean) => void; showCoordinates?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const latest = useRef(state); latest.current = state;
@@ -136,7 +137,7 @@ export default function SimulationScene({ demo, state, onReady }: {
         sprite.position.set(...position); sprite.scale.set(5, 5, 1); parent.add(sprite);
       }
       box(scene, [config.width + 2, 2.2, config.depth + 2], [center.x, -.8, center.z], beach ? '#d7ba84' : '#becbb5');
-      if (beach) buildBeachArena(scene, config, keep, material);
+      if (beach) buildBeachArena(scene, config, keep, material, showCoordinates);
       else buildFarmArena(scene, config, keep, material);
       for (const obj of config.objects) if (obj.goal) {
         for (const side of [-1, 1]) {
@@ -204,7 +205,7 @@ export default function SimulationScene({ demo, state, onReady }: {
       for (const resource of resources) resource.dispose();
       renderer?.dispose(); renderer?.forceContextLoss(); renderer?.domElement.remove(); changeView.current = () => {}; changePan.current = () => {}; zoom.current = () => {};
     };
-  }, [demo, generation, onReady]);
+  }, [demo, generation, onReady, showCoordinates]);
   const position = thirdMapPosition(state.x, state.z, demo.scene_config.depth);
   return <div className="board-viewport city3d-viewport third-simulation-viewport">
     <div className="city3d-toolbar" aria-label="地图视角"><div className="city3d-views">{([['orbit', '自由视角'], ['top', '俯视'], ['follow', '跟随小车']] as const).map(([id, label]) => <button key={id} aria-pressed={selectedView === id} disabled={loading || !!error} onClick={() => changeView.current(id)}>{label}</button>)}</div>
@@ -214,6 +215,8 @@ export default function SimulationScene({ demo, state, onReady }: {
       {loading && !error && <div className="city3d-loading" role="status">正在准备本地三维场地…</div>}
       {error && <div className="city3d-loading city3d-error" role="alert"><p>{error}</p><button onClick={() => setGeneration(n => n + 1)}>重新加载场景</button></div>}
     </div>
-    <div className="city3d-help third-map-coordinates"><span aria-label="精准定位读数">车体中心 X {position.x.toFixed(1)} · Y {position.y.toFixed(1)} cm · 朝向 <b data-testid="third-oid-heading">{((Math.round(state.heading * 180 / Math.PI * 10) % 3600 + 3600) % 3600 / 10).toFixed(1)}°</b>（左下角为零点，0° 向上）</span><span>{selectedView === 'follow' ? '焦点锁定小车 · 拖动旋转 · 滚轮 / 双指缩放' : panMode ? '拖动平移 · 滚轮 / 双指缩放' : '拖动旋转 · 右键 / Shift 拖动平移 · 双指平移缩放'}</span></div>
+    <MapStatus position={showCoordinates ? <span aria-label="精准定位读数">X {position.x.toFixed(1)} · Y {position.y.toFixed(1)} cm</span> : undefined} heading={<>朝向 <b data-testid="third-oid-heading">{((Math.round(state.heading * 180 / Math.PI * 10) % 3600 + 3600) % 3600 / 10).toFixed(1)}°</b></>} cargo={demo.category === 'place' ? state.holding ? '携带物品' : '夹爪空闲' : undefined}>
+      {showCoordinates && <p>左下角为 (0, 0)，0° 向上。</p>}<p>{selectedView === 'follow' ? '焦点锁定小车 · 拖动旋转' : panMode ? '拖动平移' : '拖动旋转 · 右键 / Shift 拖动平移'}</p><p>滚轮 / 双指缩放，复位恢复默认视角。</p>
+    </MapStatus>
   </div>;
 }

@@ -48,7 +48,7 @@ try {
     const submitted = page.waitForRequest(r => r.url().endsWith('/commands') && r.method() === 'POST');
     await page.locator('[data-track-id="python.run"]').click(); const attempt = await (await created).json();
     await page.getByTestId('running-code-line').waitFor();
-    await page.waitForFunction(() => Number(document.querySelector('.status-bar > div:first-child b')?.textContent) > 0);
+    await page.waitForFunction(() => Number(document.querySelector('[data-testid="level-steps"]')?.textContent) > 0);
     await page.screenshot({ path: join(output, `${module}-running.png`), fullPage: true });
     const stopSaved = page.waitForResponse(r => r.url().endsWith('/stop') && r.request().method() === 'POST');
     await page.getByTestId('competition-stop-reset').click();
@@ -58,20 +58,21 @@ try {
     assert.deepEqual(await sourceValues(), preserved, 'reset keeps all code fields');
     assert.equal(await page.getByTestId('running-code-line').count(), 0);
     assert.equal(await page.getByTestId('competition-stop-reset').innerText(), '停止');
-    assert.equal(Number(await page.locator('.status-bar > div:first-child b').innerText()), 0);
+    assert.equal(Number(await page.getByTestId('level-steps').innerText()), 0);
     const stopped = getDb().prepare('SELECT status, commands FROM attempts WHERE attempt_id = ?').get(attempt.attempt_id);
     assert.equal(stopped.status, 'stopped'); assert.deepEqual(JSON.parse(stopped.commands), sent);
     if (module === 'future') {
       await page.getByLabel('循环次数', { exact: true }).fill('4'); await page.getByLabel('forward 步数', { exact: true }).fill('4');
+      await page.getByRole('button', { name: '循环', exact: true }).click();
       await page.locator('[data-track-id="python.command.add.turn_right"]').click();
     } else {
       await page.getByRole('button', { name: '删除第 1 行', exact: true }).click();
-      for (const row of solutions[0].reference_rows) {
-        await page.locator(`[data-track-id="python.command.add.${row.direction}"]`).click(); await page.locator('.count-input').last().fill(String(row.count));
+      for (const row of [...solutions[0].reference_rows].reverse()) {
+        await page.locator(`[data-track-id="python.command.add.${row.direction}"]`).click(); await page.locator('.count-input').first().fill(String(row.count));
       }
     }
     await page.locator('[data-track-id="python.run"]').click();
-    await page.waitForFunction(() => document.querySelector('.score-total b')?.textContent === '100');
+    await page.waitForFunction(() => document.querySelector('.score-total b')?.textContent === '？？');
     assert.equal(await page.getByTestId('running-code-line').count(), 0);
     await page.screenshot({ path: join(output, `${module}-complete.png`), fullPage: true });
     const finalValues = await sourceValues(); await page.getByRole('button', { name: '重置', exact: true }).click(); assert.deepEqual(await sourceValues(), finalValues);
@@ -99,7 +100,7 @@ try {
       const response = page.waitForResponse(r => r.url().endsWith('/commands') && r.request().method() === 'POST');
       await page.keyboard.press(keys[action]); assert.equal((await response).status(), 200);
     }
-    await page.locator('.score-total b').waitFor(); assert.equal(await page.locator('.score-total b').innerText(), module === 'future' ? '80' : '100');
+    await page.locator('.score-total b').waitFor(); assert.equal(await page.locator('.score-total b').innerText(), '？？');
     await page.getByRole('button', { name: '返回首页', exact: true }).click(); await page.locator('.module-welcome-body').waitFor();
     await page.locator('[data-track-id="onboarding.mode.python_blank"]').click(); assert.deepEqual(await sourceValues(), finalValues);
     checks.push(`${module}: shared welcome/header/mission/actions, executed-row highlight, partial stop, reset preserves code, official program/manual scores, four responsive layouts, home/mode switching`);

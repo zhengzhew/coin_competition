@@ -29,6 +29,7 @@
     "loadtest": "node scripts/loadtest.mjs",
     "typecheck": "tsc -b",
     "test:leaderboard": "npm run build -w shared && npm run build -w server && node scripts/verify-leaderboard.mjs",
+    "test:teacher": "npm run build -w shared && npm run build -w server && node scripts/verify-teacher-competitions.mjs",
     "test:controls:browser": "npm run build && node scripts/verify-controls-leaderboard-browser.mjs"
   },
   "devDependencies": {

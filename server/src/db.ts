@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { resolve } from 'node:path';
 import { mkdirSync } from 'node:fs';
+import { formalMetrics, leaderboardScore } from './scoring.js';
 
 let db: DatabaseSync | null = null;
 
@@ -15,6 +16,17 @@ export function getDb(): DatabaseSync {
   db.exec('PRAGMA busy_timeout = 5000;');
   db.exec('PRAGMA foreign_keys = ON;');
   initSchema(db);
+  // Calculate current-rule scores on read; keep stored historical results intact.
+  db.function('teacher_score', { deterministic: true }, (configuration, status, steps, mode, source, activeSeconds, startedAt, finalizedAt) => {
+    if (status !== 'success') return null;
+    const rule = configuration === null ? null : JSON.parse(String(configuration)).rule;
+    const metrics = formalMetrics({ steps, mode, program_snapshot: source, active_seconds: activeSeconds, started_at: startedAt, finalized_at: finalizedAt });
+    return leaderboardScore(rule, metrics.steps, metrics.code_lines, metrics.seconds);
+  });
+  const columns = db.prepare('PRAGMA table_info(attempts)').all().map(column => column.name === 'score'
+    ? `teacher_score((SELECT value FROM leaderboard_config WHERE id = 1), a.status, a.steps, a.mode, a.program_snapshot, a.active_seconds, a.started_at, a.finalized_at) AS score`
+    : `a."${String(column.name).replaceAll('"', '""')}"`);
+  db.exec(`CREATE TEMP VIEW scored_attempts AS SELECT ${columns.join(', ')} FROM main.attempts a`);
   return db;
 }
 

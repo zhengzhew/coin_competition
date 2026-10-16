@@ -1,10 +1,6 @@
 .strawberry-game .brand { color: inherit; text-decoration: none; }
 .app.future-city.strawberry-game .third-stage { background: #f0f3e7; border-radius: 10px; overflow: hidden; }
 .app.future-city.strawberry-game > footer { height: auto; flex: 0 0 auto; min-height: 60px; padding: 10px 18px; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
-.strawberry-game .farm-run-summary { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; color: #24483d; }
-.strawberry-game .farm-run-summary > div:not(.status-pill) { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
-.strawberry-game .farm-run-summary small, .strawberry-game .farm-run-summary em { font-size: 12px; font-style: normal; }
-.strawberry-game .farm-run-summary b { font-size: 19px; font-variant-numeric: tabular-nums; }
 .strawberry-game > footer .level-metrics { flex: 1 1 auto; width: auto; }
 .app.future-city.strawberry-game .farm-nav-instructions { padding: 12px 4px; }
 .strawberry-board { display: flex; flex-direction: column; width: 100%; height: 100%; min-height: 0; padding: 8px 12px 0; box-sizing: border-box; }
@@ -12,25 +8,6 @@
 .farm-map-meta { flex: 1 0 auto; color: #6a7e60; font-size: 12px; text-align: center; white-space: nowrap; }
 .app.future-city.strawberry-game .farm-map-toolbar { padding: 7px; border: 1px solid #d5e0c6; border-radius: 9px; gap: 10px; flex-wrap: wrap; }
 .app.future-city.strawberry-game .farm-map-toolbar button { min-height: 30px; padding: 5px 9px; font-size: 12px; cursor: pointer; }
-.farm-scene-status { display: flex; flex-wrap: wrap; align-items: center; flex-shrink: 0; gap: 8px 16px; padding: 9px 12px; border: 1px solid #dce5d0; border-radius: 9px; background: #f7f9f1; color: #355d39; font-size: 12px; }
-.farm-car-position, .farm-car-heading, .farm-gripper-state { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
-.farm-car-position { gap: 10px; }
-.farm-car-position small { font-size: 12px; color: #738568; }
-.farm-car-position b { font-size: 14px; font-variant-numeric: tabular-nums; }
-.farm-car-heading { padding-left: 10px; border-left: 1px solid #d5dfc9; }
-.farm-car-heading i { font: 700 17px/1 system-ui, sans-serif; }
-.farm-gripper-state { margin-left: auto; color: #6a7e60; }
-.farm-gripper-state i { width: 7px; height: 7px; border-radius: 50%; background: #94ae7e; }
-.farm-gripper-state.is-holding { color: #996223; }
-.farm-gripper-state.is-holding i { background: #d5983e; }
-.farm-map-help { position: relative; padding-left: 12px; border-left: 1px solid #d5dfc9; }
-.farm-map-help summary { display: flex; align-items: center; gap: 5px; list-style: none; color: #607454; cursor: pointer; }
-.farm-map-help summary::-webkit-details-marker { display: none; }
-.farm-map-help summary b { display: grid; place-items: center; width: 16px; height: 16px; border: 1px solid #a4b696; border-radius: 50%; font-size: 11px; }
-.farm-map-help summary:focus-visible { outline: 2px solid #6f9856; outline-offset: 4px; border-radius: 3px; }
-.farm-map-help > div { position: absolute; right: -6px; bottom: calc(100% + 16px); z-index: 5; width: 220px; padding: 12px 14px; border: 1px solid #cddcbe; border-radius: 10px; background: #fffef8; box-shadow: 0 6px 24px #36543026; }
-.farm-map-help p { display: flex; justify-content: space-between; gap: 16px; margin: 6px 0; }
-.farm-map-help p b { font-weight: 600; }
 .farm-map-notice { color: #80652f; font-size: 12px; }
 .farm-axis { font-size: 20px; font-weight: 600; fill: #4b684c; }
 .farm-axis-label { font-size: 16px; fill: #718368; font-weight: 700; }
@@ -56,8 +33,6 @@
   .farm-map-toolbar .farm-map-meta { order: 3; flex-basis: 100%; padding: 2px 0; }
   .app.future-city.strawberry-game .farm-map-toolbar { gap: 6px; padding: 6px; }
   .app.future-city.strawberry-game .farm-map-toolbar button { padding: 5px 7px; }
-  .farm-scene-status { padding: 8px; gap: 8px 10px; }
-  .farm-map-help { margin-left: auto; }
   .strawberry-board-3d svg.farm-compass { width: 48px; height: 48px; right: 5px; top: 5px; }
 }
 .app.future-city.farm-game .strawberry-palette button { min-height: 56px; gap: 3px; }
@@ -78,12 +53,6 @@
 .farm-shell .strawberry-game .third-editor-fields { gap: 10px; }
 .strawberry-game .message { margin: 0; font-size: 13px; line-height: 1.6; }
 .strawberry-game .strawberry-stopped { border-left: 3px solid #bf9349; }
-.farm-result { background: #f8fbef; border: 1px solid #afc593; border-radius: 12px; padding: 14px 16px; color: #355d39; }
-.farm-result > div:first-child { display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
-.farm-result strong { font-size: 30px; font-variant-numeric: tabular-nums; }
-.farm-result strong small { font-size: 13px; }
-.farm-result p { margin: 5px 0 12px; font-size: 13px; }
-.farm-shell .farm-result .farm-completion-actions { margin: 0; }
 .strawberry-game .farm-nav-instructions + .farm-nav-instructions { margin-top: 16px; }
 @media (max-width: 999px) {
   .farm-code-editor { flex: 0 0 280px; height: 280px; }
@@ -97,7 +66,6 @@
 @media (max-width: 760px) {
   .farm-shell .strawberry-game .third-stage { height: min(106vw, 560px); min-height: 340px; }
   .app.future-city.strawberry-game > footer { padding: 12px; gap: 12px; }
-  .strawberry-game .farm-run-summary { width: 100%; justify-content: center; gap: 12px; }
   .strawberry-game > footer .level-metrics { justify-content: center; gap: 12px; }
 }
 @media (min-width: 1000px) and (max-width: 1200px) {

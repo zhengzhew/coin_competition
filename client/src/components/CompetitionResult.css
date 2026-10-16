@@ -1,0 +1,16 @@
+.app > footer:has(.competition-run-summary) { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; height: auto; flex: 0 0 auto; min-height: 60px; padding: 10px 18px; }
+.competition-run-summary { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; color: #35594c; }
+.competition-run-summary > div:not(.status-pill) { display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.competition-run-summary small, .competition-run-summary em { font-size: 12px; font-style: normal; }
+.competition-run-summary b { font: 700 19px system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.app > footer:has(.competition-run-summary) .level-metrics { width: auto; flex: 1 1 auto; }
+.app .competition-result { margin: 0; padding: 14px 16px; border: 1px solid #c3d5b4; border-radius: 12px; background: #f8fbef; color: #355d39; }
+.app .competition-result .score-total { display: flex; align-items: baseline; gap: 6px; }
+.app .competition-result .score-total span { margin-right: auto; font-size: 14px; font-weight: 700; }
+.app .competition-result .score-total b { font: 700 28px system-ui, sans-serif; }
+.app .competition-result .score-total em { font-size: 13px; font-style: normal; }
+.app .competition-result p { margin: 6px 0 12px; font-size: 13px; line-height: 1.6; }
+.competition-result-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.app .competition-result-actions button { flex: 1; margin: 0; padding: 10px; border: 1px solid #c6d5b7; border-radius: 8px; background: #eff5e5; color: #3f6536; font-size: 14px; font-weight: 700; cursor: pointer; }
+.app .competition-result .competition-result-actions button:first-child { background: var(--module-accent, var(--competition-accent, #4c7b42)); color: #fff; }
+@media (max-width: 760px) { .app > footer:has(.competition-run-summary) { padding: 12px; gap: 12px; }.competition-run-summary { width: 100%; justify-content: center; gap: 12px; }.app > footer:has(.competition-run-summary) .level-metrics { justify-content: center; } }

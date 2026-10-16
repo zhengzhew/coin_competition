@@ -1,0 +1,15 @@
+.map-status { display: flex; flex-wrap: wrap; align-items: center; flex-shrink: 0; gap: 8px 14px; padding: 9px 12px; border: 1px solid #d3e2d2; border-radius: 9px; background: #f7faf3; color: #46695b; font: 12px/1.5 system-ui, sans-serif; }
+.map-position { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.map-position small { font-size: 12px; color: #6c8073; }
+.map-position b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.map-heading { padding-left: 8px; border-left: 1px solid #d3dfd2; }
+.map-cargo { margin-left: auto; }
+.map-help { margin-left: auto; position: relative; padding-left: 10px; border-left: 1px solid #d3dfd2; }
+.map-help summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.map-help summary::-webkit-details-marker { display: none; }
+.map-help summary b { border: 1px solid #a3b6a3; border-radius: 50%; width: 16px; text-align: center; line-height: 16px; font-size: 11px; }
+.map-help summary:focus-visible { outline: 2px solid #6a9b72; outline-offset: 4px; }
+.map-help > div { position: absolute; z-index: 6; right: -6px; bottom: calc(100% + 16px); width: min(240px, 70vw); padding: 12px 14px; border: 1px solid #cbd9c7; border-radius: 10px; background: #fffef8; box-shadow: 0 6px 24px #36543026; }
+.map-help p { margin: 6px 0; line-height: 1.6; }
+.city3d-toolbar { flex-wrap: wrap; padding: 6px; border: 1px solid #d3e2d2; border-radius: 9px; box-sizing: border-box; }
+@media (max-width: 600px) { .map-status { padding: 8px; gap: 8px; }.city3d-tools { margin-left: auto; } }

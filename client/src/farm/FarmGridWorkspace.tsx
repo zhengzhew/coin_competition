@@ -1,3 +1,4 @@
+import { CompetitionResult, RunSummary } from '../components/CompetitionResult';
 import { LevelMetrics } from '../components/Leaderboard';
 import { sourceLineCount, useLeaderboardSubmission } from '../components/useLeaderboardSubmission';
 import { useEffect, useRef, useState } from 'react';
@@ -79,16 +80,16 @@ export default function FarmGridWorkspace({ demo, player, go, bestSteps, isCompl
           {error && <p className="editor-error" role="alert">{error}</p>}{draftNotice && <small role="status">{draftNotice}</small>}</div>
           <CompetitionActions running={running} paused={paused} onPause={() => { paused ? session.resume() : session.pause(); sync(); }} canReset={canReset} onRun={run} onReset={reset} onStop={reset} testId="third-start" />
         </section>
-        {state.completed ? <section className="farm-result" role="status" aria-label="本轮成绩"><div><span>全部交付完成</span><strong data-testid="farm-score">{submission.score === undefined ? '—' : submission.score ?? '？？'}{typeof submission.score === 'number' && <small> 分</small>}</strong></div><p>{submission.failed ? '成绩提交失败，请在下方重试。' : submission.score === undefined ? '正在提交成绩…' : submission.score === null ? '教师设置计分规则后显示总分。' : '总分按教师规则计算。'}</p><div className="farm-completion-actions"><button className="primary-action" onClick={() => reset()}>再挑战一次</button>{farmLevels[index + 1] && <button className="secondary-action" onClick={() => go(farmPath(farmLevels[index + 1]))}>下一关 →</button>}</div></section>
+        {state.completed ? <CompetitionResult score={submission.score} failed={submission.failed} scoreTestId="farm-score" onReset={reset} onNext={farmLevels[index + 1] ? () => go(farmPath(farmLevels[index + 1])) : undefined} />
           : <div className={`message${state.phase === 'stopped' ? ' strawberry-stopped' : ''}`} role="status">{state.message}</div>}
         </aside>
       </div></main>
     </div><footer>
-      <div className="farm-run-summary" aria-label="交付进度">
+      <RunSummary>
         <div><small>已交付</small><b data-testid="third-progress">{state.collected.length}<em> / {state.objects.length} 株</em></b></div>
         <div><small>个人最佳</small><b data-testid="farm-best">{bestSteps ?? '—'}{bestSteps !== undefined && <em> 步</em>}</b></div>
         <div className={`status-pill ${state.completed ? 'status-success' : ''}`}>{({ ready: '准备就绪', running: '运行中', paused: '已暂停', stopped: '已停止', completed: '已完成' })[state.phase]}</div>
-      </div>
+      </RunSummary>
       <LevelMetrics steps={steps} lines={sourceLineCount(source)} seconds={state.elapsed} scope={{ competition: 'farm', level: demo.demo_id, mode: 'auto', version: demo.content_version }}>{submission.notice || storageNotice ? <small role="status">{submission.notice || storageNotice}</small> : null}{submission.failed && <button onClick={submission.retry}>重试提交</button>}</LevelMetrics>
     </footer>
   </section></div>;
