@@ -17,7 +17,8 @@ test('six warehouse levels align cargo to nearest 6 cm subcells with non-overlap
   assert.deepEqual(warehouseLevels.map(l => l.targetScore), [undefined, undefined, 14, 16, 20, 30]);
   for (const level of warehouseLevels) {
     const c = level.scene_config;
-    assert.deepEqual([c.start.x, 120 - c.start.z], [12, 12]);
+    assert.deepEqual([c.start.x, 120 - c.start.z, c.start.heading], [60, 60, 0]);
+    assert.equal(c.robot_dimensions?.gripperWidth, 14);
     assert.deepEqual([c.objects[0].x, 120 - c.objects[0].z], [27, 15]);
     const session = new WarehouseSession(level, () => 0), arena = session.arena;
     const robotParts = [
@@ -178,14 +179,14 @@ test('unknown boxes cannot award points and a missing box must settle again when
   scorer.update([evidence('1', zone.x, zone.z)], .1); assert.equal(scorer.score, 0);
 });
 
-test('real contact grasp reaches the aligned first cargo, release alone cannot award a delivery', () => {
+test('real contact grasp of aligned cargo works, release alone cannot award a delivery', () => {
   let now = 0;
-  const session = new WarehouseSession(warehouseLevels[0], () => now);
-  session.start();
-  // The aligned box is 3 cm farther forward. Approach through real drive inputs.
-  session.press('w', 'forward');
-  for (let i = 0; i < 21; i++) { now += 1000 / 120; session.tick(1 / 120); }
-  session.release('w'); session.press('g', 'grab');
+  const level = structuredClone(warehouseLevels[0]);
+  // Isolate contact from navigation; the reference-driver script covers the full route from the centre.
+  const first = level.scene_config.objects[0];
+  level.scene_config.start = { x: first.x, z: first.z - 11.9, heading: Math.PI };
+  const session = new WarehouseSession(level, () => now);
+  session.start(); session.press('g', 'grab');
   for (let i = 0; i < 240; i++) { now += 1000 / 120; session.tick(1 / 120); }
   assert.equal(session.snapshot().holding, '1');
   session.press('r', 'release');

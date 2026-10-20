@@ -1,7 +1,7 @@
 import type { ThirdDemo, ThirdZone } from '../third/types.js';
 import { THIRD_DIMENSIONS as D } from '../third/geometry.js';
 
-export const WAREHOUSE_VERSION = 'warehouse-manual-7';
+export const WAREHOUSE_VERSION = 'warehouse-manual-8';
 export const WAREHOUSE_RULES = { cell: 12, cargo: 6, lineWidth: .6, settleSeconds: .4 } as const;
 export interface WarehouseLevel extends ThirdDemo {
   requiredCount: number;
@@ -58,9 +58,9 @@ export const warehouseLevels: WarehouseLevel[] = configs.map((config, index) => 
   scene_task: 'warehouse', requiredCount: config.objects.length, targetScore: config.targetScore, strategyHint: config.hint,
   scene_config: {
     kind: 'simulation3d', width: 120, depth: 120, speed: 18, turnSpeed: Math.PI / 2,
-    // Leave clearance between the open fingers and the first grid-aligned cargo.
-    robot_dimensions: { body: 17.8, gripperWidth: 15 },
-    start: { x: 12, z: 108, heading: Math.PI / 2 }, walls: [], zones: config.zones,
+    robot_dimensions: { body: 17.8, gripperWidth: 14 },
+    // Start in the open centre, clear of both rows, without widening the gripper.
+    start: { x: 60, z: 60, heading: 0 }, walls: [], zones: config.zones,
     objects: config.objects.map((object, i) => ({ id: String(i + 1), ...object })),
   },
 }));

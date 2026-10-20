@@ -17,9 +17,9 @@ const plans = [
   { level: 5, name: 'four-box-exact-target', drops: [['1', 'A', 12, 12], ['2', 'C', 24, 12], ['3', 'E', 48, 12], ['6', 'B', 108, 12]] },
   { level: 5, name: 'five-box-over-target', drops: [['1', 'A', 12, 12], ['2', 'C', 24, 12], ['3', 'C', 36, 12], ['5', 'F', 72, 12], ['6', 'D', 96, 12]] },
   { level: 5, name: 'six-box-exact-target', drops: [['1', 'C', 24, 12], ['2', 'C', 36, 12], ['3', 'E', 48, 12], ['4', 'F', 72, 12], ['5', 'D', 84, 12], ['6', 'D', 96, 12]] },
-  { level: 6, name: 'six-box-exact-target', drops: [['1', 'A', 12, 12], ['5', 'C', 24, 12], ['6', 'C', 36, 12], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'B', 108, 12]] },
-  { level: 6, name: 'seven-box-over-target', drops: [['1', 'A', 12, 12], ['5', 'C', 24, 12], ['6', 'C', 36, 12], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'D', 96, 24], ['2', 'C', 24, 24]] },
-  { level: 6, name: 'eight-box-exact-target', aisle: 60, drops: [['1', 'C', 24, 12], ['5', 'C', 36, 12], ['6', 'C', 24, 24], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'D', 96, 24], ['3', 'F', 72, 12], ['2', 'C', 12, 36]] },
+  { level: 6, name: 'six-box-exact-target', drops: [['5', 'A', 12, 12], ['1', 'C', 24, 12], ['6', 'C', 36, 12], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'B', 108, 12]] },
+  { level: 6, name: 'seven-box-over-target', drops: [['5', 'A', 12, 12], ['1', 'C', 24, 12], ['6', 'C', 36, 12], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'D', 96, 24], ['2', 'C', 24, 24]] },
+  { level: 6, name: 'eight-box-exact-target', aisle: 60, drops: [['5', 'C', 24, 12], ['1', 'C', 36, 12], ['6', 'C', 24, 24], ['7', 'D', 84, 12], ['8', 'D', 96, 12], ['4', 'D', 96, 24], ['3', 'F', 72, 12], ['2', 'C', 12, 36]] },
 ];
 for (const plan of plans.filter(plan => !process.env.WAREHOUSE_PLAN || `${plan.level}/${plan.name}`.includes(process.env.WAREHOUSE_PLAN))) {
   const level = warehouseLevels[plan.level - 1], aisle = plan.aisle ?? 48;
@@ -67,28 +67,19 @@ for (const plan of plans.filter(plan => !process.env.WAREHOUSE_PLAN || `${plan.l
   for (const [i, [id, zoneId, cargoX, dropZ]] of plan.drops.entries()) {
     const zone = level.scene_config.zones.find(z => z.id === zoneId);
     const object = s.snapshot().objects.find(o => o.id === id);
-    if (i === 0) {
-      straight(object.x - 11.9, s.snapshot().z);
-      tap('grab'); wait(1);
-      assert.equal(s.snapshot().holding, object.id, 'initial contact grasp');
-      // Leave the tight starting corner along the forward axis. Chasing lateral
-      // millimetres here can turn the loaded gripper back into the left wall.
-      turn(0); straight(s.snapshot().x, aisle);
-    } else {
-      // Approach the row from the open central aisle, facing toward the bottom edge.
-      // Keep full turns away from the right wall; approach the last cube diagonally.
-      const stagingX = Math.min(object.x, 102);
-      drive(s.snapshot().x, aisle); drive(stagingX, aisle);
-      if (object.x > 102) {
-        drive(stagingX, 75);
-        straight(106, 83); straight(108, 90); straight(108, object.z - 11.9); turn(Math.PI);
-      } else { straight(object.x, object.z - 11.9); turn(Math.PI); }
-      tap('grab'); wait(1);
-      assert.equal(s.snapshot().holding, object.id, `pick ${object.id}`);
-      if (object.x > 102) {
-        straight(108, 90, true); straight(106, 83, true); straight(102, 75, true); drive(102, aisle, true);
-      } else straight(stagingX, aisle, true);
-    }
+    // Approach from the open centre. In the two-row level, take the nearer box
+    // before the one behind it so the gripper has a clear path.
+    const stagingX = Math.min(object.x, 102);
+    drive(s.snapshot().x, aisle); drive(stagingX, aisle);
+    if (object.x > 102) {
+      drive(stagingX, 75);
+      straight(106, 83); straight(108, 90); straight(108, object.z - 11.9); turn(Math.PI);
+    } else { straight(object.x, object.z - 11.9); turn(Math.PI); }
+    tap('grab'); wait(1);
+    assert.equal(s.snapshot().holding, object.id, `pick ${object.id}`);
+    if (object.x > 102) {
+      straight(108, 90, true); straight(106, 83, true); straight(102, 75, true); drive(102, aisle, true);
+    } else straight(stagingX, aisle, true);
     // Approach far regions from below, near regions from above. Reverse out along
     // that approach so neither the chassis nor the gripper pushes delivered cargo.
     const cargoZ = dropZ ?? zone.z, heading = cargoZ > aisle ? Math.PI : 0;

@@ -23,7 +23,7 @@ export function buildWarehouseArena(
   drawSimulationMapGrid(ctx, config.width, config.depth, { edge: '#dde2dc', major: '#5f8077', minor: '#aabdb5' });
   ctx.save(); ctx.scale(surface.width / config.width, surface.height / config.depth);
   ctx.fillStyle = '#657678'; ctx.font = '2px sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('出发区', 12, 119);
+  ctx.fillText('出发区', config.start.x, config.start.z + (config.robot_dimensions?.body ?? 17.8) / 2 + 3);
   for (const zone of config.zones ?? []) {
     // Clip the half-width border into its own region: adjacent colours never paint
     // over each other, and the visible inner edge matches the shared judge.
