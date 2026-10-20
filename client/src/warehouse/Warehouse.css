@@ -60,6 +60,8 @@ html[data-competition="warehouse"] #root { display: block; height: auto; }
 .warehouse-actions button:disabled { opacity: .5; cursor: default; }
 .warehouse-cargo-list > div { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf0e4; font-size: 12px; }
 .warehouse-cargo-list h2 { margin-bottom: 8px; }.warehouse-cargo-list span { color: #74958a; }
+.warehouse-strategy h2 { margin: 0 0 7px; font-size: 14px; }
+.warehouse-strategy p { margin: 0; font-size: 12px; line-height: 1.8; color: #557d7f; }
 .warehouse-message { font-size: 12px; line-height: 1.8; padding: 13px 16px; border-left: 3px solid #72a8a7; background: #ecf4e8; border-radius: 6px; color: #557d7f; }
 .app.warehouse-game footer { color: #608086; background: #fffdf3; border-color: #cadfd7; }
 .app.warehouse-game .status-pill { color: #397982; border-color: #cadfd5; background: #eaf3ec; }

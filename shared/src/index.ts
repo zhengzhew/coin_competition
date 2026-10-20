@@ -24,4 +24,5 @@ export * from './beach/session.js';
 export * from './beach/program.js';
 export * from './warehouse/levels.js';
 export * from './warehouse/rules.js';
+export * from './warehouse/geometry.js';
 export * from './warehouse/session.js';

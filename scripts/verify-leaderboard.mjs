@@ -118,7 +118,7 @@ try {
   const warehouse = warehouseLevels[0];
   const timed = { ...payload, submission_id: randomUUID(), participant_id: randomUUID(), competition: 'warehouse',
     level_id: warehouse.demo_id, content_version: warehouse.content_version, mode: 'manual', source: '', steps: 0, seconds: 31.25 };
-  for (const extra of [{ completed: false }, { seconds: 0 }, { steps: 1 }, { mode: 'auto' }, { content_version: 'warehouse-manual-2' }]) {
+  for (const extra of [{ completed: false }, { seconds: 0 }, { steps: 1 }, { mode: 'auto' }, { content_version: 'warehouse-manual-2' }, { content_version: 'warehouse-manual-3' }, { content_version: 'warehouse-manual-4' }]) {
     assert.equal((await request('/leaderboard/submissions', 'POST', { ...timed, ...extra })).status, 422);
   }
   assert.equal((await request('/leaderboard/submissions', 'POST', timed)).status, 201);
@@ -133,19 +133,26 @@ try {
     getDb().prepare('UPDATE leaderboard_submissions SET submitted_at = ? WHERE submission_id = ?').run(date, entry.submission_id);
   }
   const timedScope = `/leaderboard?competition=warehouse&level=${warehouse.demo_id}&mode=manual&version=${warehouse.content_version}`;
+  // Preserve a real old-version row while proving it cannot compete with the new layout.
+  const oldWarehouseId = randomUUID();
+  getDb().prepare('INSERT INTO leaderboard_submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(oldWarehouseId, player, timed.participant_id, '仓储旧版本', 'warehouse', warehouse.demo_id,
+      'manual', 'warehouse-manual-3', 0, 0, 1, 1, '2026-10-13T05:00:00.000Z');
   const timedRank = (await request(timedScope)).data;
   assert.deepEqual(timedRank.rows.map(row => row.seconds), [20.12, 35.5], 'default time ascending; latest success rather than personal best');
   assert.equal(timedRank.score_visible, false); assert(timedRank.rows.every(row => row.score === null));
   assert.equal((await request(timedScope + '&sort=score')).status, 422);
   assert.deepEqual((await request(timedScope + '&order=desc')).data.rows.map(row => row.seconds), [35.5, 20.12]);
   assert.equal((await request(timedScope.replace(warehouse.content_version, 'warehouse-manual-2'))).data.rows.length, 0);
+  assert.deepEqual((await request(timedScope.replace(warehouse.content_version, 'warehouse-manual-3'))).data.rows.map(row => row.seconds), [1]);
+  assert.equal(getDb().prepare('SELECT content_version FROM leaderboard_submissions WHERE submission_id = ?').get(oldWarehouseId).content_version, 'warehouse-manual-3');
   assert.equal((await request(timedScope.replace(warehouse.demo_id, 'warehouse-2'))).data.rows.length, 0);
   await request('/teacher/leaderboard', 'PUT', config);
   assert.deepEqual((await request(timedScope)).data.rows.map(row => row.seconds), [31.25]);
   assert.deepEqual((await request(timedScope + '&scope=history')).data.rows.map(row => row.seconds), [20.12, 35.5]);
   const warehouseDashboard = (await request('/teacher/dashboard?competition=warehouse')).data;
   assert.equal(warehouseDashboard.catalog.find(event => event.id === 'warehouse').levels.length, 6);
-  assert.equal(warehouseDashboard.submissions.rows.length, 3);
+  assert.equal(warehouseDashboard.submissions.rows.length, 4);
   assert(warehouseDashboard.submissions.rows.every(row => row.score === null));
   await request('/teacher/leaderboard', 'PUT', { ...config, start: null, end: null });
   const later = (await request('/attempts', 'POST', { assignment_key: 'P01' })).data;

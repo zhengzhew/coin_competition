@@ -5,14 +5,16 @@ import { footprintsOverlap, footprintCorners } from '../third/geometry.js';
 import { warehouseLevels } from './levels.js';
 import { warehouseContains, WarehouseDeliveryTracker, type WarehouseEvidence } from './rules.js';
 import { WarehouseSession } from './session.js';
+import { warehouseZoneRects, warehouseZoneEdges } from './geometry.js';
 
 const evidence = (id: string, x: number, z: number, extra: Partial<WarehouseEvidence> = {}): WarehouseEvidence =>
   ({ id, x, z, heading: 0, released: true, holding: false, speed: 0, angularSpeed: 0, ...extra });
 
 test('six warehouse levels preserve centres and counts with non-overlapping starts and zones', () => {
   assert.deepEqual(warehouseLevels.map(l => l.scene_config.objects.length), [1, 2, 3, 4, 6, 8]);
-  assert.deepEqual(warehouseLevels.map(l => l.scene_config.zones.length), [1, 2, 3, 4, 6, 8]);
+  assert.deepEqual(warehouseLevels.map(l => l.scene_config.zones.length), [1, 1, 2, 4, 6, 6]);
   assert.deepEqual(warehouseLevels.map(l => l.requiredCount), [1, 2, 3, 4, 6, 8]);
+  assert.deepEqual(warehouseLevels.map(l => l.targetScore), [undefined, undefined, 14, 16, 20, 30]);
   for (const level of warehouseLevels) {
     const c = level.scene_config;
     assert.deepEqual([c.start.x, 120 - c.start.z], [12, 12]);
@@ -20,65 +22,129 @@ test('six warehouse levels preserve centres and counts with non-overlapping star
     for (const o of c.objects) assert.equal(footprintsOverlap(
       { ...c.start, width: c.robot_dimensions!.body, depth: c.robot_dimensions!.body },
       { ...o, width: 6, depth: 6 }), false);
-    for (const z of c.zones) {
-      assert(footprintCorners({ ...z, width: 12.6, depth: 12.6 }).every(p => p.x > 0 && p.x < 120 && p.z > 0 && p.z < 120));
-      for (const other of c.zones) if (other !== z) assert(!footprintsOverlap({ ...z, width: 12.6, depth: 12.6 }, { ...other, width: 12.6, depth: 12.6 }));
+    for (const zone of c.zones) for (const rect of warehouseZoneRects(zone)) {
+      assert(footprintCorners(rect).every(p => p.x >= 6 && p.x <= 114 && p.z >= 6 && p.z <= 114));
+      for (const other of c.zones) if (other !== zone) for (const otherRect of warehouseZoneRects(other))
+        assert(!footprintsOverlap(rect, otherRect), 'regions have disjoint interiors; strokes stay inside each region');
+      for (const object of c.objects) assert(!footprintsOverlap(rect, { ...object, width: 6, depth: 6 }), 'cargo starts clear of scoring regions');
     }
-    if (c.objects.length >= 3) assert.deepEqual(c.objects.map(o => o.x), Array.from({ length: c.objects.length }, (_, i) => 24 + i * 12));
+    for (const object of c.objects) for (const other of c.objects) if (object !== other) {
+      assert(!footprintsOverlap({ ...object, width: 6, depth: 6 }, { ...other, width: 6, depth: 6 }));
+    }
+    assert.equal(new Set(c.objects.map(o => o.z)).size, level.demo_id === 'warehouse-6' ? 2 : 1);
   }
+  assert.equal(warehouseLevels[1].scene_config.objects[1].x, 96);
+  assert.deepEqual(warehouseLevels[2].scene_config.objects.map(o => o.x), [24, 60, 96]);
+  assert.deepEqual(warehouseLevels[4].scene_config.zones, warehouseLevels[5].scene_config.zones);
 });
 
-test('boundary uses the outer 6 mm line edge and actual rotated corners', () => {
+test('stepped bands follow Euclidean cell-centre radii and mirror the two top corners', () => {
+  const zones = warehouseLevels[5].scene_config.zones;
+  assert.deepEqual(zones.map(z => z.points), [7, 7, 4, 4, 2, 2]);
+  assert.deepEqual(zones.map(z => z.cells!.length), [1, 1, 5, 5, 5, 5]);
+  assert.deepEqual(zones[0].cells, [{ x: 12, z: 12 }]);
+  assert.deepEqual(zones[1].cells, [{ x: 108, z: 12 }]);
+  for (let i = 0; i < zones.length; i += 2) {
+    const left = zones[i], right = zones[i + 1];
+    assert.deepEqual(right.cells, left.cells!.map(cell => ({ x: 120 - cell.x, z: cell.z })));
+    for (const cell of left.cells!) {
+      const d2 = ((cell.x - 12) / 12) ** 2 + ((cell.z - 12) / 12) ** 2;
+      assert(left.points === 7 ? d2 === 0 : left.points === 4 ? d2 > 0 && d2 <= 4 : d2 > 4 && d2 <= 9);
+      assert(warehouseContains({ id: '1', ...cell }, left));
+    }
+  }
+  for (let x = 6; x <= 114; x += 1.5) for (let z = 6; z <= 60; z += 1.5)
+    assert(zones.filter(zone => warehouseContains({ id: '1', x, z, heading: Math.PI / 4 }, zone)).length <= 1, 'no ambiguous score near shared boundaries');
+});
+
+test('visible scoring border cannot be touched, including rotated corners; internal grid is not a border', () => {
   const zone = warehouseLevels[0].scene_config.zones[0];
-  assert(warehouseContains({ id: '1', x: zone.x + 3.3, z: zone.z }, zone));
-  assert(!warehouseContains({ id: '1', x: zone.x + 3.301, z: zone.z }, zone));
+  assert(warehouseContains({ id: '1', x: zone.x + 2.699, z: zone.z }, zone));
+  assert(!warehouseContains({ id: '1', x: zone.x + 2.7, z: zone.z }, zone));
+  assert(!warehouseContains({ id: '1', x: zone.x + 3, z: zone.z }, zone));
   assert(warehouseContains({ id: '1', x: zone.x + 1, z: zone.z, heading: Math.PI / 4 }, zone));
-  // A 45° cube extends 3√2 cm from its centre: offset 2 is inside 6.3, 2.1 is outside.
-  assert(warehouseContains({ id: '1', x: zone.x + 2, z: zone.z, heading: Math.PI / 4 }, zone));
-  assert(!warehouseContains({ id: '1', x: zone.x + 2.1, z: zone.z, heading: Math.PI / 4 }, zone));
+  assert(!warehouseContains({ id: '1', x: zone.x + 1.5, z: zone.z, heading: Math.PI / 4 }, zone));
+  const wide = warehouseLevels[1].scene_config.zones[0];
+  assert(warehouseContains({ id: '1', x: wide.x + 6, z: wide.z }, wide));
 });
 
-test('each box needs its own zone; shared occupancy retracts delivery until separated', () => {
-  const level = warehouseLevels[1], [zone, other] = level.scene_config.zones, scorer = new WarehouseDeliveryTracker(level);
-  const a = evidence('1', zone.x - 3.05, zone.z - 3.05), b = evidence('2', zone.x + 3.05, zone.z + 3.05);
+test('stepped region containment rejects concave crossings but permits same-colour internal grid crossings', () => {
+  const four = warehouseLevels[3].scene_config.zones[2];
+  assert(warehouseContains({ id: '1', x: 30, z: 12 }, four), 'shared edge between two 4-point cells is not a border');
+  assert(!warehouseContains({ id: '1', x: 18, z: 12 }, four), '7/4 boundary is a border');
+  assert(!warehouseContains({ id: '1', x: 42, z: 12 }, four), '4/2 boundary is a border');
+  // This diamond has four corners inside the L-shaped region but cuts across its concave notch.
+  const notched = { id: 'notched', x: 0, z: 0, color: '#000', cells: [{ x: 0, z: 0 }, { x: 12, z: 0 }, { x: 0, z: 12 }] };
+  assert(!warehouseContains({ id: '1', x: 5.5, z: 5.5, heading: Math.PI / 4 }, notched));
+  assert.equal(warehouseZoneEdges(notched).length, 8, 'two internal shared edges are removed');
+});
+
+test('two boxes can complete level two inside the same continuous three-cell region', () => {
+  const level = warehouseLevels[1], [zone] = level.scene_config.zones, scorer = new WarehouseDeliveryTracker(level);
+  const a = evidence('1', zone.x - 6, zone.z), b = evidence('2', zone.x + 6, zone.z);
   assert(!footprintsOverlap({ ...a, width: 6, depth: 6 }, { ...b, width: 6, depth: 6 }));
   scorer.update([a], .4); assert.equal(scorer.completed, false);
   scorer.update([a, b], .39); assert.equal(scorer.completed, false);
-  scorer.update([a, b], .01); assert.equal(scorer.completed, false);
-  assert.deepEqual(scorer.delivered, {});
-  scorer.update([a, { ...b, x: other.x, z: other.z }], .39);
-  assert.equal(scorer.completed, false);
-  scorer.update([a, { ...b, x: other.x, z: other.z }], .01);
-  assert.equal(scorer.completed, true); assert.deepEqual(scorer.delivered, { '1': 'A', '2': 'B' });
+  scorer.update([a, b], .01); assert.equal(scorer.completed, true);
+  assert.deepEqual(scorer.delivered, { '1': 'A', '2': 'A' });
   scorer.update([a, { ...b, released: false, holding: true }], .4);
-  assert.equal(scorer.completed, false); assert.deepEqual(scorer.delivered, {});
+  assert.equal(scorer.completed, false); assert.deepEqual(scorer.delivered, { '1': 'A' });
 });
 
 test('grab/release eligibility, stability, delivery retraction and zone changes', () => {
-  const level = warehouseLevels[2], [a, b, c] = level.scene_config.zones, scorer = new WarehouseDeliveryTracker(level);
+  const level = warehouseLevels[3], [a, b, c] = level.scene_config.zones, scorer = new WarehouseDeliveryTracker(level);
   const one = evidence('1', a.x, a.z);
   for (const extra of [{ released: false }, { holding: true }, { speed: .6 }, { angularSpeed: .1 }]) {
     scorer.update([{ ...one, ...extra }], 2); assert.deepEqual(scorer.delivered, {});
   }
-  scorer.update([one], .4); assert.deepEqual(scorer.delivered, { '1': 'A' });
-  scorer.update([one], 20); assert.deepEqual(scorer.delivered, { '1': 'A' });
-  scorer.update([{ ...one, holding: true }], .01); assert.deepEqual(scorer.delivered, {});
-  scorer.update([evidence('1', b.x, b.z)], .4); assert.deepEqual(scorer.delivered, { '1': 'B' });
-  scorer.update([evidence('1', b.x, b.z), evidence('2', a.x, a.z)], .4);
-  assert.deepEqual(scorer.delivered, { '1': 'B', '2': 'A' }); assert.equal(scorer.completed, false);
-  scorer.update([evidence('1', b.x, b.z), evidence('2', a.x, a.z), evidence('3', c.x, c.z)], .4);
-  assert.equal(scorer.completed, true);
+  scorer.update([one], .4); assert.equal(scorer.score, 7);
+  scorer.update([one], 20); assert.equal(scorer.score, 7);
+  scorer.update([{ ...one, holding: true }], .01); assert.equal(scorer.score, 0);
+  scorer.update([evidence('1', c.x, c.z)], .4); assert.equal(scorer.score, 4);
+  scorer.update([evidence('1', c.x, c.z), evidence('2', a.x, a.z)], .4);
+  assert.equal(scorer.score, 11); assert.equal(scorer.completed, false);
+  scorer.update([evidence('1', c.x, c.z), evidence('2', a.x, a.z), evidence('3', b.x, b.z)], .4);
+  assert.equal(scorer.score, 18); assert.equal(scorer.completed, true, 'exceeding the target is valid');
+  scorer.update([evidence('1', c.x, c.z), evidence('2', a.x + 60, a.z)], .4);
+  assert.equal(scorer.score, 4, 'moving or removing cargo retracts its score');
 });
 
-test('all boxes must be delivered and fit in separate ground placements in every level', () => {
-  warehouseLevels.forEach(level => {
-    const objects = level.scene_config.zones.map((zone, j) => evidence(String(j + 1), zone.x, zone.z));
+test('scoring targets allow distinct decompositions and stop before unused boxes are delivered', () => {
+  const combinations = [
+    { index: 2, zones: ['A', 'B'], score: 14 },
+    { index: 3, zones: ['A', 'B', 'C'], score: 18 },
+    { index: 3, zones: ['C', 'C', 'D', 'D'], score: 16 },
+    { index: 4, zones: ['A', 'B', 'C', 'E'], score: 20 },
+    { index: 4, zones: ['A', 'C', 'C', 'D', 'F'], score: 21 },
+    { index: 4, zones: ['C', 'C', 'D', 'D', 'E', 'F'], score: 20 },
+    { index: 5, zones: ['A', 'B', 'C', 'C', 'D', 'D'], score: 30 },
+    { index: 5, zones: ['A', 'C', 'C', 'C', 'D', 'D', 'D'], score: 31 },
+    { index: 5, zones: ['C', 'C', 'C', 'C', 'D', 'D', 'D', 'F'], score: 30 },
+  ];
+  for (const { index, zones, score } of combinations) {
+    const level = warehouseLevels[index], used = new Map<string, number>();
+    const objects = zones.map((id, j) => {
+      const zone = level.scene_config.zones.find(z => z.id === id)!;
+      const slot = used.get(id) ?? 0; used.set(id, slot + 1);
+      const cell = zone.cells![slot];
+      return evidence(String(j + 1), cell.x, cell.z);
+    });
+    for (const object of objects) for (const other of objects) if (object !== other)
+      assert(!footprintsOverlap({ ...object, width: 6, depth: 6 }, { ...other, width: 6, depth: 6 }));
     const scorer = new WarehouseDeliveryTracker(level);
     scorer.update(objects.slice(0, -1), .4);
-    assert.equal(scorer.completed, false, `${level.demo_id} must wait for the last box`);
+    assert.equal(scorer.completed, false, `${level.demo_id} below target`);
     scorer.update(objects, .4);
-    assert.equal(scorer.completed, true, level.demo_id);
-  });
+    assert.equal(scorer.score, score); assert.equal(scorer.completed, true, level.demo_id);
+  }
+});
+
+test('unknown boxes cannot award points and a missing box must settle again when it returns', () => {
+  const level = warehouseLevels[2], zone = level.scene_config.zones[0], scorer = new WarehouseDeliveryTracker(level);
+  scorer.update([evidence('unknown', zone.x, zone.z)], 1); assert.equal(scorer.score, 0);
+  scorer.update([evidence('1', zone.x, zone.z)], .3);
+  scorer.update([], .1);
+  scorer.update([evidence('1', zone.x, zone.z)], .1); assert.equal(scorer.score, 0);
 });
 
 test('real contact grasp succeeds at the specified start, release alone cannot award a delivery', () => {

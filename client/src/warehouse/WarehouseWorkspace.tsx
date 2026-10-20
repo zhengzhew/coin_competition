@@ -67,7 +67,7 @@ export default function WarehouseWorkspace({ level, player, records, notice, go,
   const best = times.length ? Math.min(...times.map(r => r.seconds)) : null;
   const submission = useLeaderboardSubmission('warehouse', level, player, 'manual', '', state);
   const position = thirdMapPosition(state.x, state.z, 120);
-  const grip = state.completed ? '箱子已送达 · 任务完成' : state.holding ? `已夹稳箱子 ${state.holding}` : ({
+  const grip = state.completed ? '本关目标已达成 · 任务完成' : state.holding ? `已夹稳箱子 ${state.holding}` : ({
     open: '夹爪张开 · 对准后按 G', opening: '正在放下箱子', closing: '正在合拢夹爪',
     closed: '空夹 · 按 R 重新张开', blocked: '夹取受阻 · 调整位置再试', holding: '已夹稳',
   })[state.gripper?.phase ?? 'open'];
@@ -77,18 +77,18 @@ export default function WarehouseWorkspace({ level, player, records, notice, go,
     <div className="app-body">
       <nav className="level-nav" aria-label="仓储关卡"><div className="nav-heading"><span>搬运任务</span><b>6 关</b></div><div className="stage-levels">
         {warehouseLevels.map((l, i) => <button key={l.demo_id} className={`level-btn${level === l ? ' active' : ''}`} aria-current={level === l ? 'page' : undefined} onClick={() => go(warehousePath(l))}>
-          <span>0{i + 1}</span><strong>{l.title}</strong><small>{records.some(r => r.levelId === l.demo_id) ? '✓' : `${l.requiredCount} 箱 / ${l.scene_config.zones.length} 格`}</small></button>)}
-        </div><details className="warehouse-instructions" open><summary>摆放规则</summary><ul><li>G 夹取，R 放下。</li><li>一箱一格，每个箱子可选择任一空投递区。</li><li>允许旋转、轻微压线，不能越过边线外沿。</li><li>箱子不重叠、不叠放，停稳 0.4 秒确认。</li><li>同格放入多个箱子时，该格暂不计入送达；移出后重新判定。</li><li>全部箱子有效送达即停表，只记录完成用时。</li></ul><p>不设时间上限。松键、切换视角或窗口失焦均不停表。</p><p>成功完成后提交排行榜，按完成用时排名。</p></details>
+          <span>0{i + 1}</span><strong>{l.title}</strong><small>{records.some(r => r.levelId === l.demo_id) ? '✓' : l.targetScore !== undefined ? `${l.requiredCount} 箱 / ${l.targetScore} 分` : `${l.requiredCount} 箱`}</small></button>)}
+        </div><details className="warehouse-instructions" open><summary>摆放规则</summary><ul><li>G 夹取，R 放下。</li><li>同一片标记区可放多个箱子，箱子不重叠、不叠放。</li><li>允许旋转，但不得碰到或压住彩色区域的边线。</li><li>区域内部网格辅助定位，不作为判分边界。</li><li>释放并停稳 0.4 秒后确认；移出区域或重新夹起，会撤销该箱子的送达与分数。</li><li>{level.targetScore !== undefined ? `每箱按所在区分值计分，达到或超过 ${level.targetScore} 分立即停表，不必搬完所有箱子。` : '全部箱子有效送达后立即停表。'}</li></ul><p>不设时间上限。松键、切换视角或窗口失焦均不停表。</p><p>成功完成后提交排行榜，按完成用时排名。</p></details>
       </nav>
       <main className="game-area">
         <div className="workspace-grid robot-workspace">
-          <section className="board-panel"><CompetitionMission number={index + 1} title={level.title} objective={level.objective} /><div className="warehouse-map-caption"><span>120 × 120 cm · 投递格 12 cm · 箱子 6 cm</span><span>一箱一格 · 自选空格</span></div>
+          <section className="board-panel"><CompetitionMission number={index + 1} title={level.title} objective={level.objective} /><div className="warehouse-map-caption"><span>地图 {level.scene_config.width} × {level.scene_config.depth} cm · 边缘宽 6 cm</span><span>粗线大格 12 × 12 cm · 虚线小格 6 × 6 cm · 箱子 6 cm</span><span>不得压彩色区域边线 · 内部网格可跨越</span></div>
             <div className="third-stage warehouse-stage" data-testid="warehouse-stage" data-phase={state.phase} data-x={state.x.toFixed(3)}
               data-y={position.y.toFixed(3)} data-heading={state.heading} data-holding={state.holding ?? ''}
-              data-delivered={state.collected.length} data-objects={JSON.stringify(state.objects)}>
+              data-delivered={state.collected.length} data-score={state.score} data-target-score={level.targetScore} data-objects={JSON.stringify(state.objects)}>
               <SimulationScene demo={level} state={state} onReady={onReady} />
             </div>
-            <div className="warehouse-zone-legend">{level.scene_config.zones.map(z => <span key={z.id}><i style={{ background: z.color }} />{z.id} 投递区</span>)}</div>
+            <div className="warehouse-zone-legend">{level.scene_config.zones.map(z => <span key={z.id}><i style={{ background: z.color }} />{z.id} 区 · {z.points ? `${z.points} 分/箱 · ` : ''}{z.cells ? `${z.cells.length} 格` : `${(z.width ?? 12) / 12} × ${(z.depth ?? 12) / 12} 格`}</span>)}</div>
           </section>
           <aside className="control-column">
             <section className="warehouse-card"><div className="warehouse-card-heading"><h2>驾驶控制</h2><small>按住行驶 · 松开制动</small></div>
@@ -102,6 +102,7 @@ export default function WarehouseWorkspace({ level, player, records, notice, go,
               <button className="warehouse-primary" data-testid="warehouse-start" disabled={!ready || running || state.completed} onClick={start}>{!ready ? '正在准备场景…' : running ? '搬运进行中' : state.completed ? '任务已完成' : '开始计时'}</button>
               <div className="warehouse-actions"><button disabled={!running} onClick={() => { session.stop(); sync(); }}>结束本轮</button><button onClick={reset}>重新开始</button></div>
             </section>
+            <section className="warehouse-card warehouse-strategy"><h2>策略思考</h2><p>{level.strategyHint}</p>{level.targetScore !== undefined && <p>从左右顶角格中心向外数：顶角 7 分，2 格半径内 4 分，2～3 格半径内 2 分。按格子中心距离分区，本关只显示已启用的分区。</p>}</section>
             {state.completed ? <CompetitionResult score={submission.score} seconds={state.elapsed} failed={submission.failed} scoreTestId="warehouse-result-time" onReset={reset}
               onNext={warehouseLevels[index + 1] ? () => go(warehousePath(warehouseLevels[index + 1])) : undefined} />
               : <p className="warehouse-message" role="status">{state.message}</p>}
@@ -110,7 +111,7 @@ export default function WarehouseWorkspace({ level, player, records, notice, go,
         </div>
       </main>
     </div>
-    <footer><RunSummary><div><small>有效送达</small><b data-testid="warehouse-progress">{state.collected.length}<em> / {level.requiredCount} 箱</em></b></div><div><small>个人最快</small><b>{best?.toFixed(2) ?? '—'}{best !== null && <em> 秒</em>}</b></div><div className={`status-pill ${state.completed ? 'status-success' : ''}`}>{({ ready: '准备出发', running: '搬运进行中', stopped: '本轮已停止', completed: '全部送达' })[state.phase]}</div></RunSummary>
+    <footer><RunSummary>{level.targetScore !== undefined && <div><small>当前 / 目标分数</small><b data-testid="warehouse-score">{state.score}<em> / {level.targetScore} 分</em></b></div>}<div><small>有效送达</small><b data-testid="warehouse-progress">{state.collected.length}<em> / {level.requiredCount} 箱</em></b></div><div><small>个人最快</small><b>{best?.toFixed(2) ?? '—'}{best !== null && <em> 秒</em>}</b></div><div className={`status-pill ${state.completed ? 'status-success' : ''}`}>{({ ready: '准备出发', running: '搬运进行中', stopped: '本轮已停止', completed: '目标达成' })[state.phase]}</div></RunSummary>
       <LevelMetrics steps={0} lines={0} seconds={state.elapsed} scope={{ competition: 'warehouse', level: level.demo_id, mode: 'manual', version: level.content_version }}>
         <small role="status">{submission.notice || notice}</small>{submission.failed && <button onClick={submission.retry}>重试提交</button>}
       </LevelMetrics></footer>

@@ -64,14 +64,15 @@ export class WarehouseSession {
           speed: body.getLinearVelocity().length() * 10, angularSpeed: body.getAngularVelocity() };
       }), STEP);
       if (this.deliveries.completed) {
-        this.phase = 'completed'; this.clearInputs(); this.message = '任务完成，已停表！';
+        this.phase = 'completed'; this.clearInputs();
+        this.message = this.level.targetScore !== undefined ? '目标分数已达成，已停表！' : '任务完成，已停表！';
       }
     }
   }
   snapshot() {
     if (this.phase === 'running') this.updateTime();
     const state = this.arena.snapshot();
-    return { ...state, phase: this.phase, elapsed: this.elapsed,
+    return { ...state, phase: this.phase, elapsed: this.elapsed, score: this.deliveries.score,
       delivered: { ...this.deliveries.delivered }, collected: Object.keys(this.deliveries.delivered), completed: this.phase === 'completed',
       message: this.message || (this.phase === 'ready' ? '观察场地，准备好后开始计时。' : state.message) };
   }

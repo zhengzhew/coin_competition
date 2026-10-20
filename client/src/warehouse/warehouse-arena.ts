@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WAREHOUSE_RULES, type ThirdDemo } from '@coin-path/shared';
+import { WAREHOUSE_RULES, warehouseZoneRects, warehouseZoneEdges, type ThirdDemo } from '@coin-path/shared';
 import { drawSimulationMapGrid } from '../third/simulation3d/map-grid';
 
 export function buildWarehouseArena(
@@ -10,18 +10,33 @@ export function buildWarehouseArena(
   const surface = document.createElement('canvas'); surface.width = surface.height = 1536;
   const ctx = surface.getContext('2d')!;
   ctx.fillStyle = '#eef0eb'; ctx.fillRect(0, 0, surface.width, surface.height);
-  drawSimulationMapGrid(ctx, config.width, config.depth, { edge: '#dde2dc', major: '#b9c5c5', minor: '#d4dcda' });
   ctx.save(); ctx.scale(surface.width / config.width, surface.height / config.depth);
   ctx.fillStyle = '#e5d5b4'; ctx.fillRect(18, 102, 96, 12);
+  if (config.objects.some(object => object.z < 102)) ctx.fillRect(18, 78, 96, 12);
+  for (const zone of config.zones ?? []) {
+    ctx.fillStyle = zone.color + '68';
+    for (const rect of warehouseZoneRects(zone))
+      ctx.fillRect(rect.x - rect.width / 2, rect.z - rect.depth / 2, rect.width, rect.depth);
+  }
+  ctx.restore();
+  // Paint the common grid above every area fill so the loading lane and targets retain their subdivisions.
+  drawSimulationMapGrid(ctx, config.width, config.depth, { edge: '#dde2dc', major: '#5f8077', minor: '#aabdb5' });
+  ctx.save(); ctx.scale(surface.width / config.width, surface.height / config.depth);
   ctx.fillStyle = '#657678'; ctx.font = '2px sans-serif'; ctx.textAlign = 'center';
   ctx.fillText('出发区', 12, 119);
-  ctx.strokeStyle = '#74898c'; ctx.lineWidth = .3; ctx.strokeRect(0, 0, 120, 120);
   for (const zone of config.zones ?? []) {
-    ctx.fillStyle = zone.color + '38'; ctx.fillRect(zone.x - 6, zone.z - 6, 12, 12);
+    // Clip the half-width border into its own region: adjacent colours never paint
+    // over each other, and the visible inner edge matches the shared judge.
+    ctx.save(); ctx.beginPath();
+    for (const rect of warehouseZoneRects(zone))
+      ctx.rect(rect.x - rect.width / 2, rect.z - rect.depth / 2, rect.width, rect.depth);
+    ctx.clip(); ctx.beginPath();
+    for (const [a, b] of warehouseZoneEdges(zone)) { ctx.moveTo(a.x, a.z); ctx.lineTo(b.x, b.z); }
     ctx.strokeStyle = zone.color; ctx.lineWidth = WAREHOUSE_RULES.lineWidth;
-    ctx.strokeRect(zone.x - 6, zone.z - 6, 12, 12);
-    ctx.fillStyle = '#304954'; ctx.font = 'bold 2.7px sans-serif';
-    ctx.fillText(`${zone.id} 投递区`, zone.x, zone.z - 8);
+    ctx.lineCap = 'round'; ctx.stroke(); ctx.restore();
+    ctx.fillStyle = '#304954'; ctx.font = 'bold 2.6px sans-serif';
+    if (zone.cells) for (const cell of zone.cells) ctx.fillText(`${zone.points}分`, cell.x, cell.z + 1);
+    else ctx.fillText(`${zone.id} 投递区`, zone.x, zone.z - (zone.depth ?? 12) / 2 - 2);
   }
   ctx.restore();
   const texture = keep(new THREE.CanvasTexture(surface)); texture.colorSpace = THREE.SRGBColorSpace;

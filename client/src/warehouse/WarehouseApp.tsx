@@ -42,7 +42,7 @@ export default function WarehouseApp() {
   if (confirmed && player && level) return <WarehouseWorkspace key={`${player.id}/${level.demo_id}`} level={level} player={player}
     records={records} notice={notice} go={go} onComplete={complete} />;
   return <div className="third-game-shell warehouse-shell"><div className="app future-city third-game warehouse-game competition-template competition-welcome" data-module="warehouse">
-    <CompetitionWelcome module={competitionModules.warehouse} onHome={() => go(warehousePath())} footer="一箱一格 · 全部送达后提交排行榜 · 只记录完成用时">
+    <CompetitionWelcome module={competitionModules.warehouse} onHome={() => go(warehousePath())} footer="按键搬运 · 完成本关目标立即停表 · 按完成用时排名">
       {!home && !level ? <section className="onboarding-card"><h2>未找到这个关卡</h2><button className="identity-confirm" onClick={() => go(warehousePath())}>返回关卡选择</button></section>
         : !confirmed ? <form className="onboarding-card" onSubmit={event => {
           event.preventDefault(); if (!name.trim()) return;
@@ -56,7 +56,7 @@ export default function WarehouseApp() {
         : <section className="onboarding-card"><span className="eyebrow">{player?.name} · 选择任务</span><h2>从第一次投递，到自主规划</h2>
           <div className="experience-grid">{warehouseLevels.map((l, i) => {
             const times = records.filter(r => r.levelId === l.demo_id).map(r => r.seconds);
-            return <button key={l.demo_id} onClick={() => go(warehousePath(l))}><b>0{i + 1} · {l.title}</b><small>{l.scene_config.objects.length} 箱 · {l.scene_config.zones.length} 格 · 一箱一格</small>
+            return <button key={l.demo_id} onClick={() => go(warehousePath(l))}><b>0{i + 1} · {l.title}</b><small>{l.scene_config.objects.length} 箱 · {l.targetScore !== undefined ? `目标 ${l.targetScore} 分` : '全部送达'} · 不限时</small>
               <small>{times.length ? `最快 ${Math.min(...times).toFixed(2)} 秒 · 已完成 ${times.length} 次` : '等待你的第一次完成'}</small><span className="warehouse-task-enter">出发 →</span></button>;
           })}</div><button className="module-change-player" onClick={() => setConfirmed(false)}>更换玩家</button></section>}
       {notice && <p role="status">{notice}</p>}

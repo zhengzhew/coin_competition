@@ -3,10 +3,16 @@ export type ThirdMode = 'auto' | 'manual';
 export type ThirdSimulation = 'grid' | 'simulation3d';
 export type ThirdAction = 'forward' | 'backward' | 'turn_left' | 'turn_right' | 'grab' | 'release' | 'wait';
 export interface ThirdObject { id: string; x: number; z: number; heading?: number; goal?: { x: number; z: number }; }
+export interface ThirdZone {
+  id: string; x: number; z: number; color: string;
+  width?: number; depth?: number; points?: number;
+  /** A continuous union of 12 cm cells, used by the warehouse's stepped regions. */
+  cells?: { x: number; z: number }[];
+}
 interface SceneBase {
   width: number; depth: number;
   robot_dimensions?: { body: number; gripperWidth: number };
-  zones?: { id: string; x: number; z: number; color: string }[];
+  zones?: ThirdZone[];
   start: { x: number; z: number; heading: number };
   objects: ThirdObject[];
   walls: { x: number; z: number; width?: number; depth?: number }[];
