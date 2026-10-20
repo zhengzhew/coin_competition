@@ -17,7 +17,6 @@ export function warehouseContains(object: ThirdObject, zone: WarehouseZone): boo
   return shape.edges.every(edge => warehouseBoundaryDistance(polygon, edge) > R.lineWidth / 2 + 1e-7);
 }
 export interface WarehouseEvidence extends ThirdObject {
-  released: boolean;
   holding: boolean;
   speed: number;
   angularSpeed: number;
@@ -34,7 +33,7 @@ export class WarehouseDeliveryTracker {
     const knownIds = new Set(this.level.scene_config.objects.map(object => object.id));
     for (const object of objects) {
       if (!knownIds.has(object.id)) continue;
-      const zone = object.released && !object.holding && object.speed < .5 && Math.abs(object.angularSpeed) < .05
+      const zone = !object.holding && object.speed < .5 && Math.abs(object.angularSpeed) < .05
         ? this.level.scene_config.zones.find(z => warehouseContains(object, z)) : undefined;
       if (!zone) { this.stable.delete(object.id); continue; }
       const previous = this.stable.get(object.id);

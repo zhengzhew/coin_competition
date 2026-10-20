@@ -8,7 +8,7 @@ import { WarehouseSession } from './session.js';
 import { warehouseZoneRects, warehouseZoneEdges } from './geometry.js';
 
 const evidence = (id: string, x: number, z: number, extra: Partial<WarehouseEvidence> = {}): WarehouseEvidence =>
-  ({ id, x, z, heading: 0, released: true, holding: false, speed: 0, angularSpeed: 0, ...extra });
+  ({ id, x, z, heading: 0, holding: false, speed: 0, angularSpeed: 0, ...extra });
 
 test('six warehouse levels preserve centres and counts with non-overlapping starts and zones', () => {
   assert.deepEqual(warehouseLevels.map(l => l.scene_config.objects.length), [1, 2, 3, 4, 6, 8]);
@@ -87,14 +87,14 @@ test('two boxes can complete level two inside the same continuous three-cell reg
   scorer.update([a, b], .39); assert.equal(scorer.completed, false);
   scorer.update([a, b], .01); assert.equal(scorer.completed, true);
   assert.deepEqual(scorer.delivered, { '1': 'A', '2': 'A' });
-  scorer.update([a, { ...b, released: false, holding: true }], .4);
+  scorer.update([a, { ...b, holding: true }], .4);
   assert.equal(scorer.completed, false); assert.deepEqual(scorer.delivered, { '1': 'A' });
 });
 
-test('grab/release eligibility, stability, delivery retraction and zone changes', () => {
+test('unheld stable cargo scores regardless of transport method; retraction and zone changes', () => {
   const level = warehouseLevels[3], [a, b, c] = level.scene_config.zones, scorer = new WarehouseDeliveryTracker(level);
   const one = evidence('1', a.x, a.z);
-  for (const extra of [{ released: false }, { holding: true }, { speed: .6 }, { angularSpeed: .1 }]) {
+  for (const extra of [{ holding: true }, { speed: .6 }, { angularSpeed: .1 }]) {
     scorer.update([{ ...one, ...extra }], 2); assert.deepEqual(scorer.delivered, {});
   }
   scorer.update([one], .4); assert.equal(scorer.score, 7);
@@ -160,6 +160,29 @@ test('real contact grasp succeeds at the specified start, release alone cannot a
   assert.equal(session.snapshot().collected.length, 0);
 });
 
+test('real pushing without G or R can complete delivery and score targets after stopping', () => {
+  for (const scored of [false, true]) {
+    const level = structuredClone(warehouseLevels[0]);
+    level.scene_config.start = { x: 60, z: 60, heading: 0 };
+    level.scene_config.objects = [{ id: '1', x: 60, z: 48 }];
+    level.scene_config.zones = [{ id: 'push', x: 60, z: 36, width: 12, depth: 12, color: '#319581', points: scored ? 4 : 0 }];
+    level.targetScore = scored ? 4 : undefined;
+    let now = 0;
+    const session = new WarehouseSession(level, () => now);
+    const tick = (count: number) => { for (let i = 0; i < count; i++) { now += 1000 / 120; session.tick(1 / 120); } };
+    session.start(); session.press('drive', 'forward'); tick(90);
+    assert.equal(session.snapshot().completed, false, 'moving cargo is not settled');
+    session.release('drive'); tick(120);
+    assert.equal(session.snapshot().holding, null);
+    assert.equal(session.snapshot().gripper?.target, 'open', 'no grip or release was needed');
+    assert.equal(session.snapshot().completed, true, JSON.stringify(session.snapshot()));
+    assert.equal(session.snapshot().score, scored ? 4 : 0);
+    assert.deepEqual(session.snapshot().delivered, { '1': 'push' });
+    const elapsed = session.elapsed; now += 1000; session.tick(.1);
+    assert.equal(session.elapsed, elapsed, 'pushed deliveries freeze the timer too');
+  }
+});
+
 test('no time limit; clearing inputs retains elapsed time; stop/reset have distinct results', () => {
   let now = 0;
   const session = new WarehouseSession(warehouseLevels[5], () => now);
@@ -223,7 +246,7 @@ test('synchronized warehouse fingers retain cargo through a turn and stop withou
   }
 });
 
-test('completion freezes timer and controls; restart clears old release and delivery evidence', () => {
+test('completion freezes timer and controls; restart clears old delivery evidence', () => {
   let now = 0;
   const level = warehouseLevels[0], session = new WarehouseSession(level, () => now);
   session.start(); session.press('g', 'grab');

@@ -78,7 +78,7 @@ export default function WarehouseWorkspace({ level, player, records, notice, go,
       <nav className="level-nav" aria-label="仓储关卡"><div className="nav-heading"><span>搬运任务</span><b>6 关</b></div><div className="stage-levels">
         {warehouseLevels.map((l, i) => <button key={l.demo_id} className={`level-btn${level === l ? ' active' : ''}`} aria-current={level === l ? 'page' : undefined} onClick={() => go(warehousePath(l))}>
           <span>0{i + 1}</span><strong>{l.title}</strong><small>{records.some(r => r.levelId === l.demo_id) ? '✓' : l.targetScore !== undefined ? `${l.requiredCount} 箱 / ${l.targetScore} 分` : `${l.requiredCount} 箱`}</small></button>)}
-        </div><details className="warehouse-instructions" open><summary>摆放规则</summary><ul><li>G 夹取，R 放下。</li><li>同一片标记区可放多个箱子，箱子不重叠、不叠放。</li><li>允许旋转，但不得碰到或压住彩色区域的边线。</li><li>区域内部网格辅助定位，不作为判分边界。</li><li>释放并停稳 0.4 秒后确认；移出区域或重新夹起，会撤销该箱子的送达与分数。</li><li>{level.targetScore !== undefined ? `每箱按所在区分值计分，达到或超过 ${level.targetScore} 分立即停表，不必搬完所有箱子。` : '全部箱子有效送达后立即停表。'}</li></ul><p>不设时间上限。松键、切换视角或窗口失焦均不停表。</p><p>成功完成后提交排行榜，按完成用时排名。</p></details>
+        </div><details className="warehouse-instructions" open><summary>摆放规则</summary><ul><li>可直接推入，也可 G 夹取、R 放下。</li><li>同一片标记区可放多个箱子，箱子不重叠、不叠放。</li><li>允许旋转，但不得碰到或压住彩色区域的边线。</li><li>区域内部网格辅助定位，不作为判分边界。</li><li>箱子未被夹持且停稳 0.4 秒后确认；移出区域或重新夹起，会撤销该箱子的送达与分数。</li><li>{level.targetScore !== undefined ? `每箱按所在区分值计分，达到或超过 ${level.targetScore} 分立即停表，不必搬完所有箱子。` : '全部箱子有效送达后立即停表。'}</li></ul><p>不设时间上限。松键、切换视角或窗口失焦均不停表。</p><p>成功完成后提交排行榜，按完成用时排名。</p></details>
       </nav>
       <main className="game-area">
         <div className="workspace-grid robot-workspace">

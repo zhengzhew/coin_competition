@@ -10,7 +10,6 @@ export class WarehouseSession {
   phase: 'ready' | 'running' | 'stopped' | 'completed' = 'ready';
   elapsed = 0;
   readonly inputs = new Map<string, ThirdAction>();
-  private released = new Set<string>();
   private accumulator = 0;
   private startedAt = 0;
   private message = '';
@@ -19,7 +18,7 @@ export class WarehouseSession {
   }
   reset() {
     this.clearInputs(); this.arena = new ThirdPhysicsArena(this.level); this.deliveries = new WarehouseDeliveryTracker(this.level);
-    this.released.clear(); this.accumulator = 0; this.elapsed = 0; this.phase = 'ready'; this.message = '';
+    this.accumulator = 0; this.elapsed = 0; this.phase = 'ready'; this.message = '';
   }
   start() {
     if (this.phase === 'running') return;
@@ -35,13 +34,7 @@ export class WarehouseSession {
     if (this.phase !== 'running' || this.inputs.has(source)) return;
     const held = [...this.inputs.values()].includes(action);
     this.inputs.set(source, action);
-    if (!held) {
-      if (action === 'release') {
-        const cargo = this.arena.gripper().holding;
-        if (cargo) this.released.add(cargo);
-      }
-      this.arena.act(action);
-    }
+    if (!held) this.arena.act(action);
   }
   release(source: string) { this.inputs.delete(source); }
   tick(dt: number) {
@@ -57,10 +50,9 @@ export class WarehouseSession {
         (Number(actions.has('forward')) - Number(actions.has('backward'))) * config.speed,
         (Number(actions.has('turn_right')) - Number(actions.has('turn_left'))) * config.turnSpeed);
       const state = this.arena.snapshot();
-      if (state.holding) this.released.delete(state.holding);
       this.deliveries.update(state.objects.map(o => {
         const body = this.arena.cubes.get(o.id)!;
-        return { ...o, released: this.released.has(o.id), holding: state.holding === o.id,
+        return { ...o, holding: state.holding === o.id,
           speed: body.getLinearVelocity().length() * 10, angularSpeed: body.getAngularVelocity() };
       }), STEP);
       if (this.deliveries.completed) {

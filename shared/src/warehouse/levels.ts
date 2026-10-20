@@ -1,6 +1,6 @@
 import type { ThirdDemo, ThirdZone } from '../third/types.js';
 
-export const WAREHOUSE_VERSION = 'warehouse-manual-5';
+export const WAREHOUSE_VERSION = 'warehouse-manual-6';
 export const WAREHOUSE_RULES = { cell: 12, cargo: 6, lineWidth: .6, settleSeconds: .4 } as const;
 export interface WarehouseLevel extends ThirdDemo {
   requiredCount: number;
@@ -30,7 +30,7 @@ const scoringZones = [band('A', false, 7), band('B', true, 7), band('C', false, 
   band('D', true, 4), band('E', false, 2), band('F', true, 2)];
 const row = (xs: number[], y = 12) => xs.map(x => ({ x, z: 120 - y }));
 const configs: { objects: { x: number; z: number }[]; zones: ReturnType<typeof zone>[]; targetScore?: number; hint: string }[] = [
-  { objects: row([24]), zones: [zone('A', 84, 84, 1)], hint: '先对准箱子，再观察投递区，练习抓取与放下的节奏。' },
+  { objects: row([24]), zones: [zone('A', 84, 84, 1)], hint: '可以直接推送，也可以夹取搬运。观察投递区，对准落点并让箱子停稳。' },
   { objects: row([24, 96]), zones: [zone('A', 96, 108, 3)], hint: '两箱放进同一片三格区域，留出第二箱的入口和自己的退路。' },
   { objects: row([24, 60, 96]), zones: scoringZones.slice(0, 2), targetScore: 14,
     hint: '两个顶角格各得 7 分，选哪两个箱子更顺路？角落落点要对准，也要留出退车空间。' },
@@ -46,9 +46,9 @@ export const warehouseLevels: WarehouseLevel[] = configs.map((config, index) => 
   title: index < 2 ? '定点投递' : '目标达成',
   objective: config.targetScore !== undefined
     ? `${config.objects.length} 个箱子，自选搬运顺序和得分区，达到或超过 ${config.targetScore} 分立即停表。`
-    : index === 0 ? '将箱子夹起并放入远处的 12 × 12 cm 投递格，停稳后完成并记录用时。'
+    : index === 0 ? '将箱子推入或夹取后放入远处的 12 × 12 cm 投递格，停稳后完成并记录用时。'
       : '将两个箱子放进右上角同一片 36 × 12 cm 投递区，可占不同格，全部停稳后立即停表。',
-  description: '不限时 · 按键驾驶 · G 夹取 / R 放下 · 完成用时越短越好',
+  description: '不限时 · 按键驾驶 · 推送或夹取搬运 · 完成用时越短越好',
   category: 'place', simulation: 'simulation3d', supported_modes: ['manual'], status: 'ready', starter: '',
   scene_task: 'warehouse', requiredCount: config.objects.length, targetScore: config.targetScore, strategyHint: config.hint,
   scene_config: {
