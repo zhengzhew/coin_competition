@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { randomUUID } from 'node:crypto';
-import { strawberryLevels, beachLevels, robotDemoManifests, solveStrawberryRoute, solve } from '../shared/dist/index.js';
+import { strawberryLevels, beachLevels, warehouseLevels, robotDemoManifests, solveStrawberryRoute, solve } from '../shared/dist/index.js';
 import { generatePythonSource, validateAndExpand } from '../shared/dist/index.js';
 import { curriculumReferencePrograms } from '../shared/dist/curriculum-reference.js';
 
@@ -114,6 +114,40 @@ try {
     assert.equal(saved.score, 92);
     assert.equal((await request(`/leaderboard?competition=${competition}&level=${task.demo_id}&mode=${sample.mode}&version=${task.content_version}`)).data.rows[0].score, saved.score);
   }
+  // Warehouse shares identity, periods and latest-success selection, but ranks time only.
+  const warehouse = warehouseLevels[0];
+  const timed = { ...payload, submission_id: randomUUID(), participant_id: randomUUID(), competition: 'warehouse',
+    level_id: warehouse.demo_id, content_version: warehouse.content_version, mode: 'manual', source: '', steps: 0, seconds: 31.25 };
+  for (const extra of [{ completed: false }, { seconds: 0 }, { steps: 1 }, { mode: 'auto' }, { content_version: 'warehouse-manual-2' }]) {
+    assert.equal((await request('/leaderboard/submissions', 'POST', { ...timed, ...extra })).status, 422);
+  }
+  assert.equal((await request('/leaderboard/submissions', 'POST', timed)).status, 201);
+  const timedRetry = await request('/leaderboard/submissions', 'POST', timed);
+  assert.equal(timedRetry.status, 200); assert.equal(timedRetry.data.score, null);
+  assert.equal(getDb().prepare('SELECT COUNT(*) AS n FROM leaderboard_submissions WHERE submission_id = ?').get(timed.submission_id).n, 1);
+  const faster = { ...timed, submission_id: randomUUID(), participant_id: randomUUID(), display_name: '更快', seconds: 20.12 };
+  const latestTimed = { ...timed, submission_id: randomUUID(), seconds: 35.5 };
+  await request('/leaderboard/submissions', 'POST', faster);
+  await request('/leaderboard/submissions', 'POST', latestTimed);
+  for (const [entry, date] of [[timed, '2026-10-13T01:00:00.000Z'], [faster, '2026-10-13T03:00:00.000Z'], [latestTimed, '2026-10-13T04:00:00.000Z']]) {
+    getDb().prepare('UPDATE leaderboard_submissions SET submitted_at = ? WHERE submission_id = ?').run(date, entry.submission_id);
+  }
+  const timedScope = `/leaderboard?competition=warehouse&level=${warehouse.demo_id}&mode=manual&version=${warehouse.content_version}`;
+  const timedRank = (await request(timedScope)).data;
+  assert.deepEqual(timedRank.rows.map(row => row.seconds), [20.12, 35.5], 'default time ascending; latest success rather than personal best');
+  assert.equal(timedRank.score_visible, false); assert(timedRank.rows.every(row => row.score === null));
+  assert.equal((await request(timedScope + '&sort=score')).status, 422);
+  assert.deepEqual((await request(timedScope + '&order=desc')).data.rows.map(row => row.seconds), [35.5, 20.12]);
+  assert.equal((await request(timedScope.replace(warehouse.content_version, 'warehouse-manual-2'))).data.rows.length, 0);
+  assert.equal((await request(timedScope.replace(warehouse.demo_id, 'warehouse-2'))).data.rows.length, 0);
+  await request('/teacher/leaderboard', 'PUT', config);
+  assert.deepEqual((await request(timedScope)).data.rows.map(row => row.seconds), [31.25]);
+  assert.deepEqual((await request(timedScope + '&scope=history')).data.rows.map(row => row.seconds), [20.12, 35.5]);
+  const warehouseDashboard = (await request('/teacher/dashboard?competition=warehouse')).data;
+  assert.equal(warehouseDashboard.catalog.find(event => event.id === 'warehouse').levels.length, 6);
+  assert.equal(warehouseDashboard.submissions.rows.length, 3);
+  assert(warehouseDashboard.submissions.rows.every(row => row.score === null));
+  await request('/teacher/leaderboard', 'PUT', { ...config, start: null, end: null });
   const later = (await request('/attempts', 'POST', { assignment_key: 'P01' })).data;
   await request(`/attempts/${later.attempt_id}/finalize`, 'POST', {});
   assert.equal((await request(formalScope)).data.rows[0].id, successful.attempt_id, 'later failure preserves previous success');

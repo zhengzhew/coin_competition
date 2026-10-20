@@ -1,0 +1,96 @@
+html[data-competition="warehouse"] { color-scheme: light; }
+html[data-competition="warehouse"] body { display: block; overflow: auto; background: #e4ece3; }
+html[data-competition="warehouse"] #root { display: block; height: auto; }
+.warehouse-shell { background: #e4ece3; }
+.app.future-city.warehouse-game.competition-template { --ink: #264e57; --muted: #68858a; --module-accent: #24777d; --module-soft: #e9f2eb; --module-border: #c8d9d5; --module-highlight: #d3e9df; --line: #d1ded7; --green: #24777d; --forest-2: #24777d; background: #edf2e8; color: var(--ink); box-shadow: none; }
+.app.warehouse-game .module-header { background: #fffef6; }
+.app.warehouse-game .module-intro::after { content: ""; display: block; width: min(100%, 430px); aspect-ratio: 1.65; background: url('/assets/warehouse/warehouse.svg') center / contain no-repeat; margin-top: 20px; }
+.app.warehouse-game .identity-confirm { width: 100%; padding: 13px 18px; border-radius: 9px; border: 0; }
+.warehouse-local-note { display: block; margin-top: 14px; text-align: center; color: #71877f; font-size: 11px; }
+.warehouse-task-enter { position: absolute; right: 18px; top: 28px; font-size: 12px; color: #24777d; }
+.warehouse-header-timer { display: flex; align-items: center; gap: 10px; color: #547980; font-size: 11px; white-space: nowrap; }
+.warehouse-header-timer output { font: 750 22px/1.2 ui-monospace, monospace; color: #24777d; font-variant-numeric: tabular-nums; min-width: 100px; }
+.warehouse-header-timer small { font: 11px system-ui; }
+.app.warehouse-game .level-nav { background: #f1f5e9; border-color: var(--module-border); }
+.app.warehouse-game .nav-heading { color: var(--module-accent); border-color: var(--module-border); }
+.app.warehouse-game .stage-levels { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.app.warehouse-game .level-btn { background: #fffef6; color: #50797e; border-color: #cadfd5; padding: 15px 10px; gap: 7px; }
+.app.warehouse-game .level-btn strong { flex: 1; text-align: left; font-size: 12px; }
+.app.warehouse-game .level-btn small { color: inherit; white-space: nowrap; font-size: 10px; }
+.app.warehouse-game .level-btn.active { background: var(--module-accent); color: #fffdf4; border-color: var(--module-accent); box-shadow: 0 5px 15px #377c801a; }
+.warehouse-instructions { padding: 17px 4px; border-top: 1px solid #d2e1d4; margin-top: 20px; color: #618086; font-size: 12px; line-height: 1.8; }
+.warehouse-instructions summary { cursor: pointer; font-weight: 700; color: #347079; }
+.warehouse-instructions ul { padding-left: 18px; margin: 12px 0; }
+.warehouse-instructions li { padding-bottom: 7px; }
+.warehouse-instructions p { margin: 8px 0 0; }
+.app.warehouse-game .board-panel { background: #fffef6; border: 1px solid #ccdfd6; }
+.app.warehouse-game .module-mission-heading { display: flex; flex-shrink: 0; align-items: center; padding: 11px 13px; border: 1px solid var(--module-border); border-left: 3px solid var(--module-accent); border-radius: 8px; margin-bottom: 8px; width: 100%; }
+.app.warehouse-game .module-mission-heading > span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; font: 700 16px system-ui; }
+.app.warehouse-game .module-mission-heading h1 { font-size: 19px; margin: 0; }
+.app.warehouse-game .module-mission-heading p { display: flex; flex-direction: column; gap: 2px; margin-top: 0; margin-bottom: 0; font-size: 12px; }
+.app.warehouse-game .module-mission-heading p > span { font-size: 10px; color: #719191; }
+.warehouse-map-caption { width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; padding: 3px 1px 9px; color: #718581; font-size: 11px; }
+.warehouse-zone-legend { display: flex; flex-wrap: wrap; gap: 6px 15px; margin-top: 8px; color: #627b77; font-size: 11px; flex-shrink: 0; }
+.warehouse-zone-legend > span { display: flex; gap: 6px; align-items: center; }
+.warehouse-zone-legend i { width: 10px; height: 10px; border-radius: 3px; }
+.app.warehouse-game .city3d-toolbar { background: #eef5ed; border-color: var(--module-border); }
+.app.warehouse-game .city3d-toolbar button { color: #507e82; background: #fffdf6; border-color: #cfdfd5; }
+.app.warehouse-game .city3d-toolbar button[aria-pressed="true"] { background: var(--module-accent); color: white; border-color: var(--module-accent); }
+.warehouse-card { flex-shrink: 0; padding: 18px; background: #fffef6; border: 1px solid #ccdfd6; border-radius: 12px; }
+.warehouse-card-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 13px; }
+.warehouse-card-heading h2, .warehouse-cargo-list h2 { font-size: 15px; margin: 0; }
+.warehouse-card-heading small { font-size: 10px; color: #809691; }
+.warehouse-keypad { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.warehouse-keypad button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 51px; color: #44797f; background: #f0f6ee; border: 1px solid #cbded4; border-radius: 8px; box-shadow: 0 3px 0 #dbe7dd; touch-action: none; user-select: none; }
+.warehouse-keypad button:active:not(:disabled) { transform: translateY(2px); box-shadow: none; background: #d4e9de; }
+.warehouse-keypad button:disabled { opacity: .55; cursor: default; }
+.warehouse-keypad kbd { font: 650 14px ui-monospace, monospace; }
+.warehouse-keypad span { font-size: 11px; }
+.warehouse-key-forward { grid-column: 2; }
+.warehouse-key-turn_left { grid-column: 1; grid-row: 2; }
+.warehouse-key-backward { grid-column: 2; grid-row: 2; }
+.warehouse-key-turn_right { grid-column: 3; grid-row: 2; }
+.warehouse-keypad .warehouse-key-grab, .warehouse-keypad .warehouse-key-release { grid-row: 3; background: #faefe2; border-color: #e4d4bb; color: #987456; box-shadow: 0 3px 0 #e9decd; }
+.warehouse-key-grab { grid-column: 1; }.warehouse-key-release { grid-column: 3; }
+.warehouse-grip { margin: 15px 0 12px; padding: 8px; background: #f4f4e9; border-radius: 6px; color: #688176; font-size: 11px; text-align: center; }
+.warehouse-primary { width: 100%; min-height: 43px; padding: 9px; border: 0; border-radius: 8px; background: #24777d; color: #fffdf3; font-size: 15px; font-weight: 650; }
+.warehouse-primary:disabled { background: #83aaa5; cursor: default; }
+.warehouse-actions { display: flex; gap: 8px; margin-top: 9px; }
+.warehouse-actions button { flex: 1; border: 1px solid #cbded4; background: #edf4e9; color: #4f7d7c; padding: 9px; border-radius: 7px; font-size: 12px; }
+.warehouse-actions button:disabled { opacity: .5; cursor: default; }
+.warehouse-cargo-list > div { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #edf0e4; font-size: 12px; }
+.warehouse-cargo-list h2 { margin-bottom: 8px; }.warehouse-cargo-list span { color: #74958a; }
+.warehouse-message { font-size: 12px; line-height: 1.8; padding: 13px 16px; border-left: 3px solid #72a8a7; background: #ecf4e8; border-radius: 6px; color: #557d7f; }
+.app.warehouse-game footer { color: #608086; background: #fffdf3; border-color: #cadfd7; }
+.app.warehouse-game .status-pill { color: #397982; border-color: #cadfd5; background: #eaf3ec; }
+.app.warehouse-game .status-success { color: #32735e; background: #dbeddf; }
+@media (min-width: 1000px) {
+  .app.warehouse-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 290px; grid-template-rows: minmax(0, 1fr); }
+  .app.warehouse-game .robot-workspace > .board-panel, .app.warehouse-game .robot-workspace > .control-column { grid-row: 1; }
+  .app.warehouse-game .control-column { overflow: auto; }
+  .app.warehouse-game .level-nav { width: 190px; flex-basis: 190px; overflow: auto; }
+}
+@media (max-width: 1200px) {
+  .warehouse-card { padding: 13px; }
+  .app.warehouse-game .workspace-grid { grid-template-columns: minmax(0, 1fr) 260px; }
+  .app.warehouse-game .module-mission-heading p { flex-basis: 100%; margin-top: 5px; }
+}
+@media (max-width: 999px) {
+  .app.future-city.warehouse-game .workspace-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; }
+  .app.future-city.warehouse-game .robot-workspace > .board-panel { grid-column: 1; grid-row: 1; min-height: 510px; }
+  .app.future-city.warehouse-game .robot-workspace > .control-column { grid-column: 1; grid-row: 2; }
+  .app.warehouse-game .level-nav { width: 155px; flex-basis: 155px; }
+  .warehouse-header-timer output { font-size: 19px; }
+}
+@media (max-width: 560px) {
+  .app.warehouse-game .level-nav { display: block; width: 100%; flex-basis: auto; padding: 12px; }
+  .app.warehouse-game .stage-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
+  .warehouse-instructions { margin-top: 10px; padding: 8px 4px; }
+  .app.warehouse-game .level-btn { padding: 9px; }
+  .app.warehouse-game .game-area, .app.warehouse-game .board-panel { padding: 10px; }
+  .app.warehouse-game .module-mission-heading h1 { font-size: 17px; }
+  .app.warehouse-game .module-mission-heading p { font-size: 11px; }
+  .app.warehouse-game .module-mode-notice > span { display: none; }
+  .app.warehouse-game .module-mode-notice > strong { font-size: 12px; }
+  .app.warehouse-game .module-intro::after { display: none; }
+}

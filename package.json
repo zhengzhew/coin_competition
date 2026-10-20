@@ -23,6 +23,7 @@
     "test:editor:browser": "npm run build && node scripts/verify-map-editor.mjs",
     "test:farm:browser": "npm run build && node scripts/verify-strawberry-browser.mjs",
     "test:beach:browser": "npm run build && node scripts/verify-beach-browser.mjs",
+    "test:warehouse": "npm run build -w shared && node --test shared/dist/warehouse/warehouse.test.js && node scripts/verify-warehouse-physics.mjs",
     "test:template:browser": "npm run build && node scripts/verify-competition-template-browser.mjs",
     "test:future:browser": "npm run build && node scripts/verify-curriculum-browser.mjs",
     "test:policy": "npm run build -w shared && npm run build -w server && node scripts/verify-attempt-policy.mjs && node scripts/verify-insights.mjs",

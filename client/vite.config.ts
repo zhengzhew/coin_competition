@@ -10,6 +10,7 @@ export default defineConfig({
     future: fileURLToPath(new URL('./future/index.html', import.meta.url)),
     farm: fileURLToPath(new URL('./farm/index.html', import.meta.url)),
     beach: fileURLToPath(new URL('./beach/index.html', import.meta.url)),
+    warehouse: fileURLToPath(new URL('./warehouse/index.html', import.meta.url)),
     demo: fileURLToPath(new URL('./demo/index.html', import.meta.url)),
   } } },
   server: {

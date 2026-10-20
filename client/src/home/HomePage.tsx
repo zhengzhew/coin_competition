@@ -1,12 +1,13 @@
 import { competitionModules } from '../competition-modules';
 import './HomePage.css';
 
-const competitions = ['coin', 'future', 'farm', 'beach'] as const;
+const competitions = ['coin', 'future', 'farm', 'beach', 'warehouse'] as const;
 const artwork = {
   coin: { scene: '/assets/sand.png', symbol: '/assets/coin.png' },
   future: { scene: '/assets/future/city.svg', symbol: '/assets/future/aircar.svg' },
   farm: { scene: '/assets/farm/landscape.svg', symbol: '/assets/farm/leaf.svg' },
   beach: { scene: '/assets/beach/shoreline.svg', symbol: '/assets/beach/shell.svg' },
+  warehouse: { scene: '/assets/warehouse/warehouse.svg', symbol: '/assets/warehouse/box.svg' },
 };
 
 export default function HomePage() {

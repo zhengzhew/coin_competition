@@ -1,6 +1,6 @@
 /** All continuous simulation dimensions and distances are in centimetres. */
 export const THIRD_DIMENSIONS = {
-  map: 120, cell: 12, body: 19, gripperWidth: 19, gripperLength: 6,
+  map: 120, cell: 12, smallCell: 6, edge: 6, body: 19, gripperWidth: 19, gripperLength: 6,
   fingerWidth: 1.2, cargo: 6,
 } as const;
 export const THIRD_GRIP_CENTER = THIRD_DIMENSIONS.body / 2 + THIRD_DIMENSIONS.gripperLength / 2;

@@ -5,6 +5,8 @@ export type ThirdAction = 'forward' | 'backward' | 'turn_left' | 'turn_right' | 
 export interface ThirdObject { id: string; x: number; z: number; heading?: number; goal?: { x: number; z: number }; }
 interface SceneBase {
   width: number; depth: number;
+  robot_dimensions?: { body: number; gripperWidth: number };
+  zones?: { id: string; x: number; z: number; color: string }[];
   start: { x: number; z: number; heading: number };
   objects: ThirdObject[];
   walls: { x: number; z: number; width?: number; depth?: number }[];
@@ -13,7 +15,7 @@ export type ThirdSceneConfig = (SceneBase & { kind: 'grid' }) | (SceneBase & {
   kind: 'simulation3d'; speed: number; turnSpeed: number;
 });
 export interface ThirdDemo {
-  scene_task?: 'seashell-edge';
+  scene_task?: 'seashell-edge' | 'warehouse';
   grid_task?: 'strawberry-edge';
   competition_id?: string; demo_id: string; content_version: string;
   category: ThirdCategory; simulation: ThirdSimulation;

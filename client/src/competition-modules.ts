@@ -1,4 +1,8 @@
 export const competitionModules = {
+  warehouse: { id: 'warehouse', title: '智能仓储', subtitle: '第五赛事 · 手动搬运', mark: '▣', home: '/warehouse/',
+    eyebrow: 'WAREHOUSE LAB · 05', headline: ['稳稳夹起，', '准确送达。'],
+    description: ['实时驾驶小车，完成抓取、运输与精准摆放。', '观察投递区，规划搬运路线，记录自己的完成用时。'],
+    tags: ['3D 仓库', '按键操控', '不限时挑战'], motto: '把每一箱货物，送到合适的位置' },
   beach: { id: 'beach', title: '潮汐拾光', subtitle: '第四赛事 · 海边拾贝', mark: '◒', home: '/beach/',
     eyebrow: 'TIDAL TREASURES · 04', headline: ['循着海风出发，', '拾起一岸好时光。'],
     description: ['编程控制小车，在沙滩上寻找潮汐留下的贝壳。', '从逐个收集到循环搬运，用更短的程序送回岸边。'],

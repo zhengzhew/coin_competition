@@ -1,15 +1,15 @@
-import { beachLevels, robotDemoManifests, strawberryLevels } from '@coin-path/shared';
+import { beachLevels, warehouseLevels, robotDemoManifests, strawberryLevels } from '@coin-path/shared';
 import { allLevels } from './levels.js';
 import { getDb } from './db.js';
 import { leaderboardScore, type ScoreRule } from './scoring.js';
 
 export const teacherCompetitionNames = {
-  coin: '旷野淘金', future: '未来城市', farm: '生态农场', beach: '潮汐拾光（贝壳）', demo: '机器人 DEMO',
+  coin: '旷野淘金', future: '未来城市', farm: '生态农场', beach: '潮汐拾光（贝壳）', warehouse: '智能仓储', demo: '机器人 DEMO',
 };
 
 export function teacherCatalog() {
   const formal = allLevels();
-  const local = { farm: strawberryLevels, beach: beachLevels, demo: robotDemoManifests.map(entry => entry.configuration) };
+  const local = { farm: strawberryLevels, beach: beachLevels, warehouse: warehouseLevels, demo: robotDemoManifests.map(entry => entry.configuration) };
   const stored = getDb().prepare('SELECT DISTINCT competition, level_id, mode FROM leaderboard_submissions WHERE completed = 1').all();
   return Object.entries(teacherCompetitionNames).map(([id, title]) => {
     const levels = id === 'coin' || id === 'future'
@@ -36,7 +36,7 @@ export function submissionInsights(records: TeacherSubmission[], rule: ScoreRule
   const catalog = teacherCatalog();
   const rows = records.map(row => ({ ...row,
     title: catalog.find(event => event.id === row.competition)?.levels.find(level => level.id === row.level_id)?.title ?? row.level_id,
-    score: leaderboardScore(rule, row.steps, row.code_lines, row.seconds),
+    score: row.competition === 'warehouse' ? null : leaderboardScore(rule, row.steps, row.code_lines, row.seconds),
   }));
   const mean = (values: number[]) => values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length * 100) / 100 : null;
   function aggregate(entries: typeof rows) {

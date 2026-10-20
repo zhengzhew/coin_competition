@@ -1,5 +1,5 @@
 import type { Router, RequestHandler } from 'express';
-import { strawberryLevels, beachLevels, robotDemoManifests, createRobotRuntime } from '@coin-path/shared';
+import { strawberryLevels, beachLevels, warehouseLevels, robotDemoManifests, createRobotRuntime } from '@coin-path/shared';
 import { getDb } from './db.js';
 import { getLevelForAssignment } from './levels.js';
 import { codeLines, formalMetrics, leaderboardScore, type ScoreRule } from './scoring.js';
@@ -36,13 +36,14 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
   });
   router.post('/leaderboard/submissions', playerGuard, (req, res) => {
     const b = req.body ?? {}, uuid = /^[0-9a-f-]{36}$/i;
-    const catalog = b.competition === 'farm' ? strawberryLevels : b.competition === 'beach' ? beachLevels : b.competition === 'demo' ? robotDemoManifests.map(entry => entry.configuration) : [];
+    const catalog = b.competition === 'farm' ? strawberryLevels : b.competition === 'beach' ? beachLevels : b.competition === 'warehouse' ? warehouseLevels : b.competition === 'demo' ? robotDemoManifests.map(entry => entry.configuration) : [];
     const level = catalog.find(l => l.demo_id === b.level_id && l.content_version === b.content_version);
     if (!level || !level.supported_modes.includes(b.mode) || !uuid.test(b.submission_id) || !uuid.test(b.participant_id)
       || typeof b.display_name !== 'string' || !b.display_name.trim() || b.display_name.length > 40
       || typeof b.source !== 'string' || b.source.length > 8000 || typeof b.completed !== 'boolean'
       || [b.steps, b.seconds].some(n => typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > 86400)) return res.status(422).json({ error: '提交数据或关卡版本无效' });
     if (!b.completed) return res.status(422).json({ error: '成功完成任务后才能提交排行榜' });
+    if (b.competition === 'warehouse' && (b.seconds <= 0 || b.steps !== 0 || b.source !== '')) return res.status(422).json({ error: '仓储只提交有效完成用时' });
     let steps = b.steps;
     if (level.grid_task === 'strawberry-edge') {
       try {
@@ -54,21 +55,23 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
       } catch (e) { return res.status(422).json({ error: (e as Error).message }); }
     }
     const db = getDb(), owner = String(req.cookies.player_uuid);
-    const existing = db.prepare('SELECT player_uuid, steps, code_lines, seconds, completed FROM leaderboard_submissions WHERE submission_id = ?').get(b.submission_id);
+    const existing = db.prepare('SELECT player_uuid, competition, steps, code_lines, seconds, completed FROM leaderboard_submissions WHERE submission_id = ?').get(b.submission_id);
     if (existing) {
       if (existing.player_uuid !== owner) return res.status(409).json({ error: '提交编号冲突' });
       if (!existing.completed) return res.status(422).json({ error: '此记录未完成任务，不能加入排行榜' });
-      return res.json({ saved: true, score: leaderboardScore(leaderboardConfig().rule, Number(existing.steps), Number(existing.code_lines), Number(existing.seconds)) });
+      return res.json({ saved: true, score: existing.competition === 'warehouse' ? null : leaderboardScore(leaderboardConfig().rule, Number(existing.steps), Number(existing.code_lines), Number(existing.seconds)) });
     }
     const lines = b.mode === 'auto' ? codeLines(b.source) : 0;
     db.prepare(`INSERT INTO leaderboard_submissions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
       .run(b.submission_id, owner, b.participant_id, b.display_name.trim(), b.competition, b.level_id, b.mode, b.content_version, steps, lines, b.seconds, Number(b.completed), new Date().toISOString());
-    res.status(201).json({ saved: true, score: leaderboardScore(leaderboardConfig().rule, steps, lines, b.seconds) });
+    res.status(201).json({ saved: true, score: b.competition === 'warehouse' ? null : leaderboardScore(leaderboardConfig().rule, steps, lines, b.seconds) });
   });
   router.get('/leaderboard', (req, res) => {
     const c = leaderboardConfig(), competition = String(req.query.competition ?? ''), level = String(req.query.level ?? ''), mode = String(req.query.mode ?? '');
     const scope = req.query.scope === 'history' ? 'history' : 'current';
-    const sort = String(req.query.sort ?? 'steps'), order = req.query.order === 'desc' ? -1 : 1;
+    const timingOnly = competition === 'warehouse';
+    const sort = String(req.query.sort ?? (timingOnly ? 'seconds' : 'steps')), order = req.query.order === 'desc' ? -1 : 1;
+    if (timingOnly && sort !== 'seconds') return res.status(422).json({ error: '仓储仅按完成用时排序' });
     if (!['steps', 'code_lines', 'seconds', 'score'].includes(sort) || sort === 'score' && !c.rule) return res.status(422).json({ error: '总分隐藏时不可排序，或排序字段无效' });
     let entries: Entry[] = [];
     if (competition === 'coin' || competition === 'future') {
@@ -88,8 +91,8 @@ export function registerLeaderboardRoutes(router: Router, playerGuard: RequestHa
       const inside = !c.start || row.submitted_at >= c.start && row.submitted_at <= c.end!;
       if (scope === 'current' ? inside : !inside) latest.set(row.participant, row);
     }
-    const result = [...latest.values()].map(row => ({ ...row, score: leaderboardScore(c.rule, row.steps, row.code_lines, row.seconds) }));
+    const result = [...latest.values()].map(row => ({ ...row, score: timingOnly ? null : leaderboardScore(c.rule, row.steps, row.code_lines, row.seconds) }));
     result.sort((a, b) => { const x = a[sort as 'steps'], y = b[sort as 'steps']; return x == null ? y == null ? a.id.localeCompare(b.id) : 1 : y == null ? -1 : (x - y) * order || a.submitted_at.localeCompare(b.submitted_at) || a.id.localeCompare(b.id); });
-    res.json({ start: c.start, end: c.end, score_visible: !!c.rule, scope, rows: result.map(({ participant: _private, ...row }) => row) });
+    res.json({ start: c.start, end: c.end, score_visible: !timingOnly && !!c.rule, scope, rows: result.map(({ participant: _private, ...row }) => row) });
   });
 }

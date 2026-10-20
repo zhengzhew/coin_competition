@@ -20,6 +20,8 @@ const angleDifference = (a: number, b: number) => Math.atan2(Math.sin(a - b), Ma
 
 /** Ground-plane rigid bodies. Grasping is finger contact/friction, never a weld or teleport. */
 export class ThirdPhysicsArena {
+  private get dimensions() { return { ...D, ...this.demo.scene_config.robot_dimensions }; }
+  private get gripCenter() { return this.dimensions.body / 2 + this.dimensions.gripperLength / 2; }
   readonly world = new World(Vec2(0, 0));
   readonly robot: Body;
   readonly cubes = new Map<string, Body>();
@@ -34,6 +36,7 @@ export class ThirdPhysicsArena {
   private blocked = false;
   private message = '货块可以推动。G 合拢夹爪，R 张开夹爪。';
   constructor(readonly demo: ThirdDemo) {
+    const D = this.dimensions, THIRD_GRIP_CENTER = this.gripCenter;
     const c = demo.scene_config, p = THIRD_PHYSICS;
     const floor = this.world.createBody();
     const wall = (x: number, z: number, width: number, depth: number) => floor.createFixture(
@@ -59,9 +62,13 @@ export class ThirdPhysicsArena {
       this.robot, body, body.getPosition(), this.robot.getWorldVector(Vec2(side, 0))))!;
       this.fingers.push({ body, joint, side });
     }
-    // A linked parallel gripper keeps equal travel on both sides; cubes remain independent bodies.
-    this.world.createJoint(new GearJoint({ ratio: -1 }, this.fingers[0].body, this.fingers[1].body,
-      this.fingers[0].joint, this.fingers[1].joint, -1));
+    // Warehouse synchronizes the two motors below. Planck 1.4.2's GearJoint writes
+    // angular velocity separately for its two base bodies; using the same dynamic
+    // chassis for both loses a reaction impulse and can keep turning after release.
+    if (demo.scene_task !== 'warehouse') {
+      this.world.createJoint(new GearJoint({ ratio: -1 }, this.fingers[0].body, this.fingers[1].body,
+        this.fingers[0].joint, this.fingers[1].joint, -1));
+    }
     for (const o of c.objects) {
       const body = this.world.createDynamicBody({ position: Vec2(unit(o.x), unit(o.z)), angle: o.heading || 0, bullet: true });
       body.createFixture(Box(unit(D.cargo / 2), unit(D.cargo / 2)), {
@@ -84,6 +91,7 @@ export class ThirdPhysicsArena {
     for (let i = 0; i < n; i++) this.substep(dt / n, driveCm, turn, precision);
   }
   private substep(dt: number, driveCm: number, turn: number, precision?: PrecisionDrive) {
+    const D = this.dimensions;
     const p = THIRD_PHYSICS, before = this.robot.getPosition().clone(), angle = this.robot.getAngle();
     const velocity = this.robot.getLinearVelocity();
     const desired = Vec2(Math.sin(angle) * unit(driveCm), -Math.cos(angle) * unit(driveCm));
@@ -102,8 +110,16 @@ export class ThirdPhysicsArena {
     this.robot.applyForceToCenter(force, true);
     this.robot.applyTorque(clamp((turn - this.robot.getAngularVelocity()) * this.robot.getInertia() / dt,
       -p.steeringTorqueNm * 100, p.steeringTorqueNm * 100), true);
+    let destination = this.target === 'open' ? 0 : -unit((D.gripperWidth - 2 * D.fingerWidth) / 2);
+    if (this.demo.scene_task === 'warehouse') {
+      // Advance from the lagging finger so both motors share a setpoint even if
+      // one finger meets cargo first. Forces and contacts still move every body.
+      const travel = this.fingers.map(f => f.joint.getJointTranslation());
+      const lagging = this.target === 'open' ? Math.min(...travel) : Math.max(...travel);
+      const advance = unit(p.fingerSpeedCm) * dt;
+      destination = clamp(destination, lagging - advance, lagging + advance);
+    }
     for (const f of this.fingers) {
-      const destination = this.target === 'open' ? 0 : -unit((D.gripperWidth - 2 * D.fingerWidth) / 2);
       f.joint.setMotorSpeed(clamp((destination - f.joint.getJointTranslation()) / dt, -unit(p.fingerSpeedCm), unit(p.fingerSpeedCm)));
     }
     // Coulomb floor drag is capped by current momentum so it never reverses a resting cube.
@@ -164,6 +180,7 @@ export class ThirdPhysicsArena {
   }
   /** Remove only sub-millimetre solver residue after arrival, never jump a route or move cargo. */
   private finishPrecisionPose(pose: ThirdPose) {
+    const D = this.dimensions;
     const position = this.robot.getPosition(), angle = this.robot.getAngle();
     const correction = angleDifference(pose.heading, angle);
     if (Math.hypot(pose.x - cm(position.x), pose.z - cm(position.y)) > .02 || Math.abs(correction) > .001) return;
@@ -193,6 +210,7 @@ export class ThirdPhysicsArena {
     return false;
   }
   gripper(): ThirdGripper & { holding: string | null } {
+    const D = this.dimensions, THIRD_GRIP_CENTER = this.gripCenter;
     const offsets = this.fingers.map(f => cm(this.robot.getLocalPoint(f.body.getPosition()).x));
     const gap = Math.max(0, offsets[1] - offsets[0] - D.fingerWidth);
     let holding: string | null = null;

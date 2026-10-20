@@ -6,6 +6,7 @@ import { THIRD_DIMENSIONS as D, thirdMapPosition, type ThirdDemo, type ThirdSnap
 import { createSaikaoRobot } from '../../components/SaikaoRobot';
 import { buildFarmArena } from './farm-arena';
 import { buildBeachArena, buildShell } from '../../beach/beach-arena';
+import { buildWarehouseArena } from '../../warehouse/warehouse-arena';
 
 type View = 'orbit' | 'top' | 'follow';
 export default function SimulationScene({ demo, state, onReady, showCoordinates = true }: {
@@ -45,16 +46,18 @@ export default function SimulationScene({ demo, state, onReady, showCoordinates 
     const lost = (event: Event) => { event.preventDefault(); setError('三维画面暂时不可用，请重试加载。'); onReady(false); renderer?.setAnimationLoop(null); };
     onReady(false); setError(''); setLoading(true);
     void (async () => { try {
-      const model = await createSaikaoRobot();
+      const model = await createSaikaoRobot(demo.scene_config.robot_dimensions);
       if (disposed) { model.dispose(); return; }
       keep(model);
       const config = demo.scene_config;
       const beach = demo.scene_task === 'seashell-edge';
+      const warehouse = demo.scene_task === 'warehouse';
       renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'low-power' });
       const canvas = renderer.domElement;
       canvas.setAttribute('aria-label', '本地 3D 模拟场景，可拖动旋转、右键平移、滚轮缩放'); canvas.setAttribute('role', 'img');
       canvas.dataset.thirdScene = 'true';
       if (beach) canvas.dataset.beachScene = 'true';
+      if (warehouse) canvas.dataset.warehouseScene = 'true';
       canvas.addEventListener('webglcontextlost', lost);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
       renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -137,7 +140,8 @@ export default function SimulationScene({ demo, state, onReady, showCoordinates 
         sprite.position.set(...position); sprite.scale.set(5, 5, 1); parent.add(sprite);
       }
       box(scene, [config.width + 2, 2.2, config.depth + 2], [center.x, -.8, center.z], beach ? '#d7ba84' : '#becbb5');
-      if (beach) buildBeachArena(scene, config, keep, material, showCoordinates);
+      if (warehouse) buildWarehouseArena(scene, config, keep, material);
+      else if (beach) buildBeachArena(scene, config, keep, material, showCoordinates);
       else buildFarmArena(scene, config, keep, material);
       for (const obj of config.objects) if (obj.goal) {
         for (const side of [-1, 1]) {

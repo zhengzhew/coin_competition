@@ -43,6 +43,7 @@ if (existsSync(clientDist)) {
     if (!['GET', 'HEAD'].includes(req.method) || req.path.startsWith('/api/')) return next();
     res.sendFile(resolve(clientDist, /^\/home(?:\/|$)/.test(req.path) ? 'home/index.html'
       : /^\/beach(?:\/|$)/.test(req.path) ? 'beach/index.html'
+      : /^\/warehouse(?:\/|$)/.test(req.path) ? 'warehouse/index.html'
       : /^\/farm(?:\/|$)/.test(req.path) ? 'farm/index.html'
       : /^\/demo(?:\/|$)/.test(req.path) ? 'demo/index.html' : 'index.html'));
   });
