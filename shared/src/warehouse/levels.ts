@@ -1,6 +1,7 @@
 import type { ThirdDemo, ThirdZone } from '../third/types.js';
+import { THIRD_DIMENSIONS as D } from '../third/geometry.js';
 
-export const WAREHOUSE_VERSION = 'warehouse-manual-6';
+export const WAREHOUSE_VERSION = 'warehouse-manual-7';
 export const WAREHOUSE_RULES = { cell: 12, cargo: 6, lineWidth: .6, settleSeconds: .4 } as const;
 export interface WarehouseLevel extends ThirdDemo {
   requiredCount: number;
@@ -28,7 +29,11 @@ const band = (id: string, right: boolean, points: number): ThirdZone => {
 };
 const scoringZones = [band('A', false, 7), band('B', true, 7), band('C', false, 4),
   band('D', true, 4), band('E', false, 2), band('F', true, 2)];
-const row = (xs: number[], y = 12) => xs.map(x => ({ x, z: 120 - y }));
+// Match the rendered 6 cm subcells inside the 6 cm perimeter. At equal distance,
+// choose the centre to the right/above in display coordinates, before converting Y to Z.
+const cargoCentre = (value: number) => D.edge + D.smallCell / 2
+  + Math.floor((value - D.edge) / D.smallCell) * D.smallCell;
+const row = (xs: number[], y = 12) => xs.map(x => ({ x: cargoCentre(x), z: D.map - cargoCentre(y) }));
 const configs: { objects: { x: number; z: number }[]; zones: ReturnType<typeof zone>[]; targetScore?: number; hint: string }[] = [
   { objects: row([24]), zones: [zone('A', 84, 84, 1)], hint: '可以直接推送，也可以夹取搬运。观察投递区，对准落点并让箱子停稳。' },
   { objects: row([24, 96]), zones: [zone('A', 96, 108, 3)], hint: '两箱放进同一片三格区域，留出第二箱的入口和自己的退路。' },
@@ -53,8 +58,8 @@ export const warehouseLevels: WarehouseLevel[] = configs.map((config, index) => 
   scene_task: 'warehouse', requiredCount: config.objects.length, targetScore: config.targetScore, strategyHint: config.hint,
   scene_config: {
     kind: 'simulation3d', width: 120, depth: 120, speed: 18, turnSpeed: Math.PI / 2,
-    // Local dimensions preserve the requested centres without spawning intersecting bodies.
-    robot_dimensions: { body: 17.8, gripperWidth: 14 },
+    // Leave clearance between the open fingers and the first grid-aligned cargo.
+    robot_dimensions: { body: 17.8, gripperWidth: 15 },
     start: { x: 12, z: 108, heading: Math.PI / 2 }, walls: [], zones: config.zones,
     objects: config.objects.map((object, i) => ({ id: String(i + 1), ...object })),
   },

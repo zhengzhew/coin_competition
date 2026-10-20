@@ -68,6 +68,7 @@ for (const plan of plans.filter(plan => !process.env.WAREHOUSE_PLAN || `${plan.l
     const zone = level.scene_config.zones.find(z => z.id === zoneId);
     const object = s.snapshot().objects.find(o => o.id === id);
     if (i === 0) {
+      straight(object.x - 11.9, s.snapshot().z);
       tap('grab'); wait(1);
       assert.equal(s.snapshot().holding, object.id, 'initial contact grasp');
       // Leave the tight starting corner along the forward axis. Chasing lateral

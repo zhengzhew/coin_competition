@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Vec2 } from 'planck';
-import { footprintsOverlap, footprintCorners } from '../third/geometry.js';
+import { THIRD_DIMENSIONS as D, footprintsOverlap, footprintCorners } from '../third/geometry.js';
 import { warehouseLevels } from './levels.js';
 import { warehouseContains, WarehouseDeliveryTracker, type WarehouseEvidence } from './rules.js';
 import { WarehouseSession } from './session.js';
@@ -10,7 +10,7 @@ import { warehouseZoneRects, warehouseZoneEdges } from './geometry.js';
 const evidence = (id: string, x: number, z: number, extra: Partial<WarehouseEvidence> = {}): WarehouseEvidence =>
   ({ id, x, z, heading: 0, holding: false, speed: 0, angularSpeed: 0, ...extra });
 
-test('six warehouse levels preserve centres and counts with non-overlapping starts and zones', () => {
+test('six warehouse levels align cargo to nearest 6 cm subcells with non-overlapping starts and zones', () => {
   assert.deepEqual(warehouseLevels.map(l => l.scene_config.objects.length), [1, 2, 3, 4, 6, 8]);
   assert.deepEqual(warehouseLevels.map(l => l.scene_config.zones.length), [1, 1, 2, 4, 6, 6]);
   assert.deepEqual(warehouseLevels.map(l => l.requiredCount), [1, 2, 3, 4, 6, 8]);
@@ -18,10 +18,23 @@ test('six warehouse levels preserve centres and counts with non-overlapping star
   for (const level of warehouseLevels) {
     const c = level.scene_config;
     assert.deepEqual([c.start.x, 120 - c.start.z], [12, 12]);
-    assert.deepEqual([c.objects[0].x, 120 - c.objects[0].z], [24, 12]);
-    for (const o of c.objects) assert.equal(footprintsOverlap(
+    assert.deepEqual([c.objects[0].x, 120 - c.objects[0].z], [27, 15]);
+    const session = new WarehouseSession(level, () => 0), arena = session.arena;
+    const robotParts = [
       { ...c.start, width: c.robot_dimensions!.body, depth: c.robot_dimensions!.body },
-      { ...o, width: 6, depth: 6 }), false);
+      ...arena.fingers.map(({ body }) => ({ x: body.getPosition().x * 10, z: body.getPosition().y * 10,
+        heading: body.getAngle(), width: D.fingerWidth, depth: D.gripperLength })),
+    ];
+    for (const o of c.objects) {
+      for (const corner of footprintCorners({ ...o, width: D.cargo, depth: D.cargo })) {
+        assert.equal((corner.x - D.edge) % D.smallCell, 0, 'cargo edges align to the visible small grid');
+        assert.equal((corner.z - D.edge) % D.smallCell, 0);
+        assert(corner.x >= D.edge && corner.x <= c.width - D.edge);
+        assert(corner.z >= D.edge && corner.z <= c.depth - D.edge);
+      }
+      for (const part of robotParts)
+        assert(!footprintsOverlap(part, { ...o, width: D.cargo, depth: D.cargo }), 'no chassis or open-finger overlap');
+    }
     for (const zone of c.zones) for (const rect of warehouseZoneRects(zone)) {
       assert(footprintCorners(rect).every(p => p.x >= 6 && p.x <= 114 && p.z >= 6 && p.z <= 114));
       for (const other of c.zones) if (other !== zone) for (const otherRect of warehouseZoneRects(other))
@@ -32,9 +45,27 @@ test('six warehouse levels preserve centres and counts with non-overlapping star
       assert(!footprintsOverlap({ ...object, width: 6, depth: 6 }, { ...other, width: 6, depth: 6 }));
     }
     assert.equal(new Set(c.objects.map(o => o.z)).size, level.demo_id === 'warehouse-6' ? 2 : 1);
+    session.start();
+    for (let i = 0; i < 120; i++) session.tick(1 / 120);
+    for (const o of session.snapshot().objects) {
+      const initial = c.objects.find(initial => initial.id === o.id)!;
+      assert(Math.hypot(o.x - initial.x, o.z - initial.z) < .001, 'aligned cargo stays still before driving');
+    }
+    session.press('w', 'forward');
+    for (let i = 0; i < 120; i++) session.tick(1 / 120);
+    session.reset();
+    assert.deepEqual(session.snapshot().objects.map(({ x, z }) => ({ x, z })), c.objects.map(({ x, z }) => ({ x, z })),
+      'reset restores the aligned layout');
   }
-  assert.equal(warehouseLevels[1].scene_config.objects[1].x, 96);
-  assert.deepEqual(warehouseLevels[2].scene_config.objects.map(o => o.x), [24, 60, 96]);
+  const originalXs = [[24], [24, 96], [24, 60, 96], [24, 48, 72, 96],
+    [24, 36, 48, 72, 84, 96], [24, 48, 72, 96, 24, 48, 72, 96]];
+  for (const [levelIndex, level] of warehouseLevels.entries()) for (const [i, o] of level.scene_config.objects.entries()) {
+    const original = { x: originalXs[levelIndex][i], y: levelIndex === 5 && i >= 4 ? 36 : 12 };
+    assert.deepEqual([o.x, 120 - o.z], [original.x + 3, original.y + 3], 'choose the upper-right centre on a tie');
+    const moved = Math.hypot(o.x - original.x, 120 - o.z - original.y);
+    for (let x = 9; x <= 111; x += 6) for (let y = 9; y <= 111; y += 6)
+      assert(moved <= Math.hypot(x - original.x, y - original.y), 'no other small cell is closer');
+  }
   assert.deepEqual(warehouseLevels[4].scene_config.zones, warehouseLevels[5].scene_config.zones);
 });
 
@@ -147,10 +178,14 @@ test('unknown boxes cannot award points and a missing box must settle again when
   scorer.update([evidence('1', zone.x, zone.z)], .1); assert.equal(scorer.score, 0);
 });
 
-test('real contact grasp succeeds at the specified start, release alone cannot award a delivery', () => {
+test('real contact grasp reaches the aligned first cargo, release alone cannot award a delivery', () => {
   let now = 0;
   const session = new WarehouseSession(warehouseLevels[0], () => now);
-  session.start(); session.press('g', 'grab');
+  session.start();
+  // The aligned box is 3 cm farther forward. Approach through real drive inputs.
+  session.press('w', 'forward');
+  for (let i = 0; i < 21; i++) { now += 1000 / 120; session.tick(1 / 120); }
+  session.release('w'); session.press('g', 'grab');
   for (let i = 0; i < 240; i++) { now += 1000 / 120; session.tick(1 / 120); }
   assert.equal(session.snapshot().holding, '1');
   session.press('r', 'release');
@@ -249,10 +284,8 @@ test('synchronized warehouse fingers retain cargo through a turn and stop withou
 test('completion freezes timer and controls; restart clears old delivery evidence', () => {
   let now = 0;
   const level = warehouseLevels[0], session = new WarehouseSession(level, () => now);
-  session.start(); session.press('g', 'grab');
+  session.start();
   const tick = (count: number) => { for (let i = 0; i < count; i++) { now += 1000 / 120; session.tick(1 / 120); } };
-  tick(200); assert.equal(session.snapshot().holding, '1');
-  session.press('r', 'release'); tick(200);
   // Inject a valid physical destination to isolate finish/clock logic from route driving.
   const cube = session.arena.cubes.get('1')!, goal = level.scene_config.zones[0];
   cube.setTransform(Vec2(goal.x / 10, goal.z / 10), Math.PI / 4);

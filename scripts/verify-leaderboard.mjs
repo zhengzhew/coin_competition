@@ -118,7 +118,7 @@ try {
   const warehouse = warehouseLevels[0];
   const timed = { ...payload, submission_id: randomUUID(), participant_id: randomUUID(), competition: 'warehouse',
     level_id: warehouse.demo_id, content_version: warehouse.content_version, mode: 'manual', source: '', steps: 0, seconds: 31.25 };
-  for (const extra of [{ completed: false }, { seconds: 0 }, { steps: 1 }, { mode: 'auto' }, { content_version: 'warehouse-manual-2' }, { content_version: 'warehouse-manual-3' }, { content_version: 'warehouse-manual-4' }, { content_version: 'warehouse-manual-5' }]) {
+  for (const extra of [{ completed: false }, { seconds: 0 }, { steps: 1 }, { mode: 'auto' }, { content_version: 'warehouse-manual-2' }, { content_version: 'warehouse-manual-3' }, { content_version: 'warehouse-manual-4' }, { content_version: 'warehouse-manual-5' }, { content_version: 'warehouse-manual-6' }]) {
     assert.equal((await request('/leaderboard/submissions', 'POST', { ...timed, ...extra })).status, 422);
   }
   assert.equal((await request('/leaderboard/submissions', 'POST', timed)).status, 201);
